@@ -2,13 +2,32 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
-                  <com.google.android.maps.MapView
-                 android:id="@+id/mapview"
-                 android:layout_width="fill_parent"
-                 android:layout_height="fill_parent"
-                 android:clickable="true"
-                 android:apiKey="0Swejj587aUMnEZ9QijQMCIiU9fyT_2PMLYZS5A"
-                 />
-            
+
+    <com.google.android.maps.MapView
+        android:id="@+id/mapview"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:apiKey="0Swejj587aUMnEZ9QijQMCIiU9fyT_2PMLYZS5A"
+        android:clickable="true" />
+
+    <RelativeLayout
+        android:id="@+id/layout_actionbar"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true" >
+
+        <Button
+            android:id="@+id/button_getlocation"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="false"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="false"
+            android:layout_centerVertical="true"
+            android:text="Update Location" />
+
+    </RelativeLayout>
 
 </RelativeLayout>
