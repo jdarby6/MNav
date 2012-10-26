@@ -269,8 +269,15 @@ public class MNavMainActivity extends MapActivity {
 	private void zoomTo(GeoPoint p) {
         MapController mc = gMapView.getController();
       	mc.animateTo(p);
-      	for(int i = gMapView.getZoomLevel(); i < 20; i++)
+      	int zoomLevel = gMapView.getZoomLevel();
+      	if(zoomLevel < 19) {
+      	for(int i = zoomLevel; i < 19; i++)
       		mc.zoomIn();
+      	} else {
+      		for(int i = zoomLevel; i > 19; i--) {
+      			mc.zoomOut();
+      		}
+      	}
 	}
 	
 	/** Helper function for displaying a toast. Takes the string to be displayed and the length: LONG or SHORT **/
