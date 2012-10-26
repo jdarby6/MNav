@@ -37,9 +37,7 @@ public class MNavMainActivity extends MapActivity {
 	private boolean firstRun = true;
 	private Button bGetLocation;
 	
-	//start page items;
-	private Button search;
-	private EditText address_box;
+	
 	
 	private static final int LONG = Toast.LENGTH_LONG;
 	private static final int SHORT = Toast.LENGTH_SHORT;
@@ -51,11 +49,9 @@ public class MNavMainActivity extends MapActivity {
         setContentView(R.layout.activity_main);
         
         bGetLocation = (Button) findViewById(R.id.button_getlocation);
-        search = (Button)findViewById(R.id.button_search);
-        address_box = (EditText)findViewById(R.id.editText_address_box);
 
         bGetLocation.setOnClickListener(new OnClickListener() {
-			@Override
+			
 			public void onClick(View v) {
 		        GeoPoint dest = new GeoPoint((int)(42.276773 * 1e6), (int)(-83.740178 * 1e6));
 		        GeoPoint start = new GeoPoint((int)(gLat * 1e6), (int)(gLong * 1e6));
