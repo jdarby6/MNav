@@ -45,9 +45,7 @@ public class MNavMainActivity extends MapActivity {
 	private Button bReturn;
 	private EditText tvDestination;
 	
-	//start page items;
-	private Button search;
-	private EditText address_box;
+	
 	
 	private static final int LONG = Toast.LENGTH_LONG;
 	private static final int SHORT = Toast.LENGTH_SHORT;
@@ -57,16 +55,14 @@ public class MNavMainActivity extends MapActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        
+
         gMapView = (MapView) findViewById(R.id.mapview);
-        
-        search = (Button)findViewById(R.id.button_search);
-        address_box = (EditText)findViewById(R.id.editText_address_box);
 
         tvDestination = (EditText)findViewById(R.id.editText_destination);
         
         bPlotRoute = (Button) findViewById(R.id.button_plotroute);
         bPlotRoute.setOnClickListener(new OnClickListener() {
+
 			public void onClick(View v) {
 
 				Log.d("GetRouteClicked", "Stopping GPS, Calculating Route");
@@ -82,6 +78,7 @@ public class MNavMainActivity extends MapActivity {
 		        //Creates Url and queries goole directions api
 		        Route route = directions(start, dest);
 		        RouteOverlay routeOverlay = new RouteOverlay(route, Color.BLUE);
+		        //catch exception here or something TODODODODODODO
 		        gMapView.getOverlays().add(routeOverlay);
 			}
         });
