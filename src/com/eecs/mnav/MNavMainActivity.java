@@ -2,18 +2,15 @@ package com.eecs.mnav;
 
 import java.util.List;
 
-import org.xml.sax.Parser;
-
-import com.eecs.mnav.R;
-import com.google.android.maps.*;
-
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.location.*;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
@@ -21,9 +18,15 @@ import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.Toast;
-import android.widget.TextView;
 import android.widget.EditText;
+import android.widget.Toast;
+
+import com.google.android.maps.GeoPoint;
+import com.google.android.maps.MapActivity;
+import com.google.android.maps.MapController;
+import com.google.android.maps.MapView;
+import com.google.android.maps.Overlay;
+import com.google.android.maps.OverlayItem;
 
 public class MNavMainActivity extends MapActivity {
 	//Declare globals  //g is for global
@@ -35,7 +38,8 @@ public class MNavMainActivity extends MapActivity {
 	private MapView gMapView;
 	private LocationManager gLocationManager;
 	private boolean firstRun = true;
-	private Button bGetLocation;
+	private Button bPlotRoute;
+	private Button bSatellite;
 	
 	
 	
@@ -48,23 +52,46 @@ public class MNavMainActivity extends MapActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
+<<<<<<< HEAD
         bGetLocation = (Button) findViewById(R.id.button_getlocation);
 
         bGetLocation.setOnClickListener(new OnClickListener() {
 			
+=======
+        gMapView = (MapView) findViewById(R.id.mapview);
+        
+        bPlotRoute = (Button) findViewById(R.id.button_plotroute);
+        search = (Button)findViewById(R.id.button_search);
+        address_box = (EditText)findViewById(R.id.editText_address_box);
+
+
+        bPlotRoute.setOnClickListener(new OnClickListener() {
+>>>>>>> origin/master
 			public void onClick(View v) {
-		        GeoPoint dest = new GeoPoint((int)(42.276773 * 1e6), (int)(-83.740178 * 1e6));
+
+				Log.d("GetRouteClicked", "Stopping GPS, Calculating Route");
+				gLocationManager.removeUpdates(locationListener);
+				
+				GeoPoint dest = new GeoPoint((int)(42.276773 * 1e6), (int)(-83.740178 * 1e6));
 		        GeoPoint start = new GeoPoint((int)(gLat * 1e6), (int)(gLong * 1e6));
 		        Route route = directions(start, dest);
 		        RouteOverlay routeOverlay = new RouteOverlay(route, Color.BLUE);
 		        gMapView.getOverlays().add(routeOverlay);
 			}
-        	
         });
 
         
-        gMapView = (MapView) findViewById(R.id.mapview);
-        gMapView.setBuiltInZoomControls(true);
+        bSatellite = (Button) findViewById(R.id.button_satellite);
+        bSatellite.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				if(gMapView.isSatellite())
+				gMapView.setSatellite(false);
+				else
+					gMapView.setSatellite(true);
+
+		      	Log.d("MAPSTUFF", "ZoomLevel="+gMapView.getZoomLevel());
+			}
+        });
         
         gLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         //Check to see if GPS is enabled
@@ -204,43 +231,36 @@ public class MNavMainActivity extends MapActivity {
 	
 	public void updateOverlays(Location location) {
         // this is basically your code just a bit modified (removed unnecessary code and added new code)
-        MapController mc = gMapView.getController();
         GeoPoint p = new GeoPoint((int)(gLat * 1e6), (int)(gLong * 1e6));
 
         //Remove all existing overlays
         List<Overlay> mapOverlays = gMapView.getOverlays();
         mapOverlays.clear();
 
-      	Drawable drawable = this.getResources().getDrawable(R.drawable.ic_location);
+      	Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
       	CurrentLocationOverlay classOverlay = new CurrentLocationOverlay(drawable, this);
       	OverlayItem overlayitem = new OverlayItem(p, "Current Location", "You are here!");
       	
       	classOverlay.addOverlay(overlayitem);
-      	mapOverlays.add(classOverlay);        
-      	
-      	mc.animateTo(p);
+      	mapOverlays.add(classOverlay);
     }
 	
 	public void initOverlays(Location location) {
-        // this is basically your code just a bit modified (removed unnecessary code and added new code)
-        MapController mc = gMapView.getController();
         GeoPoint p = new GeoPoint((int)(gLat * 1e6), (int)(gLong * 1e6));
 
         //Remove all existing overlays
         List<Overlay> mapOverlays = gMapView.getOverlays();
         mapOverlays.clear();
 
-      	Drawable drawable = this.getResources().getDrawable(R.drawable.ic_location);
+      	Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
       	CurrentLocationOverlay classOverlay = new CurrentLocationOverlay(drawable, this);
       	OverlayItem overlayitem = new OverlayItem(p, "Current Location", "You are here!");
       	
       	classOverlay.addOverlay(overlayitem);
       	mapOverlays.add(classOverlay);        
       	
-      	mc.animateTo(p);
-      	mc.zoomIn();
-      	mc.zoomIn();
-      	mc.zoomIn();
+      	zoomTo(p);
+      	
       	firstRun = false;
     }
 	
@@ -262,10 +282,19 @@ public class MNavMainActivity extends MapActivity {
 	    return r;
 	}
 	
-	
-	
-	
-	
+	private void zoomTo(GeoPoint p) {
+        MapController mc = gMapView.getController();
+      	mc.animateTo(p);
+      	int zoomLevel = gMapView.getZoomLevel();
+      	if(zoomLevel < 19) {
+      	for(int i = zoomLevel; i < 19; i++)
+      		mc.zoomIn();
+      	} else {
+      		for(int i = zoomLevel; i > 19; i--) {
+      			mc.zoomOut();
+      		}
+      	}
+	}
 	
 	/** Helper function for displaying a toast. Takes the string to be displayed and the length: LONG or SHORT **/
 	private void toastThis(String toast, int duration) {
