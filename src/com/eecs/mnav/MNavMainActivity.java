@@ -2,6 +2,8 @@ package com.eecs.mnav;
 
 import java.util.List;
 
+import org.xml.sax.Parser;
+
 import com.eecs.mnav.R;
 import com.google.android.maps.*;
 
@@ -9,12 +11,15 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.location.*;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Toast;
 import android.widget.TextView;
@@ -48,6 +53,19 @@ public class MNavMainActivity extends MapActivity {
         bGetLocation = (Button) findViewById(R.id.button_getlocation);
         search = (Button)findViewById(R.id.button_search);
         address_box = (EditText)findViewById(R.id.editText_address_box);
+
+        bGetLocation.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+		        GeoPoint dest = new GeoPoint((int)(42.276773 * 1e6), (int)(-83.740178 * 1e6));
+		        GeoPoint start = new GeoPoint((int)(gLat * 1e6), (int)(gLong * 1e6));
+		        Route route = directions(start, dest);
+		        RouteOverlay routeOverlay = new RouteOverlay(route, Color.BLUE);
+		        gMapView.getOverlays().add(routeOverlay);
+			}
+        	
+        });
+
         
         gMapView = (MapView) findViewById(R.id.mapview);
         gMapView.setBuiltInZoomControls(true);
@@ -198,7 +216,7 @@ public class MNavMainActivity extends MapActivity {
         mapOverlays.clear();
 
       	Drawable drawable = this.getResources().getDrawable(R.drawable.ic_location);
-      	ClassRoomLocationOverlay classOverlay = new ClassRoomLocationOverlay(drawable, this);
+      	CurrentLocationOverlay classOverlay = new CurrentLocationOverlay(drawable, this);
       	OverlayItem overlayitem = new OverlayItem(p, "Current Location", "You are here!");
       	
       	classOverlay.addOverlay(overlayitem);
@@ -217,7 +235,7 @@ public class MNavMainActivity extends MapActivity {
         mapOverlays.clear();
 
       	Drawable drawable = this.getResources().getDrawable(R.drawable.ic_location);
-      	ClassRoomLocationOverlay classOverlay = new ClassRoomLocationOverlay(drawable, this);
+      	CurrentLocationOverlay classOverlay = new CurrentLocationOverlay(drawable, this);
       	OverlayItem overlayitem = new OverlayItem(p, "Current Location", "You are here!");
       	
       	classOverlay.addOverlay(overlayitem);
@@ -229,6 +247,30 @@ public class MNavMainActivity extends MapActivity {
       	mc.zoomIn();
       	firstRun = false;
     }
+	
+	private Route directions(final GeoPoint start, final GeoPoint dest) {
+	    GoogleParser googleParser;
+	    String jsonURL = "http://maps.google.com/maps/api/directions/json?";
+	    final StringBuffer sBuf = new StringBuffer(jsonURL);
+	    sBuf.append("origin=");
+	    sBuf.append(start.getLatitudeE6()/1E6);
+	    sBuf.append(',');
+	    sBuf.append(start.getLongitudeE6()/1E6);
+	    sBuf.append("&destination=");
+	    sBuf.append(dest.getLatitudeE6()/1E6);
+	    sBuf.append(',');
+	    sBuf.append(dest.getLongitudeE6()/1E6);
+	    sBuf.append("&sensor=true&mode=walking");
+	    googleParser = new GoogleParser(sBuf.toString());
+	    Route r =  googleParser.parse();
+	    return r;
+	}
+	
+	
+	
+	
+	
+	
 	/** Helper function for displaying a toast. Takes the string to be displayed and the length: LONG or SHORT **/
 	private void toastThis(String toast, int duration) {
 		Context context = getApplicationContext();
