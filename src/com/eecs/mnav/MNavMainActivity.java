@@ -55,6 +55,8 @@ public class MNavMainActivity extends MapActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Intent intent = getIntent();//might need to modify, use bundle for data instead of getting whole intent?
+        String address = intent.getStringExtra("address");
 
         gMapView = (MapView) findViewById(R.id.mapview);
 
