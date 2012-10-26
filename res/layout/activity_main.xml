@@ -17,7 +17,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:background="@drawable/button_border_enabled" >
-
+        
         <Button
             android:id="@+id/button_plotroute"
             style="?android:attr/buttonStyleSmall"

@@ -2,18 +2,15 @@ package com.eecs.mnav;
 
 import java.util.List;
 
-import org.xml.sax.Parser;
-
-import com.eecs.mnav.R;
-import com.google.android.maps.*;
-
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.location.*;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
@@ -21,7 +18,15 @@ import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
+
+import com.google.android.maps.GeoPoint;
+import com.google.android.maps.MapActivity;
+import com.google.android.maps.MapController;
+import com.google.android.maps.MapView;
+import com.google.android.maps.Overlay;
+import com.google.android.maps.OverlayItem;
 
 public class MNavMainActivity extends MapActivity {
 	//Declare globals  //g is for global
@@ -36,6 +41,9 @@ public class MNavMainActivity extends MapActivity {
 	private Button bPlotRoute;
 	private Button bSatellite;
 	
+	//start page items;
+	private Button search;
+	private EditText address_box;
 	
 	private static final int LONG = Toast.LENGTH_LONG;
 	private static final int SHORT = Toast.LENGTH_SHORT;
@@ -49,8 +57,11 @@ public class MNavMainActivity extends MapActivity {
         gMapView = (MapView) findViewById(R.id.mapview);
         
         bPlotRoute = (Button) findViewById(R.id.button_plotroute);
+        search = (Button)findViewById(R.id.button_search);
+        address_box = (EditText)findViewById(R.id.editText_address_box);
+
+
         bPlotRoute.setOnClickListener(new OnClickListener() {
-			@Override
 			public void onClick(View v) {
 
 				Log.d("GetRouteClicked", "Stopping GPS, Calculating Route");
@@ -63,10 +74,10 @@ public class MNavMainActivity extends MapActivity {
 		        gMapView.getOverlays().add(routeOverlay);
 			}
         });
+
         
         bSatellite = (Button) findViewById(R.id.button_satellite);
         bSatellite.setOnClickListener(new OnClickListener() {
-			@Override
 			public void onClick(View v) {
 				if(gMapView.isSatellite())
 				gMapView.setSatellite(false);
