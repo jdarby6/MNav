@@ -9,16 +9,17 @@
         android:layout_height="fill_parent"
         android:apiKey="0Swejj587aUMnEZ9QijQMCIiU9fyT_2PMLYZS5A"
         android:clickable="true" />
-
+
     <RelativeLayout
         android:id="@+id/layout_actionbar"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true" >
-
+        android:layout_alignParentTop="true"
+        android:background="@drawable/button_border_enabled" >
+
         <Button
-            android:id="@+id/button_getlocation"
+            android:id="@+id/button_plotroute"
             style="?android:attr/buttonStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -26,7 +27,17 @@
             android:layout_alignParentRight="true"
             android:layout_alignParentTop="false"
             android:layout_centerVertical="true"
-            android:text="Update Location" />
+            android:background="@drawable/ic_walk"
+            android:text=" " />
+
+        <Button
+            android:id="@+id/button_satellite"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:background="@drawable/ic_satellite"
+            android:text=" " />
 
     </RelativeLayout>
 
