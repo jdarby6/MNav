@@ -51,22 +51,13 @@ public class MNavMainActivity extends MapActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        
-<<<<<<< HEAD
-        bGetLocation = (Button) findViewById(R.id.button_getlocation);
 
-        bGetLocation.setOnClickListener(new OnClickListener() {
-			
-=======
         gMapView = (MapView) findViewById(R.id.mapview);
         
         bPlotRoute = (Button) findViewById(R.id.button_plotroute);
-        search = (Button)findViewById(R.id.button_search);
-        address_box = (EditText)findViewById(R.id.editText_address_box);
-
 
         bPlotRoute.setOnClickListener(new OnClickListener() {
->>>>>>> origin/master
+
 			public void onClick(View v) {
 
 				Log.d("GetRouteClicked", "Stopping GPS, Calculating Route");
@@ -76,6 +67,7 @@ public class MNavMainActivity extends MapActivity {
 		        GeoPoint start = new GeoPoint((int)(gLat * 1e6), (int)(gLong * 1e6));
 		        Route route = directions(start, dest);
 		        RouteOverlay routeOverlay = new RouteOverlay(route, Color.BLUE);
+		        //catch exception here or something TODODODODODODO
 		        gMapView.getOverlays().add(routeOverlay);
 			}
         });
