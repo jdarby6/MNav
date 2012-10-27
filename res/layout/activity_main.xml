@@ -85,16 +85,17 @@
             android:layout_alignLeft="@+id/button_plotroute"
             android:layout_alignParentBottom="true"
             android:background="@drawable/black_blue_divider" />
-
+
         <EditText
-            android:id="@+id/editText_destination"
+            android:id="@+id/editText_map_destination"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_toLeftOf="@+id/divider_3"
             android:layout_toRightOf="@+id/divider_2"
             android:ems="10"
-            android:hint="lat,long" >
+            android:hint="lat,long"
+            android:text="42.275586,-83.734875" >
 
         </EditText>
 

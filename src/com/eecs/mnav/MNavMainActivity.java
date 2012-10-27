@@ -44,26 +44,26 @@ public class MNavMainActivity extends MapActivity {
 	private Button bSatellite;
 	private Button bReturn;
 	private EditText tvDestination;
-	
-	
-	
+
+
+
 	private static final int LONG = Toast.LENGTH_LONG;
 	private static final int SHORT = Toast.LENGTH_SHORT;
 	private static final int TWO_MINUTES = 1000 * 60 * 2;
-	
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        Intent intent = getIntent();//might need to modify, use bundle for data instead of getting whole intent?
-        String address = intent.getStringExtra("address");
 
-        gMapView = (MapView) findViewById(R.id.mapview);
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+		Intent intent = getIntent();//might need to modify, use bundle for data instead of getting whole intent?
+		String address = intent.getStringExtra("address");
 
-        tvDestination = (EditText)findViewById(R.id.editText_destination);
-        
-        bPlotRoute = (Button) findViewById(R.id.button_plotroute);
-        bPlotRoute.setOnClickListener(new OnClickListener() {
+		gMapView = (MapView) findViewById(R.id.mapview);
+
+		tvDestination = (EditText)findViewById(R.id.editText_map_destination);
+
+		bPlotRoute = (Button) findViewById(R.id.button_plotroute);
+		bPlotRoute.setOnClickListener(new OnClickListener() {
 
 			public void onClick(View v) {
 
@@ -71,60 +71,72 @@ public class MNavMainActivity extends MapActivity {
 				gLocationManager.removeUpdates(locationListener);
 				//Grab the user input lat/long
 				String temp = tvDestination.getText().toString();
-				gDestinationLat = Double.parseDouble(temp.substring(0, temp.indexOf(",")));
-				gDestinationLong = Double.parseDouble(temp.substring(temp.indexOf(",")+1,temp.length()));
-				//create a geopoint for dest
-				GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
-				zoomTo(dest);
-		        GeoPoint start = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
-		        //Creates Url and queries goole directions api
-		        Route route = directions(start, dest);
-		        RouteOverlay routeOverlay = new RouteOverlay(route, Color.BLUE);
-		        //catch exception here or something TODODODODODODO
-		        gMapView.getOverlays().add(routeOverlay);
-			}
-        });
+				if(temp != null && temp.length() > 0) {
+					gDestinationLat = Double.parseDouble(temp.substring(0, temp.indexOf(",")));
+					gDestinationLong = Double.parseDouble(temp.substring(temp.indexOf(",")+1,temp.length()));
+					//create a geopoint for dest
+					GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
+					zoomTo(dest);
+					GeoPoint start = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
+					//Creates Url and queries goole directions api
+					Route route = directions(start, dest);
+					RouteOverlay routeOverlay = new RouteOverlay(route, Color.BLUE);
+					gMapView.getOverlays().add(routeOverlay);
+					
+					Drawable drawable = getResources().getDrawable(R.drawable.ic_pin);
+					CurrentLocationOverlay classOverlay = new CurrentLocationOverlay(drawable, MNavMainActivity.this);
+					OverlayItem overlayitem = new OverlayItem(dest, "Destination", "You are going here!");
 
-        
-        bSatellite = (Button) findViewById(R.id.button_satellite);
-        bSatellite.setOnClickListener(new OnClickListener() {
+					classOverlay.addOverlay(overlayitem);
+					gMapView.getOverlays().add(classOverlay);
+					
+				}
+			}
+		});
+
+
+		bSatellite = (Button) findViewById(R.id.button_satellite);
+		bSatellite.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				if(gMapView.isSatellite())
-				gMapView.setSatellite(false);
-				else
+				if(gMapView.isSatellite()){
+					bSatellite.setBackgroundResource(R.drawable.ic_road);
+					gMapView.setSatellite(false);
+				}else{
 					gMapView.setSatellite(true);
+					bSatellite.setBackgroundResource(R.drawable.ic_satellite);
+				}
 
-		      	Log.d("MAPSTUFF", "ZoomLevel="+gMapView.getZoomLevel());
+				Log.d("MAPSTUFF", "ZoomLevel="+gMapView.getZoomLevel());
 			}
-        });
-        
-        bReturn = (Button) findViewById(R.id.button_return);
-        bReturn.setOnClickListener(new OnClickListener() {
+		});
+
+		bReturn = (Button) findViewById(R.id.button_return);
+		bReturn.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-		        GeoPoint currentLoc = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
-		        zoomTo(currentLoc);
-		        startGPS();
+				GeoPoint currentLoc = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
+				zoomTo(currentLoc);
+				startGPS();
 			}
-        });
-        
-        
-        startGPS();
+		});
 
-    }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_main, menu);
-        return true;
-    }
+		startGPS();
+
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.activity_main, menu);
+		return true;
+	}
 
 	@Override
 	protected boolean isRouteDisplayed() {
-		
+
 		return false;
 	}
-	
-	
+
+
 	LocationListener locationListener = new LocationListener() {
 		public void onLocationChanged(Location location) {
 			// Called when a new location is found by the network location provider.
@@ -134,21 +146,21 @@ public class MNavMainActivity extends MapActivity {
 			gCurrentLat = gBestLocation.getLatitude();
 			gCurrentLong = gBestLocation.getLongitude();
 			gSpeed = gBestLocation.getSpeed();
-			
+
 			//if location reports accuracy and is accurate up to at least 100 meters - location is good
 			if(gBestLocation.hasAccuracy() && gBestLocation.getAccuracy() < 100) {
 				Log.d("LocationChanged", "Found accurate location fix! Accuracy="+gBestLocation.getAccuracy());
 				gLocationManager.removeUpdates(locationListener);
 			}
-			
-			
+
+
 			String toast = "Speed: " + gSpeed + "m/s \nBearing: " + gBearing + " degrees E of N \nLong: "
 					+ gCurrentLong + " \nLat: " + gCurrentLat;
 			toastThis(toast, SHORT);
 			if(firstRun)
-			initOverlays(gBestLocation);
+				initOverlays(gBestLocation);
 			else
-			updateOverlays(gBestLocation);
+				updateOverlays(gBestLocation);
 		}
 
 		public void onStatusChanged(String provider, int status, Bundle extras) {}
@@ -206,7 +218,7 @@ public class MNavMainActivity extends MapActivity {
 		}
 		return provider1.equals(provider2);
 	}
-	
+
 	/**Gets best cached location from GPS and NETWORK. Called before searching for location */
 	private void getCachedLocation() {
 		//Get cached location from GPS
@@ -215,110 +227,110 @@ public class MNavMainActivity extends MapActivity {
 		if(isBetterLocation(gLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER), gBestLocation))
 			gBestLocation = gLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 	}
-	
+
 	private void displayEnableGPSAlert() {
-		 AlertDialog.Builder alertDialog = new AlertDialog.Builder(getApplicationContext());
-         alertDialog.setTitle("Enable GPS?");
-         alertDialog.setMessage("GPS is not enabled. Would you like to enable it in settings?");
-         alertDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-             public void onClick(DialogInterface dialog,int which) {
-             	Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            	startActivity(intent);
-             }
-         });
-         alertDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
-             public void onClick(DialogInterface dialog, int which) {
-             dialog.cancel();
-             }
-         });
-         alertDialog.show();
+		AlertDialog.Builder alertDialog = new AlertDialog.Builder(getApplicationContext());
+		alertDialog.setTitle("Enable GPS?");
+		alertDialog.setMessage("GPS is not enabled. Would you like to enable it in settings?");
+		alertDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog,int which) {
+				Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+				startActivity(intent);
+			}
+		});
+		alertDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.cancel();
+			}
+		});
+		alertDialog.show();
 	}
-	
+
 	public void updateOverlays(Location location) {
-        GeoPoint p = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
+		GeoPoint p = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
 
-        //Remove all existing overlays
-        List<Overlay> mapOverlays = gMapView.getOverlays();
-        mapOverlays.clear();
+		//Remove all existing overlays
+		List<Overlay> mapOverlays = gMapView.getOverlays();
+		mapOverlays.clear();
 
-      	Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
-      	CurrentLocationOverlay classOverlay = new CurrentLocationOverlay(drawable, this);
-      	OverlayItem overlayitem = new OverlayItem(p, "Current Location", "You are here!");
-      	
-      	classOverlay.addOverlay(overlayitem);
-      	mapOverlays.add(classOverlay);
-    }
-	
+		Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
+		CurrentLocationOverlay classOverlay = new CurrentLocationOverlay(drawable, this);
+		OverlayItem overlayitem = new OverlayItem(p, "Current Location", "You are here!");
+
+		classOverlay.addOverlay(overlayitem);
+		mapOverlays.add(classOverlay);
+	}
+
 	public void initOverlays(Location location) {
-        GeoPoint p = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
+		GeoPoint p = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
 
-        //Remove all existing overlays
-        List<Overlay> mapOverlays = gMapView.getOverlays();
-        mapOverlays.clear();
+		//Remove all existing overlays
+		List<Overlay> mapOverlays = gMapView.getOverlays();
+		mapOverlays.clear();
 
-      	Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
-      	CurrentLocationOverlay classOverlay = new CurrentLocationOverlay(drawable, this);
-      	OverlayItem overlayitem = new OverlayItem(p, "Current Location", "You are here!");
-      	
-      	classOverlay.addOverlay(overlayitem);
-      	mapOverlays.add(classOverlay);        
-      	
-      	zoomTo(p);
-      	
-      	firstRun = false;
-    }
-	
+		Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
+		CurrentLocationOverlay classOverlay = new CurrentLocationOverlay(drawable, this);
+		OverlayItem overlayitem = new OverlayItem(p, "Current Location", "You are here!");
+
+		classOverlay.addOverlay(overlayitem);
+		mapOverlays.add(classOverlay);        
+
+		zoomTo(p);
+
+		firstRun = false;
+	}
+
 	private Route directions(final GeoPoint start, final GeoPoint dest) {
-	    GoogleParser googleParser;
-	    String jsonURL = "http://maps.google.com/maps/api/directions/json?";
-	    final StringBuffer sBuf = new StringBuffer(jsonURL);
-	    sBuf.append("origin=");
-	    sBuf.append(start.getLatitudeE6()/1E6);
-	    sBuf.append(',');
-	    sBuf.append(start.getLongitudeE6()/1E6);
-	    sBuf.append("&destination=");
-	    sBuf.append(dest.getLatitudeE6()/1E6);
-	    sBuf.append(',');
-	    sBuf.append(dest.getLongitudeE6()/1E6);
-	    sBuf.append("&sensor=true&mode=walking");
-	    googleParser = new GoogleParser(sBuf.toString());
-	    Route r =  googleParser.parse();
-	    return r;
+		GoogleParser googleParser;
+		String jsonURL = "http://maps.google.com/maps/api/directions/json?";
+		final StringBuffer sBuf = new StringBuffer(jsonURL);
+		sBuf.append("origin=");
+		sBuf.append(start.getLatitudeE6()/1E6);
+		sBuf.append(',');
+		sBuf.append(start.getLongitudeE6()/1E6);
+		sBuf.append("&destination=");
+		sBuf.append(dest.getLatitudeE6()/1E6);
+		sBuf.append(',');
+		sBuf.append(dest.getLongitudeE6()/1E6);
+		sBuf.append("&sensor=true&mode=walking");
+		googleParser = new GoogleParser(sBuf.toString());
+		Route r =  googleParser.parse();
+		return r;
 	}
-	
+
 	private void zoomTo(GeoPoint p) {
-        MapController mc = gMapView.getController();
-      	mc.animateTo(p);
-      	int zoomLevel = gMapView.getZoomLevel();
-      	if(zoomLevel < 19) {
-      	for(int i = zoomLevel; i < 19; i++)
-      		mc.zoomIn();
-      	} else {
-      		for(int i = zoomLevel; i > 19; i--) {
-      			mc.zoomOut();
-      		}
-      	}
+		MapController mc = gMapView.getController();
+		mc.animateTo(p);
+		int zoomLevel = gMapView.getZoomLevel();
+		if(zoomLevel < 19) {
+			for(int i = zoomLevel; i < 19; i++)
+				mc.zoomIn();
+		} else {
+			for(int i = zoomLevel; i > 19; i--) {
+				mc.zoomOut();
+			}
+		}
 	}
-	
+
 	private void startGPS() {
-        gLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        //Check to see if GPS is enabled
-        if(!gLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
-        	//If not enabled, prompt user to enabled it
-        	displayEnableGPSAlert();
-        }
-        
-        //Start looking for location information
-      	getCachedLocation();
-      	gLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-      	gLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+		gLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+		//Check to see if GPS is enabled
+		if(!gLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+			//If not enabled, prompt user to enabled it
+			displayEnableGPSAlert();
+		}
+
+		//Start looking for location information
+		getCachedLocation();
+		gLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+		gLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
 	}
-	
+
 	/** Helper function for displaying a toast. Takes the string to be displayed and the length: LONG or SHORT **/
 	private void toastThis(String toast, int duration) {
 		Context context = getApplicationContext();
 		Toast t = Toast.makeText(context, toast, duration);
 		t.show();
 	}
-	
+
 }

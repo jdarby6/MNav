@@ -23,9 +23,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:layout_weight="3" >
-
+
         <TextView
-            android:id="@+id/textView1"
+            android:id="@+id/textView_destination"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
@@ -33,30 +33,29 @@
             android:paddingBottom="10dp"
             android:text="@string/start_prompt"
             android:textSize="30dp" />
-
+        <Button
+            android:id="@+id/button_search"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/editText_address_box"
+            android:layout_alignRight="@+id/textView_destination"
+            android:background="@drawable/ic_search_button_unselected" />
         <EditText
             android:id="@+id/editText_address_box"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_below="@+id/textView1"
-            android:layout_marginLeft="26dp"
+            android:layout_alignLeft="@+id/textView_destination"
+            android:layout_alignParentLeft="false"
+            android:layout_below="@+id/textView_destination"
+            android:layout_toLeftOf="@id/button_search"
             android:ems="10"
             android:hint="@string/address_default"
             android:inputType="textPostalAddress" >
 
             <requestFocus />
         </EditText>
+
 
-        <Button
-            android:id="@+id/button_search"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignBaseline="@+id/editText_address_box"
-            android:layout_alignBottom="@+id/editText_address_box"
-            android:layout_marginLeft="14dp"
-            android:layout_toRightOf="@+id/editText_address_box"
-            android:background="@drawable/ic_search_button_unselected" />
 
     </RelativeLayout>
 
