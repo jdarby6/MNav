@@ -16,26 +16,7 @@
         android:contentDescription="@string/app_name"
         android:focusable="false"
         android:src="@drawable/logo" />
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
     <RelativeLayout
         android:id="@+id/start_rel"
         android:layout_width="match_parent"

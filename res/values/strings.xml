@@ -8,5 +8,6 @@
     <string name="start_prompt">Enter Destination</string>
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_start">StartActivity</string>
+    <string name="poopSTring">poopString</string>
 
 </resources>

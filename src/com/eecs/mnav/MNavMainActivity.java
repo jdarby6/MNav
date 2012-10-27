@@ -32,14 +32,18 @@ public class MNavMainActivity extends MapActivity {
 	//Declare globals  //g is for global
 	private float gBearing = 0;
 	private float gSpeed = 0;
-	private double gLong = 0.0;
-	private double gLat = 0.0;
+	private double gCurrentLong = 0.0;
+	private double gCurrentLat = 0.0;
+	private double gDestinationLong = 0.0;
+	private double gDestinationLat = 0.0;
 	private Location gBestLocation = null;
 	private MapView gMapView;
 	private LocationManager gLocationManager;
 	private boolean firstRun = true;
 	private Button bPlotRoute;
 	private Button bSatellite;
+	private Button bReturn;
+	private EditText tvDestination;
 	
 	
 	
@@ -55,18 +59,25 @@ public class MNavMainActivity extends MapActivity {
         String address = intent.getStringExtra("address");
 
         gMapView = (MapView) findViewById(R.id.mapview);
+
+        tvDestination = (EditText)findViewById(R.id.editText_destination);
         
         bPlotRoute = (Button) findViewById(R.id.button_plotroute);
-
         bPlotRoute.setOnClickListener(new OnClickListener() {
 
 			public void onClick(View v) {
 
 				Log.d("GetRouteClicked", "Stopping GPS, Calculating Route");
 				gLocationManager.removeUpdates(locationListener);
-				
-				GeoPoint dest = new GeoPoint((int)(42.276773 * 1e6), (int)(-83.740178 * 1e6));
-		        GeoPoint start = new GeoPoint((int)(gLat * 1e6), (int)(gLong * 1e6));
+				//Grab the user input lat/long
+				String temp = tvDestination.getText().toString();
+				gDestinationLat = Double.parseDouble(temp.substring(0, temp.indexOf(",")));
+				gDestinationLong = Double.parseDouble(temp.substring(temp.indexOf(",")+1,temp.length()));
+				//create a geopoint for dest
+				GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
+				zoomTo(dest);
+		        GeoPoint start = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
+		        //Creates Url and queries goole directions api
 		        Route route = directions(start, dest);
 		        RouteOverlay routeOverlay = new RouteOverlay(route, Color.BLUE);
 		        //catch exception here or something TODODODODODODO
@@ -87,17 +98,17 @@ public class MNavMainActivity extends MapActivity {
 			}
         });
         
-        gLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        //Check to see if GPS is enabled
-        if(!gLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
-        	//If not enabled, prompt user to enabled it
-        	displayEnableGPSAlert();
-        }
+        bReturn = (Button) findViewById(R.id.button_return);
+        bReturn.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+		        GeoPoint currentLoc = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
+		        zoomTo(currentLoc);
+		        startGPS();
+			}
+        });
         
-        //Start looking for location information
-      	getCachedLocation();
-      	gLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-      	gLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+        
+        startGPS();
 
     }
 
@@ -120,8 +131,8 @@ public class MNavMainActivity extends MapActivity {
 			if(isBetterLocation(location, gBestLocation))
 				gBestLocation = location;
 			gBearing = gBestLocation.getBearing();
-			gLat = gBestLocation.getLatitude();
-			gLong = gBestLocation.getLongitude();
+			gCurrentLat = gBestLocation.getLatitude();
+			gCurrentLong = gBestLocation.getLongitude();
 			gSpeed = gBestLocation.getSpeed();
 			
 			//if location reports accuracy and is accurate up to at least 100 meters - location is good
@@ -132,7 +143,7 @@ public class MNavMainActivity extends MapActivity {
 			
 			
 			String toast = "Speed: " + gSpeed + "m/s \nBearing: " + gBearing + " degrees E of N \nLong: "
-					+ gLong + " \nLat: " + gLat;
+					+ gCurrentLong + " \nLat: " + gCurrentLat;
 			toastThis(toast, SHORT);
 			if(firstRun)
 			initOverlays(gBestLocation);
@@ -224,8 +235,7 @@ public class MNavMainActivity extends MapActivity {
 	}
 	
 	public void updateOverlays(Location location) {
-        // this is basically your code just a bit modified (removed unnecessary code and added new code)
-        GeoPoint p = new GeoPoint((int)(gLat * 1e6), (int)(gLong * 1e6));
+        GeoPoint p = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
 
         //Remove all existing overlays
         List<Overlay> mapOverlays = gMapView.getOverlays();
@@ -240,7 +250,7 @@ public class MNavMainActivity extends MapActivity {
     }
 	
 	public void initOverlays(Location location) {
-        GeoPoint p = new GeoPoint((int)(gLat * 1e6), (int)(gLong * 1e6));
+        GeoPoint p = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
 
         //Remove all existing overlays
         List<Overlay> mapOverlays = gMapView.getOverlays();
@@ -288,6 +298,20 @@ public class MNavMainActivity extends MapActivity {
       			mc.zoomOut();
       		}
       	}
+	}
+	
+	private void startGPS() {
+        gLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        //Check to see if GPS is enabled
+        if(!gLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+        	//If not enabled, prompt user to enabled it
+        	displayEnableGPSAlert();
+        }
+        
+        //Start looking for location information
+      	getCachedLocation();
+      	gLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+      	gLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
 	}
 	
 	/** Helper function for displaying a toast. Takes the string to be displayed and the length: LONG or SHORT **/
