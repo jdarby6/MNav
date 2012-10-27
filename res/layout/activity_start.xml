@@ -1,62 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/startscreenlayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
-
-
+    android:orientation="vertical"
+    android:padding="5dp" >
 
     <ImageView
         android:id="@+id/logoView"
-        android:layout_width="200dp"
+        android:layout_width="220dp"
         android:layout_height="200dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
         android:layout_gravity="center"
-        android:layout_weight="1"
+        android:layout_marginTop="-20dp"
         android:contentDescription="@string/app_name"
         android:focusable="false"
-        android:src="@drawable/logo" />
-    
-    <RelativeLayout
-        android:id="@+id/start_rel"
-        android:layout_width="match_parent"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:src="@drawable/ic_logo_home" />
+
+    <TextView
+        android:id="@+id/textView_destination"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:layout_weight="3" >
-
-        <TextView
-            android:id="@+id/textView_destination"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:paddingBottom="10dp"
-            android:text="@string/start_prompt"
-            android:textSize="30dp" />
-        <Button
-            android:id="@+id/button_search"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignBaseline="@+id/editText_address_box"
-            android:layout_alignRight="@+id/textView_destination"
-            android:background="@drawable/ic_search_button_unselected" />
-        <EditText
-            android:id="@+id/editText_address_box"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignLeft="@+id/textView_destination"
-            android:layout_alignParentLeft="false"
-            android:layout_below="@+id/textView_destination"
-            android:layout_toLeftOf="@id/button_search"
-            android:ems="10"
-            android:hint="@string/address_default"
-            android:inputType="textPostalAddress" >
+        android:layout_alignLeft="@id/logoView"
+        android:layout_below="@id/logoView"
+        android:gravity="center_horizontal"
+        android:paddingBottom="10dp"
+        android:text="@string/start_prompt"
+        android:textSize="25dp" />
 
-            <requestFocus />
-        </EditText>
-
+    <EditText
+        android:id="@+id/editText_address_box"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@id/logoView"
+        android:layout_below="@id/textView_destination"
+        android:layout_toLeftOf="@+id/button_search"
+        android:ems="10"
+        android:hint="@string/address_default"
+        android:inputType="textPostalAddress" />
+
+    <Button
+        android:id="@+id/button_search"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignRight="@id/logoView"
+        android:layout_below="@id/textView_destination"
+        android:background="@drawable/button_search_drawable"
+        android:text="@string/_" />
 
-
-    </RelativeLayout>
-
-</LinearLayout>
+</RelativeLayout>

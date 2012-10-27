@@ -1,17 +1,24 @@
 package com.eecs.mnav;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
@@ -37,36 +44,68 @@ public class MNavMainActivity extends MapActivity {
 	private double gDestinationLong = 0.0;
 	private double gDestinationLat = 0.0;
 	private Location gBestLocation = null;
-	private MapView gMapView;
+	private MapView gMapView = null;
+	private MapController gMapController = null;
+	private SharedPreferences gPreferences = null;
 	private LocationManager gLocationManager;
 	private boolean firstRun = true;
 	private Button bPlotRoute;
 	private Button bSatellite;
 	private Button bReturn;
+	private Button bZoomIn;
+	private Button bZoomOut;
 	private EditText tvDestination;
-
-
+	private String gDestAddr = "the diag";
 
 	private static final int LONG = Toast.LENGTH_LONG;
 	private static final int SHORT = Toast.LENGTH_SHORT;
 	private static final int TWO_MINUTES = 1000 * 60 * 2;
+	private static final int LAYER_TYPE_SOFTWARE = 1;
+	private static final int ZOOM_LEVEL_SKY = 17;
+	private static final int ZOOM_LEVEL_CAMPUS = 18;
+	private static final int ZOOM_LEVEL_BUILDING = 19;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		Intent intent = getIntent();//might need to modify, use bundle for data instead of getting whole intent?
-		String address = intent.getStringExtra("address");
 
-		gMapView = (MapView) findViewById(R.id.mapview);
+		//Load stored data
+		gPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+		//Load last known latitude, longitude default is the Diag
+		gCurrentLat = Double.parseDouble(gPreferences.getString("LASTLAT", "42.276956"));
+		gCurrentLong = Double.parseDouble(gPreferences.getString("LASTLONG", "-83.738234"));
+		//Load destination address, default is the Diag
+		gDestAddr = gPreferences.getString("DESTADDR", "the diag");
+		Log.d("LOADED DATA", "Coords: "+String.valueOf(gCurrentLat)+","+String.valueOf(gCurrentLong)+
+				" time: "+" destAddr: "+gDestAddr);
+		//Put last known info as current location
+		Location location = new Location(LocationManager.GPS_PROVIDER);
+		location.setLatitude(gCurrentLat);
+		location.setLongitude(gCurrentLong);
+		location.setTime(Long.parseLong(gPreferences.getString("LASTLOCTIME", "0")));
+		gBestLocation = location;
+
+
+		gMapView = (MapView)findViewById(R.id.mapview);
+		try {
+			Method setLayerTypeMethod = gMapView.getClass().getMethod("setLayerType", new Class[] {int.class, Paint.class});
+			setLayerTypeMethod.invoke(gMapView, new Object[] {LAYER_TYPE_SOFTWARE, null});
+		} catch (NoSuchMethodException e) {
+			// Older OS, no HW acceleration anyway
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+		}
 
 		tvDestination = (EditText)findViewById(R.id.editText_map_destination);
 
 		bPlotRoute = (Button) findViewById(R.id.button_plotroute);
 		bPlotRoute.setOnClickListener(new OnClickListener() {
-
 			public void onClick(View v) {
-
 				Log.d("GetRouteClicked", "Stopping GPS, Calculating Route");
 				gLocationManager.removeUpdates(locationListener);
 				//Grab the user input lat/long
@@ -76,20 +115,11 @@ public class MNavMainActivity extends MapActivity {
 					gDestinationLong = Double.parseDouble(temp.substring(temp.indexOf(",")+1,temp.length()));
 					//create a geopoint for dest
 					GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
-					zoomTo(dest);
+					zoomTo(dest, ZOOM_LEVEL_BUILDING);
 					GeoPoint start = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
-					//Creates Url and queries goole directions api
-					Route route = directions(start, dest);
-					RouteOverlay routeOverlay = new RouteOverlay(route, Color.BLUE);
-					gMapView.getOverlays().add(routeOverlay);
-					
-					Drawable drawable = getResources().getDrawable(R.drawable.ic_pin);
-					CurrentLocationOverlay classOverlay = new CurrentLocationOverlay(drawable, MNavMainActivity.this);
-					OverlayItem overlayitem = new OverlayItem(dest, "Destination", "You are going here!");
-
-					classOverlay.addOverlay(overlayitem);
-					gMapView.getOverlays().add(classOverlay);
-					
+					if(start.equals(dest))
+						return;
+					new GetDirectionsTask().execute(start, dest);
 				}
 			}
 		});
@@ -114,15 +144,48 @@ public class MNavMainActivity extends MapActivity {
 		bReturn.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				GeoPoint currentLoc = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
-				zoomTo(currentLoc);
+				zoomTo(currentLoc, ZOOM_LEVEL_BUILDING);
 				startGPS();
 			}
 		});
 
+		bZoomIn = (Button) findViewById(R.id.button_zoomin);
+		bZoomIn.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				if(gMapController == null)
+					gMapController = gMapView.getController();
+				gMapController.zoomIn();
+			}
+		});
+
+		bZoomOut = (Button) findViewById(R.id.button_zoomout);
+		bZoomOut.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				if(gMapController == null)
+					gMapController = gMapView.getController();
+				gMapController.zoomOut();
+			}
+		});
 
 		startGPS();
-
 	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		//Save stored data
+		Editor editor = gPreferences.edit();
+		//Save last known latitude
+		editor.putString("LASTLAT", String.valueOf(gCurrentLat));
+		editor.putString("LASTLONG", String.valueOf(gCurrentLong));
+		editor.putString("LASTLOCTIME", String.valueOf(gBestLocation.getTime()));
+		editor.commit();
+		Log.d("SAVED DATA", "Coords: "+String.valueOf(gCurrentLat)+","+String.valueOf(gCurrentLong));	
+		//Turn off GPS
+		if(gLocationManager != null)
+			gLocationManager.removeUpdates(locationListener);
+	}	
+
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -132,13 +195,14 @@ public class MNavMainActivity extends MapActivity {
 
 	@Override
 	protected boolean isRouteDisplayed() {
-
+			
 		return false;
 	}
 
 
 	LocationListener locationListener = new LocationListener() {
 		public void onLocationChanged(Location location) {
+			Log.d("LocationChanged", "Found You: "+location.getLatitude()+","+location.getLongitude());
 			// Called when a new location is found by the network location provider.
 			if(isBetterLocation(location, gBestLocation))
 				gBestLocation = location;
@@ -180,20 +244,29 @@ public class MNavMainActivity extends MapActivity {
 		boolean isSignificantlyNewer = timeDelta > TWO_MINUTES;
 		boolean isSignificantlyOlder = timeDelta < -TWO_MINUTES;
 		boolean isNewer = timeDelta > 0;
-
+/** People will probably not be moving as much, since they will be in class majority of time
+ * 
+ * 
+ *
 		// If it's been more than two minutes since the current location, use the new location
 		// because the user has likely moved
 		if (isSignificantlyNewer) {
+			Log.d("isBetter", "true: is significantly newer");
 			return true;
+			
+
 			// If the new location is more than two minutes older, it must be worse
-		} else if (isSignificantlyOlder) {
+		} else 
+		*/
+		if (isSignificantlyOlder) {
+			Log.d("isBetter", "false: is significantly older");
 			return false;
 		}
 
 		// Check whether the new location fix is more or less accurate
 		int accuracyDelta = (int) (location.getAccuracy() - currentBestLocation.getAccuracy());
-		boolean isLessAccurate = accuracyDelta > 0;
-		boolean isMoreAccurate = accuracyDelta < 0;
+		boolean isLessAccurate = accuracyDelta > 5;
+		boolean isMoreAccurate = accuracyDelta < -5;
 		boolean isSignificantlyLessAccurate = accuracyDelta > 200;
 
 		// Check if the old and new location are from the same provider
@@ -202,12 +275,17 @@ public class MNavMainActivity extends MapActivity {
 
 		// Determine location quality using a combination of timeliness and accuracy
 		if (isMoreAccurate) {
+			Log.d("isBetter", "true: is more accurate");
 			return true;
 		} else if (isNewer && !isLessAccurate) {
+			Log.d("isBetter", "true: is newer, not less accurate");
 			return true;
 		} else if (isNewer && !isSignificantlyLessAccurate && isFromSameProvider) {
+			Log.d("isBetter", "true: is newer, !significantlyLessAccurate, fromSameProvider");
 			return true;
 		}
+
+		Log.d("isBetter", "false: default catch");
 		return false;
 	}
 
@@ -220,12 +298,15 @@ public class MNavMainActivity extends MapActivity {
 	}
 
 	/**Gets best cached location from GPS and NETWORK. Called before searching for location */
-	private void getCachedLocation() {
+	private Location getCachedLocation() {
+		Location cachedLoc;
 		//Get cached location from GPS
-		gBestLocation = gLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+		cachedLoc = gLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 		//Compare cached GPS location to cached Network location, if it's better, use it
 		if(isBetterLocation(gLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER), gBestLocation))
-			gBestLocation = gLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+			cachedLoc = gLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+		
+		return cachedLoc;
 	}
 
 	private void displayEnableGPSAlert() {
@@ -275,7 +356,7 @@ public class MNavMainActivity extends MapActivity {
 		classOverlay.addOverlay(overlayitem);
 		mapOverlays.add(classOverlay);        
 
-		zoomTo(p);
+		zoomTo(p, ZOOM_LEVEL_CAMPUS);
 
 		firstRun = false;
 	}
@@ -298,17 +379,22 @@ public class MNavMainActivity extends MapActivity {
 		return r;
 	}
 
-	private void zoomTo(GeoPoint p) {
-		MapController mc = gMapView.getController();
-		mc.animateTo(p);
+	private void zoomTo(GeoPoint p, int level) {
+		if(gMapController == null)
+			gMapController = gMapView.getController();
+		gMapController.animateTo(p);
 		int zoomLevel = gMapView.getZoomLevel();
-		if(zoomLevel < 19) {
-			for(int i = zoomLevel; i < 19; i++)
-				mc.zoomIn();
-		} else {
-			for(int i = zoomLevel; i > 19; i--) {
-				mc.zoomOut();
+		try{
+			if(zoomLevel < level) {
+				for(int i = zoomLevel; i < level; i++)
+					gMapController.zoomIn();
+			} else {
+				for(int i = zoomLevel; i > level; i--) {
+					gMapController.zoomOut();
+				}
 			}
+		} catch (IllegalArgumentException e) {
+			Log.d("zoomTo()", "Caught exception"+e);
 		}
 	}
 
@@ -321,7 +407,12 @@ public class MNavMainActivity extends MapActivity {
 		}
 
 		//Start looking for location information
-		getCachedLocation();
+		
+		//Check the cahced location, see if it's better than the best one we are using now
+	/*	Location cachedLoc = getCachedLocation();
+		if(isBetterLocation(cachedLoc, gBestLocation))
+			//Since it's better, use it then start querying gps sources
+		gBestLocation = cachedLoc;*/	
 		gLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
 		gLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
 	}
@@ -333,4 +424,21 @@ public class MNavMainActivity extends MapActivity {
 		t.show();
 	}
 
+	// Implementation of AsyncTask used to get walking directions from current location to destination
+	private class GetDirectionsTask extends AsyncTask<GeoPoint, Void, Route> {
+		@Override
+		protected Route doInBackground(GeoPoint... geopoints) {
+			//Creates Url and queries google directions api
+			return directions(geopoints[0], geopoints[1]);
+
+			//catch exception here or something TODODODODODODO
+
+		}
+
+		@Override
+		protected void onPostExecute(Route route) {  
+			RouteOverlay routeOverlay = new RouteOverlay(route, Color.BLUE);
+			gMapView.getOverlays().add(routeOverlay);
+		}
+	}
 }
