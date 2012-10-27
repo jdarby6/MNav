@@ -165,7 +165,7 @@ public class MbusPublicFeedXmlParser {
 		}
 		return new Stop(stopName, stopName2, stopName3, latitude, longitude, ids, toas, toacount);
 	}
-	
+
 	// Processes basic tags in the feed.
 	private String readTag(XmlPullParser parser, String tagName) throws IOException, XmlPullParserException {
 		parser.require(XmlPullParser.START_TAG, ns, tagName);

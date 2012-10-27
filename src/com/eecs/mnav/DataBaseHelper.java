@@ -141,7 +141,7 @@ public class DataBaseHelper extends SQLiteOpenHelper{
 	public Cursor getBldgInfoByName(String name) {
 		return myDataBase.rawQuery("SELECT * FROM buildings WHERE name_abbr='" + name + "' OR name_full='" + name + "'", null);
 	}
-	
+
 	public Cursor getDoorsByBldgId(int id_num) {
 		return myDataBase.rawQuery("SELECT * FROM doors WHERE id_num=" + id_num, null);
 	}

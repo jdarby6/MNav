@@ -9,7 +9,7 @@
         android:layout_height="fill_parent"
         android:apiKey="0Swejj587aUMnEZ9QijQMCIiU9fyT_2PMLYZS5A"
         android:clickable="true" />
-
+
     <RelativeLayout
         android:id="@+id/layout_actionbar"
         android:layout_width="match_parent"
@@ -17,7 +17,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:background="@drawable/button_border_enabled" >
-        
+
         <Button
             android:id="@+id/button_return"
             style="?android:attr/buttonStyleSmall"
@@ -28,8 +28,8 @@
             android:layout_alignParentTop="false"
             android:layout_centerVertical="true"
             android:background="@drawable/ic_target"
-            android:text=" " />
-
+            android:text="@string/_" />
+
         <Button
             android:id="@+id/button_satellite"
             android:layout_width="wrap_content"
@@ -37,8 +37,8 @@
             android:layout_alignParentBottom="true"
             android:layout_alignParentLeft="true"
             android:background="@drawable/ic_satellite"
-            android:text=" " />
-
+            android:text="@string/_" />
+
         <Button
             android:id="@+id/button_plotroute"
             android:layout_width="wrap_content"
@@ -46,14 +46,14 @@
             android:layout_alignParentTop="true"
             android:layout_toLeftOf="@+id/button_return"
             android:background="@drawable/ic_walk"
-            android:text=" " />
+            android:text="@string/_" />
 
         <View
             android:id="@+id/divider_1"
             android:layout_width="1dp"
             android:layout_height="wrap_content"
             android:background="@drawable/black_blue_divider" />
-
+
         <View
             android:id="@+id/divider_2"
             android:layout_width="1dp"
@@ -61,7 +61,7 @@
             android:layout_centerVertical="true"
             android:layout_toRightOf="@+id/button_satellite"
             android:background="@drawable/black_blue_divider" />
-
+
         <View
             android:id="@+id/divider_5"
             android:layout_width="1dp"
@@ -69,7 +69,7 @@
             android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
             android:background="@drawable/black_blue_divider" />
-
+
         <View
             android:id="@+id/divider_4"
             android:layout_width="1dp"
@@ -77,7 +77,7 @@
             android:layout_alignParentBottom="true"
             android:layout_toLeftOf="@+id/button_return"
             android:background="@drawable/black_blue_divider" />
-
+
         <View
             android:id="@+id/divider_3"
             android:layout_width="1dp"
@@ -85,7 +85,7 @@
             android:layout_alignLeft="@+id/button_plotroute"
             android:layout_alignParentBottom="true"
             android:background="@drawable/black_blue_divider" />
-
+
         <EditText
             android:id="@+id/editText_destination"
             android:layout_width="wrap_content"
@@ -94,10 +94,8 @@
             android:layout_toLeftOf="@+id/divider_3"
             android:layout_toRightOf="@+id/divider_2"
             android:ems="10"
-            android:hint="lat,long" >
-
+            android:hint="@string/lat_long" >
         </EditText>
-
     </RelativeLayout>
 
 </RelativeLayout>
