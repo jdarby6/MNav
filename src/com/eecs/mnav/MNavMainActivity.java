@@ -115,6 +115,14 @@ public class MNavMainActivity extends MapActivity {
 					gDestinationLong = Double.parseDouble(temp.substring(temp.indexOf(",")+1,temp.length()));
 					//create a geopoint for dest
 					GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
+					
+					Drawable drawable = getResources().getDrawable(R.drawable.ic_pin);
+					CurrentLocationOverlay destOverlay = new CurrentLocationOverlay(drawable, getApplicationContext());
+					OverlayItem overlayitem = new OverlayItem(dest, "Destination", "You are going here!");
+
+					destOverlay.addOverlay(overlayitem);
+					gMapView.getOverlays().add(destOverlay); 
+					
 					zoomTo(dest, ZOOM_LEVEL_BUILDING);
 					GeoPoint start = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
 					if(start.equals(dest))
