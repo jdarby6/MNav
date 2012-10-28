@@ -77,10 +77,10 @@ public class MNavMainActivity extends MapActivity {
 				GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
 				zoomTo(dest);
 		        GeoPoint start = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
-		        //Creates Url and queries goole directions api
+		        //Creates Url and queries google directions api
 		        Route route = directions(start, dest);
 		        RouteOverlay routeOverlay = new RouteOverlay(route, Color.BLUE);
-		        //catch exception here or something TODODODODODODO
+		        //catch exception here or something TODO
 		        gMapView.getOverlays().add(routeOverlay);
 			}
         });
