@@ -56,6 +56,7 @@ public class MNavMainActivity extends MapActivity {
 	private Button bZoomOut;
 	private EditText tvDestination;
 	private String gDestAddr = "the diag";
+	private LocalDatabaseHandler local_db;
 
 	private static final int LONG = Toast.LENGTH_LONG;
 	private static final int SHORT = Toast.LENGTH_SHORT;
@@ -69,6 +70,8 @@ public class MNavMainActivity extends MapActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		
+		local_db = new LocalDatabaseHandler(this);
 
 		//Load stored data
 		gPreferences = PreferenceManager.getDefaultSharedPreferences(this);
