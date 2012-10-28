@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.eecs.mnav"
     android:versionCode="1"
-    android:versionName="1.0">
+    android:versionName="1.0" >
 
     <uses-sdk
         android:minSdkVersion="8"
@@ -20,11 +20,9 @@
         <activity
             android:name="com.eecs.mnav.MNavMainActivity"
             android:label="@string/title_activity_main" >
-          
         </activity>
         <activity
-            android:name=".StartActivity"
-            android:label="@string/title_activity_start" >
+            android:name=".StartActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
