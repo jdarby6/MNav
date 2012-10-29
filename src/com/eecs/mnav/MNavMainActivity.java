@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -22,10 +23,12 @@ import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
@@ -66,11 +69,15 @@ public class MNavMainActivity extends MapActivity {
 	private static final int ZOOM_LEVEL_CAMPUS = 18;
 	private static final int ZOOM_LEVEL_BUILDING = 19;
 
+	//These are arbitrary numbers, used to call and remove the correct dialogs
+	private static final int DIALOG_SAVE_CURRENT_LOC = 0;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
+
+		//Initialize local db
 		local_db = new LocalDatabaseHandler(this);
 
 		//Load stored data
@@ -118,14 +125,14 @@ public class MNavMainActivity extends MapActivity {
 					gDestinationLong = Double.parseDouble(temp.substring(temp.indexOf(",")+1,temp.length()));
 					//create a geopoint for dest
 					GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
-					
+
 					Drawable drawable = getResources().getDrawable(R.drawable.ic_pin);
 					CurrentLocationOverlay destOverlay = new CurrentLocationOverlay(drawable, getApplicationContext());
 					OverlayItem overlayitem = new OverlayItem(dest, "Destination", "You are going here!");
 
 					destOverlay.addOverlay(overlayitem);
 					gMapView.getOverlays().add(destOverlay); 
-					
+
 					zoomTo(dest, ZOOM_LEVEL_BUILDING);
 					GeoPoint start = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
 					if(start.equals(dest))
@@ -204,9 +211,89 @@ public class MNavMainActivity extends MapActivity {
 		return true;
 	}
 
+	public boolean onOptionsItemSelected (MenuItem item) {
+		switch (item.getItemId()){
+		case R.id.menu_satellite:
+			Log.d("woige","woghewogiagoahgoaaoiha");
+			showDialog(DIALOG_SAVE_CURRENT_LOC);
+			break;
+		default:
+			return false;
+		}
+		return true;
+	}
+
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		Dialog dialog = null;
+		switch(id) {
+		case DIALOG_SAVE_CURRENT_LOC:
+			final Dialog dialog_saveCurrentLoc = new Dialog(this);
+			dialog_saveCurrentLoc.setContentView(R.layout.dialog_save_current_loc);
+			dialog_saveCurrentLoc.setTitle("Save Current Location");
+			
+			Log.d("Shame","SHAOIGOIOINOIGN");
+
+			final EditText editText_BldgAbbr = (EditText)dialog_saveCurrentLoc.findViewById(R.id.editText_BldgAbbr);
+			final EditText editText_DoorNick = (EditText)dialog_saveCurrentLoc.findViewById(R.id.editText_DoorNick);
+			final TextView textView_CurrentLat = (TextView)dialog_saveCurrentLoc.findViewById(R.id.textView_CurrentLat);
+			final TextView textView_CurrentLong = (TextView)dialog_saveCurrentLoc.findViewById(R.id.textView_CurrentLong);
+			final Button button_Save = (Button)dialog_saveCurrentLoc.findViewById(R.id.button_Save);
+			final Button button_Cancel = (Button)dialog_saveCurrentLoc.findViewById(R.id.button_Cancel);
+
+			textView_CurrentLat.setText("Current lat: " + gCurrentLat);
+			textView_CurrentLong.setText("Current long: " + gCurrentLong);
+
+			button_Save.setOnClickListener(new Button.OnClickListener() {
+				public void onClick(View v) {
+					String bldgAbbr = editText_BldgAbbr.getText().toString();
+					String doorNick = editText_DoorNick.getText().toString();
+					if((bldgAbbr == null || bldgAbbr.length() == 0) || (doorNick == null || doorNick.length() == 0)) {
+						AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MNavMainActivity.this);
+
+						// set title
+						alertDialogBuilder.setTitle("Error!");
+
+						// set dialog message
+						alertDialogBuilder
+						.setMessage("You have to fill out values for building name and door nickname")
+						.setCancelable(false)
+						.setNegativeButton("OK", new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog,int id) {
+								// if this button is clicked, just close
+								// the dialog box and do nothing
+								dialog.cancel();
+							}
+						});
+
+						// create alert dialog
+						AlertDialog alertDialog = alertDialogBuilder.create();
+
+						// show it
+						alertDialog.show();
+					}
+					else {
+						local_db.addRow(bldgAbbr, doorNick, String.valueOf(gCurrentLat), String.valueOf(gCurrentLong));
+						removeDialog(DIALOG_SAVE_CURRENT_LOC);
+					}
+				}
+			});
+
+			button_Cancel.setOnClickListener(new Button.OnClickListener() {
+				public void onClick(View v) {
+					removeDialog(DIALOG_SAVE_CURRENT_LOC);
+				}
+			});
+
+			dialog = dialog_saveCurrentLoc;
+			break;
+		}
+		return dialog;
+	}
+
 	@Override
 	protected boolean isRouteDisplayed() {
-			
+
 		return false;
 	}
 
@@ -255,20 +342,20 @@ public class MNavMainActivity extends MapActivity {
 		boolean isSignificantlyNewer = timeDelta > TWO_MINUTES;
 		boolean isSignificantlyOlder = timeDelta < -TWO_MINUTES;
 		boolean isNewer = timeDelta > 0;
-/** People will probably not be moving as much, since they will be in class majority of time
- * 
- * 
- *
+		/** People will probably not be moving as much, since they will be in class majority of time
+		 * 
+		 * 
+		 *
 		// If it's been more than two minutes since the current location, use the new location
 		// because the user has likely moved
 		if (isSignificantlyNewer) {
 			Log.d("isBetter", "true: is significantly newer");
 			return true;
-			
+
 
 			// If the new location is more than two minutes older, it must be worse
 		} else 
-		*/
+		 */
 		if (isSignificantlyOlder) {
 			Log.d("isBetter", "false: is significantly older");
 			return false;
@@ -316,7 +403,7 @@ public class MNavMainActivity extends MapActivity {
 		//Compare cached GPS location to cached Network location, if it's better, use it
 		if(isBetterLocation(gLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER), gBestLocation))
 			cachedLoc = gLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-		
+
 		return cachedLoc;
 	}
 
@@ -418,9 +505,9 @@ public class MNavMainActivity extends MapActivity {
 		}
 
 		//Start looking for location information
-		
+
 		//Check the cahced location, see if it's better than the best one we are using now
-	/*	Location cachedLoc = getCachedLocation();
+		/*	Location cachedLoc = getCachedLocation();
 		if(isBetterLocation(cachedLoc, gBestLocation))
 			//Since it's better, use it then start querying gps sources
 		gBestLocation = cachedLoc;*/	

@@ -2,7 +2,6 @@ package com.eecs.mnav;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -39,8 +38,8 @@ public class StartActivity extends Activity {
 				Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
 				editor.putString("DESTADDR", address);
 				editor.commit();
-				
-				
+
+
 				Intent searchIntent = new Intent(StartActivity.this, MNavMainActivity.class);
 				StartActivity.this.startActivity(searchIntent);
 			}
