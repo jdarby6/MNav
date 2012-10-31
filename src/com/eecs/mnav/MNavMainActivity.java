@@ -110,14 +110,41 @@ public class MNavMainActivity extends MapActivity {
 		//Load stored data
 		gPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		//Load last known latitude, longitude default is the Diag
-		gCurrentLat = Double.parseDouble(gPreferences.getString("LASTLAT", "42.276956"));
-		gCurrentLong = Double.parseDouble(gPreferences.getString("LASTLONG", "-83.738234"));
+		//gCurrentLat = Double.parseDouble(gPreferences.getString("LASTLAT", "42.276956"));
+		gCurrentLat = 42.291918;
+		//gCurrentLong = Double.parseDouble(gPreferences.getString("LASTLONG", "-83.738234"));
+		gCurrentLong = -83.715823;
 		//Load destination address, default is the Diag
 		gDestAddr = gPreferences.getString("DESTADDR", "the diag");
 
 		if(gDestAddr != "the diag") {
+			gDestAddr = gDestAddr.replaceAll("[0-9]", "").trim();
 			Cursor cursor = destination_db.getBldgIdByName(gDestAddr);
 			if(cursor.getCount() > 0 && cursor.moveToFirst()) {
+				AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MNavMainActivity.this);
+
+				// set title
+				//alertDialogBuilder.setTitle("Invalid Destination");
+
+				// set dialog message
+				alertDialogBuilder
+				.setMessage("Destination found! The map is now centered at your current location. " 
+						+ "To get walking directions, click the pedestrian icon.")
+						.setCancelable(true)
+						.setNegativeButton("OK", new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog,int id) {
+								// if this button is clicked, just close
+								// the dialog box and do nothing
+
+								dialog.cancel();
+							}
+						});
+
+				// create alert dialog
+				AlertDialog alertDialog = alertDialogBuilder.create();
+
+				// show it
+				alertDialog.show();
 				int id_num_col = cursor.getColumnIndex("id_num");
 				int num_doors_col = cursor.getColumnIndex("num_doors");
 				int id_num = cursor.getInt(id_num_col);
@@ -411,7 +438,7 @@ public class MNavMainActivity extends MapActivity {
 
 			String toast = "Speed: " + gSpeed + "m/s \nBearing: " + gBearing + " degrees E of N \nLong: "
 					+ gCurrentLong + " \nLat: " + gCurrentLat;
-			toastThis(toast, SHORT);
+			//toastThis(toast, SHORT);
 			if(firstRun)
 				initOverlays(gBestLocation);
 			else
