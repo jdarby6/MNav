@@ -5,20 +5,19 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="5dp" >
-
+
     <ImageView
         android:id="@+id/logoView"
-        android:layout_width="220dp"
-        android:layout_height="200dp"
+        android:layout_width="240dp"
+        android:layout_height="220dp"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:layout_gravity="center"
-        android:layout_marginTop="-20dp"
         android:contentDescription="@string/app_name"
         android:focusable="false"
         android:paddingLeft="10dp"
         android:paddingRight="10dp"
-        android:src="@drawable/ic_logo_home" />
+        android:src="@drawable/logo2" />
 
     <TextView
         android:id="@+id/textView_destination"
@@ -27,9 +26,8 @@
         android:layout_alignLeft="@id/logoView"
         android:layout_below="@id/logoView"
         android:gravity="center_horizontal"
-        android:paddingBottom="10dp"
         android:text="@string/start_prompt"
-        android:textSize="25dp" />
+        android:textSize="20dp" />
 
     <EditText
         android:id="@+id/editText_address_box"
@@ -41,7 +39,7 @@
         android:ems="10"
         android:hint="@string/address_default"
         android:inputType="textPostalAddress" />
-
+
     <Button
         android:id="@+id/button_search"
         android:layout_width="40dp"
@@ -50,5 +48,31 @@
         android:layout_below="@id/textView_destination"
         android:background="@drawable/button_search_drawable"
         android:text="@string/_" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="100dp"
+        android:layout_alignLeft="@id/logoView"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="false"
+        android:layout_alignParentTop="false"
+        android:orientation="vertical" >
+
+        <Button
+            android:id="@+id/button1"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/button_mbus_drawable"
+            android:text="@string/_" />
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Magic Bus"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    </LinearLayout>
 
 </RelativeLayout>

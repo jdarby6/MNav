@@ -144,6 +144,11 @@ public class MNavMainActivity extends MapActivity {
 
 
 		bSatellite = (Button) findViewById(R.id.button_satellite);
+		if(!gMapView.isSatellite())
+			bSatellite.setBackgroundResource(R.drawable.ic_road);
+		else
+			bSatellite.setBackgroundResource(R.drawable.ic_satellite);
+		
 		bSatellite.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				if(gMapView.isSatellite()){
