@@ -37,6 +37,8 @@ import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
+import com.parse.Parse;
+import com.parse.ParseObject;
 
 public class MNavMainActivity extends MapActivity {
 	//Declare globals  //g is for global
@@ -79,7 +81,15 @@ public class MNavMainActivity extends MapActivity {
 
 		//Initialize local db
 		local_db = new LocalDatabaseHandler(this);
-
+		
+		//Initialize Parse
+		Parse.initialize(this, "kTygJWFcKh5a9OK7Pv58mTZtfkS7Sp91cpVyIiwc", "j8fsAwMny2P7y4iLRZNY8ABhK5oF2AV3rQe2MTdO"); 
+		//Test Parse
+		/**ParseObject testObject = new ParseObject("TestObject");
+		testObject.put("foo", "bar");
+		testObject.saveInBackground();**/
+		
+		
 		//Load stored data
 		gPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		//Load last known latitude, longitude default is the Diag
