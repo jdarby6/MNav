@@ -10,5 +10,13 @@
     <string name="title_activity_start">StartActivity</string>
     <string name="_"> </string>
     <string name="lat_long">lat,long</string>
-
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="current_lat">Current lat:</string>
+	<string name="current_long">Current long:</string>
+	<string name="bldg_abbr">Abbreviated Building Name</string>
+	<string name="door_nick">Door Nickname (e.g. \'North Entrance\')</string>
+	<string name="bus_routes">Bus Routes</string>
+	<string name="building_finder">Building Finder</string>
+    
 </resources>

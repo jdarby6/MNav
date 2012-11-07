@@ -1,0 +1,88 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <EditText
+        android:id="@+id/editText_BldgAbbr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="52dp"
+        android:layout_marginTop="53dp"
+        android:ems="10"
+        android:inputType="text" >
+
+        <requestFocus />
+    </EditText>
+
+    <EditText
+        android:id="@+id/editText_DoorNick"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/editText_BldgAbbr"
+        android:layout_below="@+id/editText_BldgAbbr"
+        android:layout_marginTop="42dp"
+        android:ems="10"
+        android:inputType="text" />
+
+    <TextView
+        android:id="@+id/textView_BldgAbbr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/editText_BldgAbbr"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="32dp"
+        android:text="@string/bldg_abbr"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <TextView
+        android:id="@+id/textView_DoorNick"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/editText_BldgAbbr"
+        android:layout_below="@+id/editText_BldgAbbr"
+        android:layout_marginTop="20dp"
+        android:text="@string/door_nick"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <TextView
+        android:id="@+id/textView_CurrentLat"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/editText_DoorNick"
+        android:layout_below="@+id/editText_DoorNick"
+        android:layout_marginLeft="14dp"
+        android:layout_marginTop="14dp"
+        android:text="@string/current_lat"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <TextView
+        android:id="@+id/textView_CurrentLong"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/textView_CurrentLat"
+        android:layout_below="@+id/textView_CurrentLat"
+        android:text="@string/current_long"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <Button
+        android:id="@+id/button_Save"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/editText_DoorNick"
+        android:layout_below="@+id/textView_CurrentLong"
+        android:layout_marginTop="32dp"
+        android:text="@string/save" />
+
+    <Button
+        android:id="@+id/button_Cancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/button_Save"
+        android:layout_alignBottom="@+id/button_Save"
+        android:layout_toRightOf="@+id/button_Save"
+        android:text="@string/cancel" />
+
+</RelativeLayout>

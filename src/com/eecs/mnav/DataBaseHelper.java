@@ -1,5 +1,6 @@
 package com.eecs.mnav;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,7 +49,7 @@ public class DataBaseHelper extends SQLiteOpenHelper{
 		else {
 			//By calling this method and empty database will be created into the default system path
 			//of your application so we are gonna be able to overwrite that database with our database.
-			this.getReadableDatabase();
+			this.getWritableDatabase();
 
 			try {
 				copyDataBase();
@@ -63,12 +64,17 @@ public class DataBaseHelper extends SQLiteOpenHelper{
 	 * Check if the database already exist to avoid re-copying the file each time you open the application.
 	 * @return true if it exists, false if it doesn't
 	 */
-	private boolean checkDataBase() {
-
+	private boolean checkDataBase()
+	{
 		SQLiteDatabase checkDB = null;
 
-		try {
+		try
+		{
 			String myPath = DB_PATH + DB_NAME;
+
+			File DBFolder = new File(DB_PATH);
+			if (!DBFolder.exists()) DBFolder.mkdir();
+
 			checkDB = SQLiteDatabase.openDatabase(myPath, null, SQLiteDatabase.OPEN_READONLY);
 		}
 		catch(SQLiteException e) {
@@ -138,11 +144,13 @@ public class DataBaseHelper extends SQLiteOpenHelper{
 
 	}
 
-	public Cursor getBldgInfoByName(String name) {
-		return myDataBase.rawQuery("SELECT * FROM buildings WHERE name_abbr='" + name + "' OR name_full='" + name + "'", null);
+	public Cursor getBldgIdByName(String name) {
+		name = name.toUpperCase();
+		return myDataBase.rawQuery("SELECT id_num, num_doors FROM buildings " +
+				"WHERE upper(name_abbr)='" + name + "' OR upper(name_full)='" + name + "'", null);
 	}
 
 	public Cursor getDoorsByBldgId(int id_num) {
-		return myDataBase.rawQuery("SELECT * FROM doors WHERE id_num=" + id_num, null);
+		return myDataBase.rawQuery("SELECT door_lat, door_long FROM doors WHERE id_num=" + id_num, null);
 	}
 }

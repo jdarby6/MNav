@@ -17,7 +17,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:background="@drawable/button_border_enabled" >
-
+
         <Button
             android:id="@+id/button_return"
             style="?android:attr/buttonStyleSmall"
@@ -29,7 +29,7 @@
             android:layout_centerVertical="true"
             android:background="@drawable/ic_target"
             android:text="@string/_" />
-
+
         <Button
             android:id="@+id/button_satellite"
             android:layout_width="45dp"
@@ -38,7 +38,7 @@
             android:layout_alignParentLeft="true"
             android:background="@drawable/ic_satellite"
             android:text="@string/_" />
-
+
         <Button
             android:id="@+id/button_plotroute"
             android:layout_width="45dp"
@@ -85,7 +85,7 @@
             android:layout_alignLeft="@+id/button_plotroute"
             android:layout_alignParentBottom="true"
             android:background="@drawable/divider_black_vert" />
-        
+
         <EditText
             android:id="@+id/editText_map_destination"
             android:layout_width="wrap_content"
@@ -94,9 +94,7 @@
             android:layout_toLeftOf="@+id/divider_3"
             android:layout_toRightOf="@+id/divider_2"
             android:ems="10"
-            android:hint="@string/lat_long" 
-            android:text="42.275586,-83.734875" >
-            >
+            android:hint="@string/lat_long" >
         </EditText>
     </RelativeLayout>
 
@@ -109,7 +107,7 @@
         android:layout_marginRight="20dp"
         android:background="@drawable/button_border_enabled"
         android:orientation="vertical" >
-
+
         <Button
             android:id="@+id/button_zoomin"
             android:layout_width="30dp"
@@ -117,13 +115,13 @@
             android:layout_weight="1"
             android:background="@drawable/ic_plus"
             android:text="@string/_" />
-
+
         <View
             android:id="@+id/view1"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="@drawable/divider_black_horizontal" />
-
+
         <Button
             android:id="@+id/button_zoomout"
             android:layout_width="30dp"
@@ -131,7 +129,6 @@
             android:layout_weight="1"
             android:background="@drawable/ic_minus"
             android:text="@string/_" />
-
     </LinearLayout>
 
 </RelativeLayout>
