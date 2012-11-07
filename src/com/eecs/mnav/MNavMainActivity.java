@@ -75,7 +75,7 @@ public class MNavMainActivity extends MapActivity {
 
 		//Load stored data
 		gPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-		//Load last known latitude, longitude default is the Diag
+		//Load last known latitude, longitude default is the Diag 
 		gCurrentLat = Double.parseDouble(gPreferences.getString("LASTLAT", "42.276956"));
 		gCurrentLong = Double.parseDouble(gPreferences.getString("LASTLONG", "-83.738234"));
 		//Load destination address, default is the Diag

@@ -41,7 +41,7 @@
         android:ems="10"
         android:hint="@string/address_default"
         android:inputType="textPostalAddress" />
-
+
     <Button
         android:id="@+id/button_search"
         android:layout_width="40dp"
