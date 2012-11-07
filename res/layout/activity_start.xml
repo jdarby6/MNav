@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="5dp" >
-
+
     <ImageView
         android:id="@+id/logoView"
         android:layout_width="240dp"
@@ -48,18 +48,18 @@
         android:layout_below="@id/textView_destination"
         android:background="@drawable/button_search_drawable"
         android:text="@string/_" />
-
+
     <LinearLayout
         android:id="@+id/layout_mbus_button"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignLeft="@id/logoView"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="false"
-        android:layout_alignParentTop="false"
-        android:layout_marginBottom="40dp"
+        android:layout_marginBottom="80dp"
+        android:layout_marginRight="15dp"
+        android:layout_marginLeft="15dp"
         android:orientation="vertical" >
-
+
         <Button
             android:id="@+id/button1"
             android:layout_width="60dp"
@@ -67,26 +67,26 @@
             android:layout_gravity="center_horizontal"
             android:background="@drawable/button_mbus_drawable"
             android:text="@string/_" />
-
+
         <TextView
             android:id="@+id/textView1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Bus Routes"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
-
+            android:text="@string/bus_routes"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
     </LinearLayout>
-
+
     <LinearLayout
         android:id="@+id/layout_find_building_button"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/layout_mbus_button"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="40dp"
+        android:layout_marginBottom="80dp"
+        android:layout_marginLeft="15dp"
         android:layout_toRightOf="@id/layout_mbus_button"
         android:orientation="vertical" >
-
+
         <Button
             android:id="@+id/button2"
             android:layout_width="60dp"
@@ -94,16 +94,15 @@
             android:layout_gravity="center_horizontal"
             android:background="@drawable/button_find_building_drawable"
             android:text="@string/_" />
-
+
         <TextView
             android:id="@+id/textView2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal|right"
             android:gravity="center_horizontal"
-            android:text="Building Finder"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
-
+            android:text="@string/building_finder"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
     </LinearLayout>
 
 </RelativeLayout>

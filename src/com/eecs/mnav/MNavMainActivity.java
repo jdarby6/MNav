@@ -1,5 +1,6 @@
 package com.eecs.mnav;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -11,6 +12,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.database.Cursor;
+import android.database.SQLException;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
@@ -62,6 +65,7 @@ public class MNavMainActivity extends MapActivity {
 	private EditText tvDestination;
 	private String gDestAddr = "the diag";
 	private LocalDatabaseHandler local_db;
+	private DataBaseHelper destination_db;
 
 	private static final int LONG = Toast.LENGTH_LONG;
 	private static final int SHORT = Toast.LENGTH_SHORT;
@@ -74,6 +78,13 @@ public class MNavMainActivity extends MapActivity {
 	//These are arbitrary numbers, used to call and remove the correct dialogs
 	private static final int DIALOG_SAVE_CURRENT_LOC = 0;
 
+	private class Coords {
+		double latitude;
+		double longitude;
+	}
+	private Coords doors[];
+	int num_doors;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -81,6 +92,22 @@ public class MNavMainActivity extends MapActivity {
 
 		//Initialize local db
 		local_db = new LocalDatabaseHandler(this);
+		
+		//Initialize destination db
+		destination_db = new DataBaseHelper(this, "destination_db");
+		try {
+			destination_db.createDataBase();
+		} 
+		catch (IOException ioe) {
+			throw new Error("Unable to create database");
+		}
+		try {
+			destination_db.openDataBase();
+		} 
+		catch(SQLException sqle) {	
+			throw sqle;
+
+		}
 		
 		//Initialize Parse
 		Parse.initialize(this, "kTygJWFcKh5a9OK7Pv58mTZtfkS7Sp91cpVyIiwc", "j8fsAwMny2P7y4iLRZNY8ABhK5oF2AV3rQe2MTdO"); 
@@ -93,10 +120,93 @@ public class MNavMainActivity extends MapActivity {
 		//Load stored data
 		gPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		//Load last known latitude, longitude default is the Diag
-		gCurrentLat = Double.parseDouble(gPreferences.getString("LASTLAT", "42.276956"));
-		gCurrentLong = Double.parseDouble(gPreferences.getString("LASTLONG", "-83.738234"));
+		//gCurrentLat = Double.parseDouble(gPreferences.getString("LASTLAT", "42.276956"));
+		gCurrentLat = 42.291918;
+		//gCurrentLong = Double.parseDouble(gPreferences.getString("LASTLONG", "-83.738234"));
+		gCurrentLong = -83.715823;
 		//Load destination address, default is the Diag
 		gDestAddr = gPreferences.getString("DESTADDR", "the diag");
+
+		if(gDestAddr != "the diag") {
+			gDestAddr = gDestAddr.replaceAll("[0-9]", "").trim();
+			Cursor cursor = destination_db.getBldgIdByName(gDestAddr);
+			if(cursor.getCount() > 0 && cursor.moveToFirst()) {
+				AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MNavMainActivity.this);
+
+				// set title
+				//alertDialogBuilder.setTitle("Invalid Destination");
+
+				// set dialog message
+				alertDialogBuilder
+				.setMessage("Destination found! The map is now centered at your current location. " 
+						+ "To get walking directions, click the pedestrian icon.")
+						.setCancelable(true)
+						.setNegativeButton("OK", new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog,int id) {
+								// if this button is clicked, just close
+								// the dialog box and do nothing
+
+								dialog.cancel();
+							}
+						});
+
+				// create alert dialog
+				AlertDialog alertDialog = alertDialogBuilder.create();
+
+				// show it
+				alertDialog.show();
+				int id_num_col = cursor.getColumnIndex("id_num");
+				int num_doors_col = cursor.getColumnIndex("num_doors");
+				int id_num = cursor.getInt(id_num_col);
+				num_doors = cursor.getInt(num_doors_col);
+
+				doors = new Coords[num_doors];
+				for(int i = 0; i < num_doors; i++) {
+					doors[i] = new Coords();
+				}
+
+				cursor.close();
+				cursor = destination_db.getDoorsByBldgId(id_num);
+				if(cursor.moveToFirst()) {
+					int door_lat_col = cursor.getColumnIndex("door_lat");
+					int door_long_col = cursor.getColumnIndex("door_long");
+					for(int i = 0; i < num_doors; i++) {
+						doors[i].latitude = cursor.getDouble(door_lat_col);
+						doors[i].longitude = cursor.getDouble(door_long_col);
+						cursor.moveToNext();
+					}
+				}
+			}
+			else {
+				num_doors = -1;
+				AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MNavMainActivity.this);
+
+				// set title
+				alertDialogBuilder.setTitle("Invalid Destination");
+
+				// set dialog message
+				alertDialogBuilder
+				.setMessage("We couldn't recognize the destination you entered. Make sure everything is spelled correctly"
+						+ "and try again.")
+						.setCancelable(false)
+						.setNegativeButton("OK", new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog,int id) {
+								// if this button is clicked, just close
+								// the dialog box and do nothing
+
+								MNavMainActivity.this.finish();
+								dialog.cancel();
+							}
+						});
+
+				// create alert dialog
+				AlertDialog alertDialog = alertDialogBuilder.create();
+
+				// show it
+				alertDialog.show();
+			}
+		}
+
 		Log.d("LOADED DATA", "Coords: "+String.valueOf(gCurrentLat)+","+String.valueOf(gCurrentLong)+
 				" time: "+" destAddr: "+gDestAddr);
 		//Put last known info as current location
@@ -158,7 +268,7 @@ public class MNavMainActivity extends MapActivity {
 			bSatellite.setBackgroundResource(R.drawable.ic_road);
 		else
 			bSatellite.setBackgroundResource(R.drawable.ic_satellite);
-		
+
 		bSatellite.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				if(gMapView.isSatellite()){
@@ -201,6 +311,14 @@ public class MNavMainActivity extends MapActivity {
 		});
 
 		startGPS();
+
+		//THIS IS WHERE WE PUT THE CLOSEST SEARCH RESULT INTO THE SEARCH BAR
+		if(num_doors != -1) {
+			int closestDoorIndex = getClosestDoorIndex();
+			gDestinationLat = doors[closestDoorIndex].latitude;
+			gDestinationLong = doors[closestDoorIndex].longitude;
+			tvDestination.setText(String.valueOf(gDestinationLat) + "," + String.valueOf(gDestinationLong));
+		}
 	}
 
 	@Override
@@ -229,7 +347,6 @@ public class MNavMainActivity extends MapActivity {
 	public boolean onOptionsItemSelected (MenuItem item) {
 		switch (item.getItemId()){
 		case R.id.menu_satellite:
-			Log.d("woige","woghewogiagoahgoaaoiha");
 			showDialog(DIALOG_SAVE_CURRENT_LOC);
 			break;
 		default:
@@ -246,8 +363,6 @@ public class MNavMainActivity extends MapActivity {
 			final Dialog dialog_saveCurrentLoc = new Dialog(this);
 			dialog_saveCurrentLoc.setContentView(R.layout.dialog_save_current_loc);
 			dialog_saveCurrentLoc.setTitle("Save Current Location");
-			
-			Log.d("Shame","SHAOIGOIOINOIGN");
 
 			final EditText editText_BldgAbbr = (EditText)dialog_saveCurrentLoc.findViewById(R.id.editText_BldgAbbr);
 			final EditText editText_DoorNick = (EditText)dialog_saveCurrentLoc.findViewById(R.id.editText_DoorNick);
@@ -333,7 +448,7 @@ public class MNavMainActivity extends MapActivity {
 
 			String toast = "Speed: " + gSpeed + "m/s \nBearing: " + gBearing + " degrees E of N \nLong: "
 					+ gCurrentLong + " \nLat: " + gCurrentLat;
-			toastThis(toast, SHORT);
+			//toastThis(toast, SHORT);
 			if(firstRun)
 				initOverlays(gBestLocation);
 			else
@@ -535,6 +650,26 @@ public class MNavMainActivity extends MapActivity {
 		Context context = getApplicationContext();
 		Toast t = Toast.makeText(context, toast, duration);
 		t.show();
+	}
+
+	private double getDistanceFromCurrentLoc(double latitude, double longitude) {
+		double lat_dist = latitude - gCurrentLat;
+		double long_dist = longitude - gCurrentLong;
+
+		return Math.sqrt(lat_dist*lat_dist + long_dist*long_dist);
+	}
+
+	private int getClosestDoorIndex() {
+		int currentBestIndex = 0;
+		double currentBestDistance = 0;
+
+		for(int i = 0; i < num_doors; i++) {
+			double contenderDistance = getDistanceFromCurrentLoc(doors[i].latitude, doors[i].longitude);
+			if(contenderDistance < currentBestDistance)
+				currentBestIndex = i;
+		}
+
+		return currentBestIndex;
 	}
 
 	// Implementation of AsyncTask used to get walking directions from current location to destination
