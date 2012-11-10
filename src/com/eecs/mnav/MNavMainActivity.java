@@ -66,6 +66,7 @@ public class MNavMainActivity extends MapActivity {
 	private String gDestAddr = "the diag";
 	private LocalDatabaseHandler local_db;
 	private DataBaseHelper destination_db;
+	private CurrentRouteOverlay gRouteOverlay = null;
 
 	private static final int LONG = Toast.LENGTH_LONG;
 	private static final int SHORT = Toast.LENGTH_SHORT;
@@ -88,8 +89,8 @@ public class MNavMainActivity extends MapActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		Log.d("OnCreate()", "OnCreate() called");
 		setContentView(R.layout.activity_main);
-
 		//Initialize local db
 		local_db = new LocalDatabaseHandler(this);
 		
@@ -110,20 +111,13 @@ public class MNavMainActivity extends MapActivity {
 		}
 		
 		//Initialize Parse
-		Parse.initialize(this, "kTygJWFcKh5a9OK7Pv58mTZtfkS7Sp91cpVyIiwc", "j8fsAwMny2P7y4iLRZNY8ABhK5oF2AV3rQe2MTdO"); 
-		//Test Parse
-		/**ParseObject testObject = new ParseObject("TestObject");
-		testObject.put("foo", "bar");
-		testObject.saveInBackground();**/
-		
+		Parse.initialize(this, "kTygJWFcKh5a9OK7Pv58mTZtfkS7Sp91cpVyIiwc", "j8fsAwMny2P7y4iLRZNY8ABhK5oF2AV3rQe2MTdO");
 		
 		//Load stored data
 		gPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		//Load last known latitude, longitude default is the Diag
-		//gCurrentLat = Double.parseDouble(gPreferences.getString("LASTLAT", "42.276956"));
-		gCurrentLat = 42.291918;
-		//gCurrentLong = Double.parseDouble(gPreferences.getString("LASTLONG", "-83.738234"));
-		gCurrentLong = -83.715823;
+		gCurrentLat = Double.parseDouble(gPreferences.getString("LASTLAT", "42.276956"));
+		gCurrentLong = Double.parseDouble(gPreferences.getString("LASTLONG", "-83.738234"));
 		//Load destination address, default is the Diag
 		gDestAddr = gPreferences.getString("DESTADDR", "the diag");
 
@@ -145,7 +139,6 @@ public class MNavMainActivity extends MapActivity {
 							public void onClick(DialogInterface dialog,int id) {
 								// if this button is clicked, just close
 								// the dialog box and do nothing
-
 								dialog.cancel();
 							}
 						});
@@ -246,12 +239,10 @@ public class MNavMainActivity extends MapActivity {
 					//create a geopoint for dest
 					GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
 
-					Drawable drawable = getResources().getDrawable(R.drawable.ic_pin);
-					CurrentLocationOverlay destOverlay = new CurrentLocationOverlay(drawable, getApplicationContext());
 					OverlayItem overlayitem = new OverlayItem(dest, "Destination", "You are going here!");
 
-					destOverlay.addOverlay(overlayitem);
-					gMapView.getOverlays().add(destOverlay); 
+					gRouteOverlay.addOverlay(overlayitem);
+					gMapView.getOverlays().add(gRouteOverlay); 
 
 					zoomTo(dest, ZOOM_LEVEL_BUILDING);
 					GeoPoint start = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
@@ -324,6 +315,7 @@ public class MNavMainActivity extends MapActivity {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+		Log.d("OnDestroy()", "OnDestroy() called");
 		//Save stored data
 		Editor editor = gPreferences.edit();
 		//Save last known latitude
@@ -429,9 +421,9 @@ public class MNavMainActivity extends MapActivity {
 
 
 	LocationListener locationListener = new LocationListener() {
-		public void onLocationChanged(Location location) {
+		public void onLocationChanged(Location location) { // Called when a new location is found by the network location provider.
 			Log.d("LocationChanged", "Found You: "+location.getLatitude()+","+location.getLongitude());
-			// Called when a new location is found by the network location provider.
+			//Check to see if the new location is better than our best location so far
 			if(isBetterLocation(location, gBestLocation))
 				gBestLocation = location;
 			gBearing = gBestLocation.getBearing();
@@ -439,20 +431,15 @@ public class MNavMainActivity extends MapActivity {
 			gCurrentLong = gBestLocation.getLongitude();
 			gSpeed = gBestLocation.getSpeed();
 
-			//if location reports accuracy and is accurate up to at least 100 meters - location is good
-			if(gBestLocation.hasAccuracy() && gBestLocation.getAccuracy() < 100) {
-				Log.d("LocationChanged", "Found accurate location fix! Accuracy="+gBestLocation.getAccuracy());
-				gLocationManager.removeUpdates(locationListener);
-			}
-
-
-			String toast = "Speed: " + gSpeed + "m/s \nBearing: " + gBearing + " degrees E of N \nLong: "
+		/*	String toast = "Speed: " + gSpeed + "m/s \nBearing: " + gBearing + " degrees E of N \nLong: "
 					+ gCurrentLong + " \nLat: " + gCurrentLat;
-			//toastThis(toast, SHORT);
+			toastThis(toast, SHORT); */
+			
+			//If it's our first found location, initialize overlays.
 			if(firstRun)
 				initOverlays(gBestLocation);
 			else
-				updateOverlays(gBestLocation);
+				updateUserPosition(gBestLocation);
 		}
 
 		public void onStatusChanged(String provider, int status, Bundle extras) {}
@@ -555,19 +542,18 @@ public class MNavMainActivity extends MapActivity {
 		alertDialog.show();
 	}
 
-	public void updateOverlays(Location location) {
+	//
+	public void updateUserPosition(Location location) {
 		GeoPoint p = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
 
 		//Remove all existing overlays
 		List<Overlay> mapOverlays = gMapView.getOverlays();
 		mapOverlays.clear();
 
-		Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
-		CurrentLocationOverlay classOverlay = new CurrentLocationOverlay(drawable, this);
 		OverlayItem overlayitem = new OverlayItem(p, "Current Location", "You are here!");
 
-		classOverlay.addOverlay(overlayitem);
-		mapOverlays.add(classOverlay);
+		gRouteOverlay.replaceOverlay(overlayitem, 0);
+		mapOverlays.add(gRouteOverlay);
 	}
 
 	public void initOverlays(Location location) {
@@ -578,11 +564,12 @@ public class MNavMainActivity extends MapActivity {
 		mapOverlays.clear();
 
 		Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
-		CurrentLocationOverlay classOverlay = new CurrentLocationOverlay(drawable, this);
+		//Create our route overlay within the initOverlays method
+		gRouteOverlay = new CurrentRouteOverlay(drawable, this);
 		OverlayItem overlayitem = new OverlayItem(p, "Current Location", "You are here!");
 
-		classOverlay.addOverlay(overlayitem);
-		mapOverlays.add(classOverlay);        
+		gRouteOverlay.addOverlay(overlayitem);
+		mapOverlays.add(gRouteOverlay);        
 
 		zoomTo(p, ZOOM_LEVEL_CAMPUS);
 
