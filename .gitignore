@@ -1,3 +1,4 @@
 #Ignoring generated files
 bin/
 gen/
+.classpath
