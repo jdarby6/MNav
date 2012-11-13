@@ -29,6 +29,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -78,6 +79,7 @@ public class MNavMainActivity extends MapActivity {
 
 	//These are arbitrary numbers, used to call and remove the correct dialogs
 	private static final int DIALOG_SAVE_CURRENT_LOC = 0;
+	final static int DIALOG_DESTINATION_BLDG = 1;
 
 	private class Coords {
 		double latitude;
@@ -121,7 +123,8 @@ public class MNavMainActivity extends MapActivity {
 		//Load destination address, default is the Diag
 		gDestAddr = gPreferences.getString("DESTADDR", "the diag");
 
-		if(gDestAddr != "the diag") {
+		/** DATABASE STUFF **/
+		if(gDestAddr != "the diag") { //checking against default string to see if we got a new destination address
 			gDestAddr = gDestAddr.replaceAll("[0-9]", "").trim();
 			Cursor cursor = destination_db.getBldgIdByName(gDestAddr);
 			if(cursor.getCount() > 0 && cursor.moveToFirst()) {
@@ -148,6 +151,7 @@ public class MNavMainActivity extends MapActivity {
 
 				// show it
 				alertDialog.show();
+				
 				int id_num_col = cursor.getColumnIndex("id_num");
 				int num_doors_col = cursor.getColumnIndex("num_doors");
 				int id_num = cursor.getInt(id_num_col);
@@ -229,8 +233,7 @@ public class MNavMainActivity extends MapActivity {
 		bPlotRoute = (Button) findViewById(R.id.button_plotroute);
 		bPlotRoute.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				Log.d("GetRouteClicked", "Stopping GPS, Calculating Route");
-				gLocationManager.removeUpdates(locationListener);
+				Log.d("GetRouteClicked", "Calculating Route");
 				//Grab the user input lat/long
 				String temp = tvDestination.getText().toString();
 				if(temp != null && temp.length() > 0) {
@@ -239,7 +242,9 @@ public class MNavMainActivity extends MapActivity {
 					//create a geopoint for dest
 					GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
 
-					OverlayItem overlayitem = new OverlayItem(dest, "Destination", "You are going here!");
+					
+					//XXX Set "Desination" to full building name
+					OverlayItem overlayitem = new OverlayItem(dest, "Destination", "This is your current destination");
 
 					gRouteOverlay.addOverlay(overlayitem);
 					gMapView.getOverlays().add(gRouteOverlay); 
@@ -409,6 +414,38 @@ public class MNavMainActivity extends MapActivity {
 
 			dialog = dialog_saveCurrentLoc;
 			break;
+			case DIALOG_DESTINATION_BLDG:
+				final Dialog dialog_destinationBldg = new Dialog(this);
+				dialog_destinationBldg.requestWindowFeature(Window.FEATURE_NO_TITLE);
+				dialog_destinationBldg.setContentView(R.layout.dialog_destination_building);
+				dialog_destinationBldg.setTitle("DESTINATIO NNAME HERE"); //TODO Put the destination name here
+
+				final Button bViewMap = (Button)dialog_destinationBldg.findViewById(R.id.button_viewmap);
+				final Button bGetDirections = (Button)dialog_destinationBldg.findViewById(R.id.button_getdirections);
+
+				bViewMap.setOnClickListener(new Button.OnClickListener() {
+					public void onClick(View v) {
+							//Call intent to new activity XXX
+							Intent intent = new Intent(MNavMainActivity.this, BuildingMapActivity.class);
+							startActivity(intent);
+							removeDialog(DIALOG_DESTINATION_BLDG);
+							}
+				});
+
+				bGetDirections.setOnClickListener(new Button.OnClickListener() {
+					public void onClick(View v) {
+						//Call method to get directions XXX
+						GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
+						GeoPoint start = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
+						if(start.equals(dest))
+							return;
+						new GetDirectionsTask().execute(start, dest);
+						removeDialog(DIALOG_DESTINATION_BLDG);
+						}
+				});
+
+				dialog = dialog_destinationBldg;
+				break;
 		}
 		return dialog;
 	}
@@ -566,6 +603,7 @@ public class MNavMainActivity extends MapActivity {
 		Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
 		//Create our route overlay within the initOverlays method
 		gRouteOverlay = new CurrentRouteOverlay(drawable, this);
+		gRouteOverlay.setTapListener(this);
 		OverlayItem overlayitem = new OverlayItem(p, "Current Location", "You are here!");
 
 		gRouteOverlay.addOverlay(overlayitem);
