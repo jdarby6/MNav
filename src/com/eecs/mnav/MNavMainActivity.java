@@ -57,7 +57,7 @@ public class MNavMainActivity extends MapActivity {
 	private MapController gMapController = null;
 	private SharedPreferences gPreferences = null;
 	private LocationManager gLocationManager;
-	private boolean firstRun = true;
+	private boolean overlaysInitialized = false;
 	private Button bPlotRoute;
 	private Button bSatellite;
 	private Button bReturn;
@@ -68,6 +68,7 @@ public class MNavMainActivity extends MapActivity {
 	private LocalDatabaseHandler local_db;
 	private DataBaseHelper destination_db;
 	private CurrentRouteOverlay gRouteOverlay = null;
+	private ScaleBarOverlay gScaleBarOverlay = null;
 
 	private static final int LONG = Toast.LENGTH_LONG;
 	private static final int SHORT = Toast.LENGTH_SHORT;
@@ -227,7 +228,7 @@ public class MNavMainActivity extends MapActivity {
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
 		}
-
+			
 		tvDestination = (EditText)findViewById(R.id.editText_map_destination);
 
 		bPlotRoute = (Button) findViewById(R.id.button_plotroute);
@@ -473,7 +474,7 @@ public class MNavMainActivity extends MapActivity {
 			toastThis(toast, SHORT); */
 			
 			//If it's our first found location, initialize overlays.
-			if(firstRun)
+			if(!overlaysInitialized)
 				initOverlays(gBestLocation);
 			else
 				updateUserPosition(gBestLocation);
@@ -601,17 +602,22 @@ public class MNavMainActivity extends MapActivity {
 		mapOverlays.clear();
 
 		Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
-		//Create our route overlay within the initOverlays method
+		//Create our route overlay
 		gRouteOverlay = new CurrentRouteOverlay(drawable, this);
 		gRouteOverlay.setTapListener(this);
 		OverlayItem overlayitem = new OverlayItem(p, "Current Location", "You are here!");
 
 		gRouteOverlay.addOverlay(overlayitem);
-		mapOverlays.add(gRouteOverlay);        
+		mapOverlays.add(gRouteOverlay);       
+		
+		//Create the scalebar and add it to mapview
+		gScaleBarOverlay = new ScaleBarOverlay(this.getBaseContext(), gMapView);
+		gScaleBarOverlay.setImperial();
+		mapOverlays.add(gScaleBarOverlay);
 
 		zoomTo(p, ZOOM_LEVEL_CAMPUS);
 
-		firstRun = false;
+		overlaysInitialized = true;
 	}
 
 	private Route directions(final GeoPoint start, final GeoPoint dest) {

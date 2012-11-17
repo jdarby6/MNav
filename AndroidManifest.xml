@@ -19,7 +19,8 @@
 
         <activity
             android:name="com.eecs.mnav.MNavMainActivity"
-            android:label="@string/title_activity_main" >
+            android:label="@string/title_activity_main" 
+            android:screenOrientation="portrait">
         </activity>
         <activity
             android:name=".StartActivity" >
