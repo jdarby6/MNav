@@ -4,18 +4,10 @@
     android:layout_height="match_parent"
     android:background="@drawable/button_border_enabled"
     android:padding="5dp" >
-
-    <ImageView
-        android:id="@+id/imageView1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:scaleType="centerInside"
-        android:src="@drawable/map_unavailable" />
-
+	<com.eecs.mnav.TouchImageView
+	    android:id="@+id/imageView_building_map"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent" />
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
