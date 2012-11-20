@@ -9,7 +9,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:icon="@drawable/ic_launcher"
@@ -21,8 +21,16 @@
             android:name="com.eecs.mnav.MNavMainActivity"
             android:label="@string/title_activity_main" >
         </activity>
+        <activity android:name=".StartActivity" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <activity
-            android:name=".StartActivity" >
+            android:name=".Schedule"
+            android:label="@string/title_activity_schedule" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

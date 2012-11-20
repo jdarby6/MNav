@@ -17,6 +17,7 @@ public class StartActivity extends Activity {
 	//start page items;
 	private Button search;
 	private EditText address_box;
+	private Button schedule;
 
 	public String address = "";
 
@@ -28,6 +29,7 @@ public class StartActivity extends Activity {
 
 		address_box = (EditText)findViewById(R.id.editText_address_box);
 		search = (Button)findViewById(R.id.button_search);
+		schedule = (Button)findViewById(R.id.button_schedule);
 
 
 		search.setOnClickListener(new OnClickListener() {
@@ -50,6 +52,18 @@ public class StartActivity extends Activity {
 				StartActivity.this.startActivity(searchIntent);
 			}
 
+		});
+		
+		schedule.setOnClickListener(new OnClickListener() {
+			
+			public void onClick(View v) {
+				
+				Intent scheduleIntent = new Intent(StartActivity.this, Schedule.class);
+				StartActivity.this.startActivity(scheduleIntent);
+				
+			}
+			
+			
 		});
 
 	}

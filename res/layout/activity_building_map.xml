@@ -14,7 +14,7 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
         android:scaleType="centerInside"
-        android:src="@drawable/default" />
+        android:src="@drawable/defaultmap" />
 
     <LinearLayout
         android:layout_width="wrap_content"
