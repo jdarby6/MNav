@@ -146,11 +146,11 @@ public class DataBaseHelper extends SQLiteOpenHelper{
 
 	public Cursor getBldgIdByName(String name) {
 		name = name.toUpperCase();
-		return myDataBase.rawQuery("SELECT id_num, num_doors FROM buildings " +
+		return myDataBase.rawQuery("SELECT bldg_num, num_doors FROM buildings " +
 				"WHERE upper(name_abbr)='" + name + "' OR upper(name_full)='" + name + "'", null);
 	}
 
-	public Cursor getDoorsByBldgId(int id_num) {
-		return myDataBase.rawQuery("SELECT door_lat, door_long FROM doors WHERE id_num=" + id_num, null);
+	public Cursor getDoorsByBldgId(int bldg_num) {
+		return myDataBase.rawQuery("SELECT door_lat, door_long FROM doors WHERE bldg_num=" + bldg_num, null);
 	}
 }
