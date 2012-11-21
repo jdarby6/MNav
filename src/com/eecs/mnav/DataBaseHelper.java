@@ -153,4 +153,8 @@ public class DataBaseHelper extends SQLiteOpenHelper{
 	public Cursor getDoorsByBldgId(int bldg_num) {
 		return myDataBase.rawQuery("SELECT door_lat, door_long FROM doors WHERE bldg_num=" + bldg_num, null);
 	}
+	
+	public Cursor getAllBldgs() {
+		return myDataBase.rawQuery("SELECT name_full, name_abbr FROM buildings", null);
+	}
 }

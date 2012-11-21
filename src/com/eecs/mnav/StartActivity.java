@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -12,20 +13,25 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences.Editor;
+import android.database.Cursor;
+import android.database.SQLException;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.EditText;
 
-public class StartActivity extends Activity {
+public class StartActivity extends Activity implements TextWatcher {
 	//start page items;
 	private Button search;
-	private EditText address_box;
+	private AutoCompleteTextView address_box;
 	private Button schedule;
 
 	public String address = "";
@@ -41,16 +47,51 @@ public class StartActivity extends Activity {
 	// Whether the display should be refreshed.
 	public static boolean refreshDisplay = true; 
 	public static String sPref = null;
+	
+	private DataBaseHelper destination_db;
+
+	String item[]={
+			"January", "February", "March", "April",
+			"May", "June", "July", "August",
+			"September", "October", "November", "December"
+	};
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_start);
+		
+		//Initialize destination db
+		destination_db = new DataBaseHelper(this, "destination_db");
+		try {
+			destination_db.createDataBase();
+		} 
+		catch (IOException ioe) {
+			throw new Error("Unable to create database");
+		}
+		try {
+			destination_db.openDataBase();
+		} 
+		catch(SQLException sqle) {	
+			throw sqle;
 
-		address_box = (EditText)findViewById(R.id.editText_address_box);
+		}
+		
+		Cursor cursor = destination_db.getAllBldgs();
+		
+		ArrayList<String> strings = new ArrayList<String>();
+		for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+		   String mTitleRaw = cursor.getString(0);
+		   strings.add(mTitleRaw);
+		}
+		String[] item = (String[]) strings.toArray(new String[strings.size()]);
+
+		address_box = (AutoCompleteTextView)findViewById(R.id.autoCompleteTextView_address_box);
 		search = (Button)findViewById(R.id.button_search);
 		schedule = (Button)findViewById(R.id.button_schedule);
 
+		address_box.addTextChangedListener(this);
+		address_box.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, item));
 
 		search.setOnClickListener(new OnClickListener() {
 
@@ -73,17 +114,17 @@ public class StartActivity extends Activity {
 			}
 
 		});
-		
+
 		schedule.setOnClickListener(new OnClickListener() {
-			
+
 			public void onClick(View v) {
-				
+
 				Intent scheduleIntent = new Intent(StartActivity.this, Schedule.class);
 				StartActivity.this.startActivity(scheduleIntent);
-				
+
 			}
-			
-			
+
+
 		});
 
 	}
@@ -128,7 +169,7 @@ public class StartActivity extends Activity {
 			// Displays the HTML string in the UI via a WebView
 			WebView myWebView = (WebView) findViewById(R.id.webview);
 			myWebView.loadData(result, "text/html", null);
-			*/
+			 */
 		}
 	}
 
@@ -156,7 +197,7 @@ public class StartActivity extends Activity {
 		// Each entry is displayed in the UI as a link that optionally includes
 		// a text summary.
 		for (MbusPublicFeedXmlParser.Route route : routes) {
-			
+
 		}
 		return "Something";
 	}
@@ -174,5 +215,21 @@ public class StartActivity extends Activity {
 		conn.connect();
 		InputStream stream = conn.getInputStream();
 		return stream;
+	}
+
+	public void afterTextChanged(Editable arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void beforeTextChanged(CharSequence s, int start, int count,
+			int after) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onTextChanged(CharSequence s, int start, int before, int count) {
+		// TODO Auto-generated method stub
+
 	}
 }
