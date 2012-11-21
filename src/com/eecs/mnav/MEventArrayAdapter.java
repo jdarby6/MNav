@@ -22,10 +22,8 @@ public class MEventArrayAdapter extends ArrayAdapter<MEvent>{
 	@Override
 	public View getView(final int position, View convertView, ViewGroup parent) {
 	
-		
-		View rowView;
 
-		return rowView;
+		return convertView;//just to satisfy warning for now
 	}
 
 

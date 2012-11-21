@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/RelativeLayout1"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:longClickable="true"
+    android:orientation="vertical"
+    android:padding="5dp"
+    android:paddingLeft="25dp" >
+
+    <!-- removed for 3.2.2 -->
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/textView_class"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/linearLayout1"
+        android:layout_alignTop="@+id/linearLayout1"
+        android:layout_marginLeft="29dp"
+        android:text="@string/class_string"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textSize="50dp" />
+
+    <Button
+        android:id="@+id/button_schedule_search"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignBaseline="@+id/textView_class"
+        android:layout_alignBottom="@+id/textView_class"
+        android:layout_alignRight="@+id/linearLayout1"
+        android:layout_marginRight="16dp"
+        android:gravity="center_vertical"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <TextView
+        android:id="@+id/textView_begin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/button_schedule_search"
+        android:layout_marginLeft="25dp"
+        android:layout_toRightOf="@+id/textView_class"
+        android:text="@string/zero_time"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <TextView
+        android:id="@+id/textView_location"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/textView_class"
+        android:layout_below="@+id/textView_class"
+        android:layout_marginLeft="17dp"
+        android:text="@string/location"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <TextView
+        android:id="@+id/textView_end"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/textView_begin"
+        android:layout_below="@+id/textView_begin"
+        android:text="@string/zero_time"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+</RelativeLayout>

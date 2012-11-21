@@ -20,5 +20,10 @@
 	<string name="bus_routes">Bus Routes</string>
 	<string name="building_finder">Building Finder</string>
 	<string name="dest_bldg_instructions">What would you like to do?</string>
+	<string name="schedule">Schedule</string>
+	<string name="class_string">Class</string>
+	<string name="location">location</string>
+	<string name="zero_time">00:00</string>
+	<string name="edit_schedule">Edit Schedule</string>
 
 </resources>
