@@ -66,7 +66,7 @@ public class MNavMainActivity extends MapActivity {
 	private EditText tvDestination;
 	private String gDestAddr = "the diag";
 	private LocalDatabaseHandler local_db;
-	private DataBaseHelper destination_db;
+	private DataBaseHelper destination_db; 
 	private CurrentRouteOverlay gRouteOverlay = null;
 	private ScaleBarOverlay gScaleBarOverlay = null;
 
@@ -118,6 +118,7 @@ public class MNavMainActivity extends MapActivity {
 		
 		//Load stored data
 		gPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
 		//Load last known latitude, longitude default is the Diag
 		gCurrentLat = Double.parseDouble(gPreferences.getString("LASTLAT", "42.276956"));
 		gCurrentLong = Double.parseDouble(gPreferences.getString("LASTLONG", "-83.738234"));
@@ -153,9 +154,9 @@ public class MNavMainActivity extends MapActivity {
 				// show it
 				alertDialog.show();
 				
-				int id_num_col = cursor.getColumnIndex("id_num");
+				int bldg_num_col = cursor.getColumnIndex("bldg_num");
 				int num_doors_col = cursor.getColumnIndex("num_doors");
-				int id_num = cursor.getInt(id_num_col);
+				int bldg_num = cursor.getInt(bldg_num_col);
 				num_doors = cursor.getInt(num_doors_col);
 
 				doors = new Coords[num_doors];
@@ -164,7 +165,7 @@ public class MNavMainActivity extends MapActivity {
 				}
 
 				cursor.close();
-				cursor = destination_db.getDoorsByBldgId(id_num);
+				cursor = destination_db.getDoorsByBldgId(bldg_num);
 				if(cursor.moveToFirst()) {
 					int door_lat_col = cursor.getColumnIndex("door_lat");
 					int door_long_col = cursor.getColumnIndex("door_long");
@@ -237,6 +238,7 @@ public class MNavMainActivity extends MapActivity {
 				Log.d("GetRouteClicked", "Calculating Route");
 				//Grab the user input lat/long
 				String temp = tvDestination.getText().toString();
+
 				if(temp != null && temp.length() > 0) {
 					gDestinationLat = Double.parseDouble(temp.substring(0, temp.indexOf(",")));
 					gDestinationLong = Double.parseDouble(temp.substring(temp.indexOf(",")+1,temp.length()));
@@ -256,6 +258,7 @@ public class MNavMainActivity extends MapActivity {
 						return;
 					new GetDirectionsTask().execute(start, dest);
 				}
+
 			}
 		});
 

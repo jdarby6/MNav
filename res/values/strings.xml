@@ -8,16 +8,22 @@
     <string name="start_prompt">Enter Destination</string>
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_start">StartActivity</string>
-    <string name="_"> </string>
+    <string name="_"></string>
     <string name="lat_long">lat,long</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="current_lat">Current lat:</string>
+
 	<string name="current_long">Current long:</string>
 	<string name="bldg_abbr">Abbreviated Building Name</string>
 	<string name="door_nick">Door Nickname (e.g. \'North Entrance\')</string>
 	<string name="bus_routes">Bus Routes</string>
 	<string name="building_finder">Building Finder</string>
 	<string name="dest_bldg_instructions">What would you like to do?</string>
-    
+	<string name="schedule">Schedule</string>
+	<string name="class_string">Class</string>
+	<string name="location">location</string>
+	<string name="zero_time">00:00</string>
+	<string name="edit_schedule">Edit Schedule</string>
+
 </resources>
