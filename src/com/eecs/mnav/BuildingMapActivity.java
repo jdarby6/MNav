@@ -53,6 +53,7 @@ public class BuildingMapActivity extends Activity{
 				if (e == null) {
 					Log.d("Parse Import", "Retrieved " + mapList.size() + " maps");
 					//Resolve the list of building maps into array of bitmaps
+					curFloor = 0; //Initialize curFloor to 0 so we can use it as an index in resolveMaps();
 					resolveMaps(mapList);
 				} else {
 					Log.d("score", "Error: " + e.getMessage());
@@ -62,6 +63,7 @@ public class BuildingMapActivity extends Activity{
 
 
 		bStairsUp = (Button) findViewById(R.id.button_stairsup);
+		bStairsUp.setEnabled(false); //Disable until maps are loaded
 		bStairsUp.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				goUpstairs();
@@ -69,6 +71,7 @@ public class BuildingMapActivity extends Activity{
 		});
 
 		bStairsDown = (Button) findViewById(R.id.button_stairsdown);
+		bStairsDown.setEnabled(false); //Disable until maps are loaded
 		bStairsDown.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				goDownstairs();
@@ -79,33 +82,34 @@ public class BuildingMapActivity extends Activity{
 
 	//Method to take the list of parseObjects and resolve them into the global array of bitmaps: floors
 	private void resolveMaps(final List<ParseObject> parseMapList) {
-		curFloor = 0;
-		for(int i = 0; i < parseMapList.size(); i++){
-			ParseObject tmpObj = parseMapList.get(i);
-			if(tmpObj.has("picture")) {
-				Log.d("Parse Import", "The buildingMapObject has key: picture");
-				ParseFile tmpFile = (ParseFile)tmpObj.get("picture");
-				Log.d("Parse Import", "Name of file: "+tmpFile.getName());
-				tmpFile.getDataInBackground(new GetDataCallback() {
-					public void done(byte[] data, ParseException e) {
-						if (e == null) {
-							// data has the bytes for the floor map
-							addFloor(curFloor, BitmapFactory.decodeByteArray(data, 0, data.length));
-							curFloor++; //Increment the current floor after adding a floor
-							if(curFloor == parseMapList.size()) {
-								Log.d("Parse Import", "curFloor="+curFloor);
-								setCurFloor();
-								Log.d("Parse Import", "setCurFloor to: "+curFloor);
-								touchImageMap.setImageBitmap(floors.get(curFloor));
-							}
-
+		ParseObject tmpObj = parseMapList.get(curFloor);
+		if(tmpObj.has("picture")) {
+			Log.d("Parse Import", "The buildingMapObject has key: picture");
+			ParseFile tmpFile = (ParseFile)tmpObj.get("picture");
+			Log.d("Parse Import", "Name of file: "+tmpFile.getName());
+			tmpFile.getDataInBackground(new GetDataCallback() {
+				public void done(byte[] data, ParseException e) {
+					if (e == null) {
+						// data has the bytes for the floor map
+						addFloor(curFloor, BitmapFactory.decodeByteArray(data, 0, data.length));
+						curFloor++; //Increment the current floor after adding a floor
+						if(curFloor == parseMapList.size()) {
+							Log.d("Parse Import", "curFloor="+curFloor);
+							setCurFloor();
+							Log.d("Parse Import", "setCurFloor to: "+curFloor);
+							touchImageMap.setImageBitmap(floors.get(curFloor));
+							bStairsUp.setEnabled(true);
+							bStairsDown.setEnabled(true);
+							return;
 						} else {
-							// something went wrong
-							Log.d("Parse Import", "There was a ParseException!\n"+e);
+							resolveMaps(parseMapList); //Recursive call upon grabbing data and putting it in arrayList
 						}
+					} else {
+						// something went wrong
+						Log.d("Parse Import", "There was a ParseException!\n"+e);
 					}
-				});
-			}
+				}
+			});
 		}
 	}
 
