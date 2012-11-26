@@ -460,7 +460,7 @@ public class MNavMainActivity extends MapActivity {
 
 	LocationListener locationListener = new LocationListener() {
 		public void onLocationChanged(Location location) { // Called when a new location is found by the network location provider.
-			Log.d("LocationChanged", "Found You: "+location.getLatitude()+","+location.getLongitude());
+	//		Log.d("LocationChanged", "Found You: "+location.getLatitude()+","+location.getLongitude());
 			//Check to see if the new location is better than our best location so far
 			if(isBetterLocation(location, gBestLocation))
 				gBestLocation = location;
@@ -531,7 +531,7 @@ public class MNavMainActivity extends MapActivity {
 			Log.d("isBetter", "true: is more accurate");
 			return true;
 		} else if (isNewer && !isLessAccurate) {
-			Log.d("isBetter", "true: is newer, not less accurate");
+	//		Log.d("isBetter", "true: is newer, not less accurate");
 			return true;
 		} else if (isNewer && !isSignificantlyLessAccurate && isFromSameProvider) {
 			Log.d("isBetter", "true: is newer, !significantlyLessAccurate, fromSameProvider");
