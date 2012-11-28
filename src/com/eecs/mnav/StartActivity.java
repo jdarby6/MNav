@@ -20,6 +20,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -27,15 +28,23 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
 
 public class StartActivity extends Activity implements TextWatcher {
 	//start page items;
 	private Button search;
 	private AutoCompleteTextView address_box;
 	private Button schedule;
+	private TextView gInputFeedback;
 
-	public String address = "";
+	private String destBldgName = "";
+	private String destRoomNum = "";
 
+	private static final String REGEX_ROOM_NUM = "^[0-9]{1,4} [a-zA-Z]+ *";
+	private static final String REGEX_BLDG_NAME = "^[a-zA-Z][a-zA-Z &]+";
+	private static final int LONG = Toast.LENGTH_LONG;
+	private static final int SHORT = Toast.LENGTH_SHORT;	
 	public static final String WIFI = "Wi-Fi";
 	public static final String ANY = "Any";
 	private static final String URL = "http://mbus.pts.umich.edu/shared/public_feed.xml";
@@ -89,26 +98,41 @@ public class StartActivity extends Activity implements TextWatcher {
 		address_box = (AutoCompleteTextView)findViewById(R.id.autoCompleteTextView_address_box);
 		search = (Button)findViewById(R.id.button_search);
 		schedule = (Button)findViewById(R.id.button_schedule);
-
+		gInputFeedback = (TextView)findViewById(R.id.textView_input_feedback);
+		
 		address_box.addTextChangedListener(this);
+		address_box.setTextColor(getResources().getColor(R.color.black));
 		address_box.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, item));
 
 		search.setOnClickListener(new OnClickListener() {
-
 			public void onClick(View v) {
-				//do this correctly TODO
-				address = address_box.getText().toString();
-
-				//Save destination address
-				Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
-				editor.putString("DESTADDR", address);
-				editor.commit();
-
 				//hide the soft keyboard
 				InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
 				imm.hideSoftInputFromWindow(address_box.getWindowToken(), 0);
-
-
+				
+				String tempAddress = address_box.getText().toString();
+				gInputFeedback.setText("");
+				if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME)) {
+					if(tempAddress.matches(REGEX_ROOM_NUM)) {
+						destRoomNum = tempAddress.substring(0,tempAddress.indexOf(" "));
+						destBldgName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
+						Log.d("Search Button", "Matches REGEX_ROOM_NUM! RoomNum="+destRoomNum+" BldgName="+destBldgName);
+					} else {//It should just be the name of the bldg
+						destBldgName = tempAddress;
+						destRoomNum = "";
+						Log.d("Search Button", "Matches REGEX_BLDG_NAME! RoomNum="+destRoomNum+" BldgName="+destBldgName);
+					}
+				} else {
+					//It doesn't match our regEx so it's an invalid entry.
+					gInputFeedback.setText("Invalid destination entry.");
+					return;
+				}
+				//Save destination address
+				Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
+				editor.putString("DESTNAME", destBldgName);
+				editor.putString("DESTROOM", destRoomNum);
+				editor.commit();
+				
 				Intent searchIntent = new Intent(StartActivity.this, MNavMainActivity.class);
 				StartActivity.this.startActivity(searchIntent);
 			}
@@ -232,4 +256,13 @@ public class StartActivity extends Activity implements TextWatcher {
 		// TODO Auto-generated method stub
 
 	}
+	
+	/** Helper function for displaying a toast. Takes the string to be displayed and the length: LONG or SHORT **/
+	private void toastThis(String toast, int duration) {
+		Context context = getApplicationContext();
+		Toast t = Toast.makeText(context, toast, duration);
+		t.show();
+	}
+	
+	
 }

@@ -5,12 +5,13 @@
     android:background="@drawable/button_border_enabled"
     android:padding="5dp" >
 
-	<com.eecs.mnav.TouchImageView
-	    android:id="@+id/imageView_building_map"
-	    android:layout_width="match_parent"
-	    android:layout_height="match_parent" />
-
-	<LinearLayout
+    <com.eecs.mnav.TouchImageView
+        android:id="@+id/imageView_building_map"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
@@ -19,7 +20,7 @@
         android:layout_marginRight="10dp"
         android:background="@drawable/button_border_enabled"
         android:orientation="vertical" >
-
+
         <Button
             android:id="@+id/button_stairsup"
             android:layout_width="30dp"
@@ -34,7 +35,7 @@
             android:layout_height="1dp"
             android:layout_weight="1"
             android:background="@drawable/divider_black_horizontal" />
-
+
         <Button
             android:id="@+id/button_stairsdown"
             android:layout_width="30dp"
@@ -42,7 +43,15 @@
             android:layout_weight="1"
             android:background="@drawable/button_stairs_down_drawable"
             android:text="@string/_" />
-
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/imageView_building_map"
+        android:layout_centerHorizontal="true"
+        android:text="Looking for: 1303"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
 
 </RelativeLayout>
