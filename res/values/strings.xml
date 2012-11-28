@@ -13,17 +13,33 @@
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="current_lat">Current lat:</string>
-
-	<string name="current_long">Current long:</string>
-	<string name="bldg_abbr">Abbreviated Building Name</string>
-	<string name="door_nick">Door Nickname (e.g. \'North Entrance\')</string>
-	<string name="bus_routes">Bus Routes</string>
-	<string name="building_finder">Building Finder</string>
-	<string name="dest_bldg_instructions">What would you like to do?</string>
-	<string name="schedule">Schedule</string>
-	<string name="class_string">Class</string>
-	<string name="location">location</string>
-	<string name="zero_time">00:00</string>
-	<string name="edit_schedule">Edit Schedule</string>
+    <string name="current_long">Current long:</string>
+    <string name="bldg_abbr">Abbreviated Building Name</string>
+    <string name="door_nick">Door Nickname (e.g. \'North Entrance\')</string>
+    <string name="bus_routes">Bus Routes</string>
+    <string name="building_finder">Building Finder</string>
+    <string name="dest_bldg_instructions">What would you like to do?</string>
+    <string name="schedule">Schedule</string>
+    <string name="class_string">Class</string>
+    <string name="location">Location</string>
+    <string name="zero_time">00:00</string>
+    <string name="edit_schedule">Edit Schedule</string>
+    <string name="title_activity_schedule_edit">MainActivity</string>
+    <string name="today_string">Today\'s Schedule</string>
+    <string name="select_event_edit">Select Event to Edit</string>
+    <string name="add_event">Add Event</string>
+    <string name="begin_time">Begin Time</string>
+    <string name="end_time">End Time</string>
+    <string name="monday">Mo</string>
+    <string name="tuesday">Tu</string>
+    <string name="wednesday">We</string>
+    <string name="thursday">Th</string>
+    <string name="friday">Fr</string>
+    <string name="saturday">Sa</string>
+    <string name="sunday">Su</string>
+    <string name="location_hint">e.g. 1670 BBB</string>
+    <string name="class_hint">e.g. EECS 280</string>
+    <string name="done">Done</string>
+    <string name="no_events">No Events Found</string>
 
 </resources>

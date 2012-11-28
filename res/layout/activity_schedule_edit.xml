@@ -6,21 +6,13 @@
               android:orientation="vertical" >
               
     <TextView
-        android:id="@+id/textView_today"
+        android:id="@+id/textView_edit_schedule"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center|center_horizontal|center_vertical"
         android:gravity="center_horizontal"
-        android:text="@string/today_string"
+        android:text="@string/select_event_edit"
         android:textSize="25dp" />
-    <TextView
-        android:id="@+id/textView_empty"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:paddingTop="20dp"
-        android:text="@string/no_events"
-        android:textSize="30dp" />
         
     <ListView android:id="@+id/list_data"
               android:layout_height="match_parent"
