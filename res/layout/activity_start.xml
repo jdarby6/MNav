@@ -28,7 +28,7 @@
         android:gravity="center_horizontal"
         android:text="@string/start_prompt"
         android:textSize="20dp" />
-
+
     <AutoCompleteTextView
         android:id="@+id/autoCompleteTextView_address_box"
         android:layout_width="wrap_content"
@@ -36,7 +36,8 @@
         android:layout_alignLeft="@id/logoView"
         android:layout_below="@id/textView_destination"
         android:layout_toLeftOf="@+id/button_search"
-        android:completionThreshold="1" />
+        android:completionThreshold="1"
+        android:hint="@string/address_default" />
 
     <Button
         android:id="@+id/button_search"
@@ -134,5 +135,16 @@
             android:text="@string/schedule"
             android:textAppearance="?android:attr/textAppearanceSmall" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/textView_input_feedback"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/autoCompleteTextView_address_box"
+        android:layout_below="@+id/autoCompleteTextView_address_box"
+        android:text="@string/_"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="@color/fireBrickRed"
+        android:textStyle="italic" />
 
 </RelativeLayout>

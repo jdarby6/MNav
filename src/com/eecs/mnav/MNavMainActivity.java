@@ -64,7 +64,8 @@ public class MNavMainActivity extends MapActivity {
 	private Button bZoomIn;
 	private Button bZoomOut;
 	private EditText tvDestination;
-	private String gDestAddr = "the diag";
+	private String gDestName = "the diag";
+	private String gDestNum = "";
 	private LocalDatabaseHandler local_db;
 	private DataBaseHelper destination_db; 
 	private CurrentRouteOverlay gRouteOverlay = null;
@@ -123,12 +124,14 @@ public class MNavMainActivity extends MapActivity {
 		gCurrentLat = Double.parseDouble(gPreferences.getString("LASTLAT", "42.276956"));
 		gCurrentLong = Double.parseDouble(gPreferences.getString("LASTLONG", "-83.738234"));
 		//Load destination address, default is the Diag
-		gDestAddr = gPreferences.getString("DESTADDR", "the diag");
+		gDestName = gPreferences.getString("DESTNAME", "the diag");
+		gDestNum = gPreferences.getString("DESTNUM", "");
+		
 
 		/** DATABASE STUFF **/
-		if(gDestAddr != "the diag") { //checking against default string to see if we got a new destination address
-			gDestAddr = gDestAddr.replaceAll("[0-9]", "").trim();
-			Cursor cursor = destination_db.getBldgIdByName(gDestAddr);
+		if(gDestName != "the diag") { //checking against default string to see if we got a new destination address
+			gDestName = gDestName.replaceAll("[0-9]", "").trim();
+			Cursor cursor = destination_db.getBldgIdByName(gDestName);
 			if(cursor.getCount() > 0 && cursor.moveToFirst()) {
 				AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MNavMainActivity.this);
 
@@ -207,7 +210,7 @@ public class MNavMainActivity extends MapActivity {
 		}
 
 		Log.d("LOADED DATA", "Coords: "+String.valueOf(gCurrentLat)+","+String.valueOf(gCurrentLong)+
-				" time: "+" destAddr: "+gDestAddr);
+				" time: "+" destAddr: "+gDestName);
 		//Put last known info as current location
 		Location location = new Location(LocationManager.GPS_PROVIDER);
 		location.setLatitude(gCurrentLat);
