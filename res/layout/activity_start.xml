@@ -29,16 +29,14 @@
         android:text="@string/start_prompt"
         android:textSize="20dp" />
 
-    <EditText
-        android:id="@+id/editText_address_box"
+    <AutoCompleteTextView
+        android:id="@+id/autoCompleteTextView_address_box"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignLeft="@id/logoView"
         android:layout_below="@id/textView_destination"
         android:layout_toLeftOf="@+id/button_search"
-        android:ems="10"
-        android:hint="@string/address_default"
-        android:inputType="textPostalAddress" />
+        android:completionThreshold="1" />
 
     <Button
         android:id="@+id/button_search"
