@@ -1,5 +1,9 @@
 <resources>
 
-    <style name="AppTheme" parent="android:Theme.Light.NoTitleBar" />
-
+    <style name="AutoCompleteTextViewLight" parent="@android:style/Widget.AutoCompleteTextView">
+		<item name="android:textColor">@android:color/black</item>
+	</style>
+	<style name="Widget.DropDownItemLight" parent="@android:style/Widget.DropDownItem">
+		<item name="android:textColor">@android:color/black</item>
+	</style>
 </resources>

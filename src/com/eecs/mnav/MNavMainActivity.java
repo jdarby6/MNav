@@ -639,6 +639,7 @@ public class MNavMainActivity extends MapActivity {
 		**/
 		
 		gMyLocationOverlay = new MyLocationOverlay(this, gMapView);
+	//	gMyLocationOverlay.enableCompass();
 		mapOverlays.add(gMyLocationOverlay);
 		
 		
