@@ -70,6 +70,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:layout_toRightOf="@+id/textView_begin_time"
+            android:inputType = "textPostalAddress"
             android:hint ="@string/class_hint"
             android:layout_marginBottom="3dp"
             android:ems="10" />

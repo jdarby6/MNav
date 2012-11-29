@@ -9,14 +9,23 @@ public class MEvent {
 	private int timeEnd;
 	private String days;//string MOTUWETHFRSASU
 	
+	public MEvent(){
+		this.label = "";
+		this.location = "";
+		this.index = 0;
+		this.timeBegin = 0;
+		this.timeEnd = 0;
+		this.days = "";
+	}
+	
 	public MEvent(String label2, String location2, int index2, int timeBegin2,
 			int timeEnd2, String days2) {
-		label = label2;
-		location = location2;
-		index = index2;
-		timeBegin = timeBegin2;
-		timeEnd = timeEnd2;
-		days = days2;
+		this.label = label2;
+		this.location = location2;
+		this.index = index2;
+		this.timeBegin = timeBegin2;
+		this.timeEnd = timeEnd2;
+		this.days = days2;
 	}
 	public String getLabel() {return label;}
 	public void setLabel(String label) {this.label = label;}
