@@ -39,6 +39,7 @@ import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
+import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 import com.parse.Parse;
@@ -69,6 +70,7 @@ public class MNavMainActivity extends MapActivity {
 	private LocalDatabaseHandler local_db;
 	private DataBaseHelper destination_db; 
 	private CurrentRouteOverlay gRouteOverlay = null;
+	private MyLocationOverlay gMyLocationOverlay = null;
 	private ScaleBarOverlay gScaleBarOverlay = null;
 
 	private static final int LONG = Toast.LENGTH_LONG;
@@ -232,6 +234,8 @@ public class MNavMainActivity extends MapActivity {
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
 		}
+		
+		initOverlays();
 			
 		tvDestination = (EditText)findViewById(R.id.editText_map_destination);
 
@@ -324,6 +328,22 @@ public class MNavMainActivity extends MapActivity {
 		}
 	}
 
+	   @Override
+	   protected void onResume() {
+	   	super.onResume();
+	   	// when our activity resumes, we want to register for location updates
+	   	if(gMyLocationOverlay != null) {
+	   		gMyLocationOverlay.enableMyLocation();
+	   	}
+	   }
+
+	   @Override
+	   protected void onPause() {
+	   	super.onPause();
+	   	// when our activity pauses, we want to remove listening for location updates
+	   	gMyLocationOverlay.disableMyLocation();
+	   }
+	
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
@@ -480,10 +500,10 @@ public class MNavMainActivity extends MapActivity {
 			toastThis(toast, SHORT); */
 			
 			//If it's our first found location, initialize overlays.
-			if(!overlaysInitialized)
+		/*	if(!overlaysInitialized)
 				initOverlays(gBestLocation);
-			else
-				updateUserPosition(gBestLocation);
+			else */
+		//		updateUserPosition(gBestLocation);
 		}
 
 		public void onStatusChanged(String provider, int status, Bundle extras) {}
@@ -600,21 +620,28 @@ public class MNavMainActivity extends MapActivity {
 		mapOverlays.add(gRouteOverlay);
 	}
 
-	public void initOverlays(Location location) {
+	public void initOverlays() {
 		GeoPoint p = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
 
 		//Remove all existing overlays
 		List<Overlay> mapOverlays = gMapView.getOverlays();
 		mapOverlays.clear();
 
-		Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
+		Drawable drawable = this.getResources().getDrawable(R.drawable.ic_location);
 		//Create our route overlay
 		gRouteOverlay = new CurrentRouteOverlay(drawable, this);
 		gRouteOverlay.setTapListener(this);
-		OverlayItem overlayitem = new OverlayItem(p, "Current Location", "You are here!");
-
-		gRouteOverlay.addOverlay(overlayitem);
-		mapOverlays.add(gRouteOverlay);       
+		/**
+		* OverlayItem overlayitem = new OverlayItem(p, "Current Location", "You are here!");
+		* gRouteOverlay.addOverlay(overlayitem);
+		* mapOverlays.add(gRouteOverlay);
+		*
+		**/
+		
+		gMyLocationOverlay = new MyLocationOverlay(this, gMapView);
+		mapOverlays.add(gMyLocationOverlay);
+		
+		
 		
 		//Create the scalebar and add it to mapview
 		gScaleBarOverlay = new ScaleBarOverlay(this.getBaseContext(), gMapView);
@@ -625,7 +652,7 @@ public class MNavMainActivity extends MapActivity {
 
 		overlaysInitialized = true;
 	}
-
+	
 	private Route directions(final GeoPoint start, final GeoPoint dest) {
 		GoogleParser googleParser;
 		String jsonURL = "http://maps.google.com/maps/api/directions/json?";
@@ -722,7 +749,7 @@ public class MNavMainActivity extends MapActivity {
 
 		@Override
 		protected void onPostExecute(Route route) {  
-			RouteOverlay routeOverlay = new RouteOverlay(route, Color.BLUE);
+			RouteOverlay routeOverlay = new RouteOverlay(route, getResources().getColor(R.color.kelly));
 			gMapView.getOverlays().add(routeOverlay);
 		}
 	}

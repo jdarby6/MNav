@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/schedule_go"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="5dp" >
+
+    <ImageView
+        android:id="@+id/logoView"
+        android:layout_width="240dp"
+        android:layout_height="125dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="center"
+        android:layout_marginBottom="60dp"
+        android:contentDescription="@string/app_name"
+        android:focusable="false"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:src="@drawable/logo2" />
+
+    <TextView
+        android:id="@+id/textView_destination"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@id/logoView"
+        android:layout_below="@id/logoView"
+        android:gravity="center_horizontal"
+        android:text="@string/start_prompt"
+        android:textSize="20dp" />
+
+    <AutoCompleteTextView
+        android:id="@+id/autoCompleteTextView_address_box"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@id/logoView"
+        android:layout_below="@id/textView_destination"
+        android:layout_toLeftOf="@+id/button_search"
+        android:completionThreshold="1"
+        android:hint="@string/address_default" />
+
+    <Button
+        android:id="@+id/button_search"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignRight="@id/logoView"
+        android:layout_below="@id/textView_destination"
+        android:background="@drawable/button_search_drawable"
+        android:text="@string/_" />
+
+    <Button
+        android:id="@+id/button_info"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="5dp"
+        android:layout_marginRight="5dp"
+        android:background="@drawable/button_info_drawable"
+        android:text="@string/_" />
+
+    <LinearLayout
+        android:id="@+id/layout_mbus_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/textView_destination"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10dp"
+        android:orientation="vertical" >
+
+        <Button
+            android:id="@+id/button1"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/button_mbus_drawable"
+            android:text="@string/_" />
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/bus_routes"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_find_building_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignRight="@+id/button_info"
+        android:layout_alignTop="@+id/layout_mbus_button"
+        android:orientation="vertical" >
+
+        <Button
+            android:id="@+id/button2"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/button_find_building_drawable"
+            android:text="@string/_" />
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|right"
+            android:gravity="center_horizontal"
+            android:text="@string/building_finder"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_schedule_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignTop="@+id/layout_mbus_button"
+        android:layout_marginLeft="23dp"
+        android:orientation="vertical" >
+
+        <Button
+            android:id="@+id/button_schedule"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/_" />
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|left"
+            android:gravity="center_horizontal"
+            android:text="@string/schedule"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/textView_input_feedback"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/autoCompleteTextView_address_box"
+        android:layout_below="@+id/autoCompleteTextView_address_box"
+        android:text="@string/_"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="@color/fireBrickRed"
+        android:textStyle="italic" />
+
+</RelativeLayout>
