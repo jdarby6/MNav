@@ -41,13 +41,11 @@
             android:layout_weight="1"
             android:background="@drawable/button_stairs_up_drawable"
             android:text="@string/_" />
-
+
         <View
             android:id="@+id/view1"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginBottom="2dp"
-            android:layout_marginTop="2dp"
             android:layout_weight="1"
             android:background="@drawable/divider_black_horizontal" />
 

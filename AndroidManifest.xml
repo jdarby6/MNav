@@ -8,6 +8,7 @@
         android:targetSdkVersion="15" />
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
@@ -32,22 +33,12 @@
         <activity
             android:name=".Schedule"
             android:label="@string/schedule" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
         <activity android:name="com.eecs.mnav.BuildingMapActivity" >
         </activity>
         <activity
             android:name=".ScheduleEditActivity"
             android:label="@string/title_activity_schedule_edit" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
     </application>
 

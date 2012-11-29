@@ -5,14 +5,15 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="5dp" >
-
+
     <ImageView
         android:id="@+id/logoView"
         android:layout_width="240dp"
-        android:layout_height="220dp"
+        android:layout_height="125dp"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:layout_gravity="center"
+        android:layout_marginBottom="60dp"
         android:contentDescription="@string/app_name"
         android:focusable="false"
         android:paddingLeft="10dp"
@@ -49,7 +50,7 @@
         android:text="@string/_" />
 
     <Button
-        android:id="@+id/button3"
+        android:id="@+id/button_info"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_alignParentBottom="true"
@@ -58,14 +59,14 @@
         android:layout_marginRight="5dp"
         android:background="@drawable/button_info_drawable"
         android:text="@string/_" />
-
+
     <LinearLayout
         android:id="@+id/layout_mbus_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/button3"
+        android:layout_above="@id/textView_destination"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="43dp"
+        android:layout_marginBottom="10dp"
         android:orientation="vertical" >
 
         <Button
@@ -83,12 +84,12 @@
             android:text="@string/bus_routes"
             android:textAppearance="?android:attr/textAppearanceSmall" />
     </LinearLayout>
-
+
     <LinearLayout
         android:id="@+id/layout_find_building_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignRight="@+id/button3"
+        android:layout_alignRight="@+id/button_info"
         android:layout_alignTop="@+id/layout_mbus_button"
         android:orientation="vertical" >
 
