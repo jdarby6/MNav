@@ -69,6 +69,7 @@ public class MNavMainActivity extends MapActivity {
 	private EditText tvDestination;
 	private String gDestName = "the diag";
 	private String gDestNum = "";
+	private String gDestName_full ="";
 	private LocalDatabaseHandler local_db;
 	private DataBaseHelper destination_db; 
 	private CurrentRouteOverlay gRouteOverlay = null;
@@ -77,7 +78,7 @@ public class MNavMainActivity extends MapActivity {
 
 	private static final int LONG = Toast.LENGTH_LONG;
 	private static final int SHORT = Toast.LENGTH_SHORT;
-	private static final int TWO_MINUTES = 1000 * 60 * 2;
+	private static final int FIVE_MINUTES = 1000 * 60 * 5;
 	private static final int LAYER_TYPE_SOFTWARE = 1;
 	private static final int ZOOM_LEVEL_SKY = 17;
 	private static final int ZOOM_LEVEL_CAMPUS = 18;
@@ -88,7 +89,12 @@ public class MNavMainActivity extends MapActivity {
 	private static final int ALERT_INTRO_PROMPT_2 = 2;
 	private static final int ALERT_INTRO_PROMPT_3 = 3;
 	private static final int ALERT_INTRO_PROMPT_4 = 4;
-
+	
+	private boolean hasSeenAlert1 = false;
+	private boolean hasSeenAlert2 = false;
+	private boolean hasSeenAlert3 = false;
+	private boolean hasSeenAlert4 = false;
+	
 	//These are arbitrary numbers, used to call and remove the correct dialogs
 	private static final int DIALOG_SAVE_CURRENT_LOC = 0;
 	final static int DIALOG_DESTINATION_BLDG = 1;
@@ -138,6 +144,12 @@ public class MNavMainActivity extends MapActivity {
 		//DestName should be free of numbers and excess space now,  but just in case we'll keep the next line
 		gDestName = gDestName.replaceAll("[0-9]", "").trim();
 		gDestNum = gPreferences.getString("DESTNUM", "");
+		
+		hasSeenAlert1 = gPreferences.getBoolean("A1", false);
+		hasSeenAlert2 = gPreferences.getBoolean("A2", false);
+		hasSeenAlert3 = gPreferences.getBoolean("A3", false);
+		hasSeenAlert4 = gPreferences.getBoolean("A4", false);
+		
 
 
 		/** DATABASE STUFF **/
@@ -158,6 +170,15 @@ public class MNavMainActivity extends MapActivity {
 			for(int i = 0; i < num_doors; i++) {
 				doors[i] = new Coords();
 			}
+			//find column containing full names XXX Jeremy can you check this out? ideally I'd like this code to go into a method we can call every time the user changes desired destination name
+			try {
+			int bldg_name_full_col = cursor.getColumnIndexOrThrow("name_full");
+			gDestName_full = cursor.getString(bldg_name_full_col);
+			toastThis(gDestName_full, LONG);
+			} catch (IllegalArgumentException e) {
+				Log.d("DATABASE SHIT", e.toString());
+			}
+			
 			cursor.close();
 			//grab a new cursor to get the lat/long of each door to put in doors[]
 			cursor = destination_db.getDoorsByBldgId(bldg_num);
@@ -176,7 +197,9 @@ public class MNavMainActivity extends MapActivity {
 		}
 
 		Log.d("LOADED DATA", "Coords: "+String.valueOf(gCurrentLat)+","+String.valueOf(gCurrentLong)+
-				" time: "+" destAddr: "+gDestName);
+				" destAddr: "+gDestName+" roomNum: "+gDestNum);
+		toastThis("LOADED\nCoords: "+String.valueOf(gCurrentLat)+","+String.valueOf(gCurrentLong)+
+				" destAddr: "+gDestName+" roomNum: "+gDestNum, LONG);
 		//Put last known info as current location
 		Location location = new Location(LocationManager.GPS_PROVIDER);
 		location.setLatitude(gCurrentLat);
@@ -198,12 +221,17 @@ public class MNavMainActivity extends MapActivity {
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
 		}
-		//Initialize the map overlays (scale, currentLocation indicator, and destination bldg if applicable)
-		//Also zooms to destination building pin
-		initOverlays();
+
+		//THIS IS WHERE WE PUT THE CLOSEST SEARCH RESULT INTO THE SEARCH BAR
+		if(num_doors != -1) {
+			int closestDoorIndex = getClosestDoorIndex();
+			gDestinationLat = doors[closestDoorIndex].latitude;
+			gDestinationLong = doors[closestDoorIndex].longitude;
+		}
 
 		tvDestination = (EditText)findViewById(R.id.editText_map_destination);
-
+		tvDestination.setText(String.valueOf(gDestinationLat) + "," + String.valueOf(gDestinationLong));
+		
 		bPlotRoute = (Button) findViewById(R.id.button_plotroute);
 		bPlotRoute.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
@@ -225,7 +253,8 @@ public class MNavMainActivity extends MapActivity {
 					gMapView.getOverlays().add(gRouteOverlay); 
 
 					zoomTo(dest, ZOOM_LEVEL_BUILDING);
-					GeoPoint start = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
+					//GeoPoint start = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
+					GeoPoint start = gMyLocationOverlay.getMyLocation();
 					buildAlertDialog(ALERT_INTRO_PROMPT_2);
 					if(start.equals(dest))
 						return;
@@ -294,23 +323,14 @@ public class MNavMainActivity extends MapActivity {
 		});
 
 		startGPS();
-
-		//THIS IS WHERE WE PUT THE CLOSEST SEARCH RESULT INTO THE SEARCH BAR
-		if(num_doors != -1) {
-			int closestDoorIndex = getClosestDoorIndex();
-			gDestinationLat = doors[closestDoorIndex].latitude;
-			gDestinationLong = doors[closestDoorIndex].longitude;
-			tvDestination.setText(String.valueOf(gDestinationLat) + "," + String.valueOf(gDestinationLong));
-		}
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-		// when our activity resumes, we want to register for location updates
-		if(gMyLocationOverlay != null) {
-			gMyLocationOverlay.enableMyLocation();
-		}
+		//Initialize the map overlays (scale, currentLocation indicator, and destination bldg if applicable)
+		//Also zooms to destination building pin or current location depending on if intro has been seen
+		initOverlays();
 	}
 
 	@Override
@@ -330,6 +350,12 @@ public class MNavMainActivity extends MapActivity {
 		editor.putString("LASTLAT", String.valueOf(gCurrentLat));
 		editor.putString("LASTLONG", String.valueOf(gCurrentLong));
 		editor.putString("LASTLOCTIME", String.valueOf(gBestLocation.getTime()));
+		
+		editor.putBoolean("A1", hasSeenAlert1);
+		editor.putBoolean("A2", hasSeenAlert2);
+		editor.putBoolean("A3", hasSeenAlert3);
+		editor.putBoolean("A4", hasSeenAlert4);
+		
 		editor.commit();
 		Log.d("SAVED DATA", "Coords: "+String.valueOf(gCurrentLat)+","+String.valueOf(gCurrentLong));	
 		//Turn off GPS
@@ -424,13 +450,13 @@ public class MNavMainActivity extends MapActivity {
 			final TextView title = (TextView)dialog_destinationBldg.findViewById(R.id.textView_dialog_title);
 
 			//TODO Put the destination name here
-			//title.setText("DESTINATION NAME");
+			title.setText("Electrical Engineering and Computer Science");
 			final Button bViewMap = (Button)dialog_destinationBldg.findViewById(R.id.button_viewmap);
 			final Button bGetDirections = (Button)dialog_destinationBldg.findViewById(R.id.button_getdirections);
 
 			bViewMap.setOnClickListener(new Button.OnClickListener() {
 				public void onClick(View v) {
-					//Call intent to new activity XXX
+					//Call intent to new activity
 					Intent intent = new Intent(MNavMainActivity.this, BuildingMapActivity.class);
 					startActivity(intent);
 					removeDialog(DIALOG_DESTINATION_BLDG);
@@ -439,7 +465,7 @@ public class MNavMainActivity extends MapActivity {
 
 			bGetDirections.setOnClickListener(new Button.OnClickListener() {
 				public void onClick(View v) {
-					//Call method to get directions XXX
+					//Call method to get directions
 					GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
 					GeoPoint start = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
 					if(start.equals(dest))
@@ -498,13 +524,10 @@ public class MNavMainActivity extends MapActivity {
 		}
 		// Check whether the new location fix is newer or older
 		long timeDelta = location.getTime() - currentBestLocation.getTime();
-		boolean isSignificantlyNewer = timeDelta > TWO_MINUTES;
-		boolean isSignificantlyOlder = timeDelta < -TWO_MINUTES;
+		boolean isSignificantlyNewer = timeDelta > FIVE_MINUTES;
+		boolean isSignificantlyOlder = timeDelta < -FIVE_MINUTES;
 		boolean isNewer = timeDelta > 0;
-		/** People will probably not be moving as much, since they will be in class majority of time
-		 * 
-		 * 
-		 *
+
 		// If it's been more than two minutes since the current location, use the new location
 		// because the user has likely moved
 		if (isSignificantlyNewer) {
@@ -513,12 +536,11 @@ public class MNavMainActivity extends MapActivity {
 
 
 			// If the new location is more than two minutes older, it must be worse
-		} else 
-		 */
-		if (isSignificantlyOlder) {
-			Log.d("isBetter", "false: is significantly older");
-			return false;
-		}
+		} else
+			if (isSignificantlyOlder) {
+				Log.d("isBetter", "false: is significantly older");
+				return false;
+			}
 
 		// Check whether the new location fix is more or less accurate
 		int accuracyDelta = (int) (location.getAccuracy() - currentBestLocation.getAccuracy());
@@ -599,13 +621,11 @@ public class MNavMainActivity extends MapActivity {
 	}
 
 	public void initOverlays() {
-		GeoPoint p = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
-
 		//Remove all existing overlays
 		List<Overlay> mapOverlays = gMapView.getOverlays();
 		mapOverlays.clear();
 
-		Drawable drawable = this.getResources().getDrawable(R.drawable.ic_location);
+		Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
 		//Create our route overlay
 		gRouteOverlay = new CurrentRouteOverlay(drawable, this);
 		gRouteOverlay.setTapListener(this);
@@ -619,15 +639,34 @@ public class MNavMainActivity extends MapActivity {
 		gMyLocationOverlay = new MyLocationOverlay(this, gMapView);
 		//	gMyLocationOverlay.enableCompass();
 		mapOverlays.add(gMyLocationOverlay);
-
-
+		
+		gMyLocationOverlay.enableMyLocation();
+		
 
 		//Create the scalebar and add it to mapview
 		gScaleBarOverlay = new ScaleBarOverlay(this.getBaseContext(), gMapView);
 		gScaleBarOverlay.setImperial();
 		mapOverlays.add(gScaleBarOverlay);
 
-		zoomTo(p, ZOOM_LEVEL_CAMPUS);
+		if(hasSeenAlert1){
+			//create a geopoint for dest
+			GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
+
+
+			//XXX Set "Desination" to full building name
+			OverlayItem overlayitem = new OverlayItem(dest, "Destination", "This is your current destination");
+
+			gRouteOverlay.addOverlay(overlayitem);
+			gMapView.getOverlays().add(gRouteOverlay); 
+
+			zoomTo(dest, ZOOM_LEVEL_BUILDING);
+		} else {
+			GeoPoint p = gMyLocationOverlay.getMyLocation();
+			if(gMapController == null)
+				gMapController = gMapView.getController();
+			gMapController.animateTo(p);
+			gMapController.setZoom(ZOOM_LEVEL_BUILDING);
+		}
 
 		overlaysInitialized = true;
 	}
@@ -665,7 +704,8 @@ public class MNavMainActivity extends MapActivity {
 				}
 			}
 		} catch (IllegalArgumentException e) {
-			Log.d("zoomTo()", "Caught exception"+e);
+			Log.d("zoomTo()", e.toString());
+			gMapController.setZoom(level);
 		}
 	}
 
@@ -680,10 +720,10 @@ public class MNavMainActivity extends MapActivity {
 		//Start looking for location information
 
 		//Check the cahced location, see if it's better than the best one we are using now
-		/*	Location cachedLoc = getCachedLocation();
+		Location cachedLoc = getCachedLocation();
 		if(isBetterLocation(cachedLoc, gBestLocation))
 			//Since it's better, use it then start querying gps sources
-		gBestLocation = cachedLoc;*/	
+		gBestLocation = cachedLoc;
 		gLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
 		gLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
 	}
@@ -716,6 +756,8 @@ public class MNavMainActivity extends MapActivity {
 					});
 			break;
 		case ALERT_INTRO_PROMPT_1:
+			if(hasSeenAlert1)
+				return;
 			// set dialog message
 			alertDialogBuilder.setTitle("Destination Found!");
 			alertDialogBuilder.setMessage("The map is now centered at your location. " 
@@ -728,11 +770,14 @@ public class MNavMainActivity extends MapActivity {
 					dialog.cancel();
 				}
 			});
+			hasSeenAlert1 = true;
 			break;
 		case ALERT_INTRO_PROMPT_2:
+			if(hasSeenAlert2)
+				return;
 			// set dialog message
 			alertDialogBuilder.setTitle("Note:");
-			alertDialogBuilder.setMessage("You can press the targetting icon in the top right corner to return to" +
+			alertDialogBuilder.setMessage("You can press the targeting icon in the top right corner to return to" +
 					" your current location or tap on the building pin for more options.")
 			.setCancelable(true)
 			.setNegativeButton("OK", new DialogInterface.OnClickListener() {
@@ -742,10 +787,13 @@ public class MNavMainActivity extends MapActivity {
 					dialog.cancel();
 				}
 			});
+			hasSeenAlert2 = true;
 			break;
 		case ALERT_INTRO_PROMPT_3:
+			if(hasSeenAlert3)
+				return;
 			alertDialogBuilder.setTitle("Note:");
-			alertDialogBuilder.setMessage("You can long-press the targetting icon to return to your destination building pin.")
+			alertDialogBuilder.setMessage("You can long-press the targeting icon to return to your destination building pin.")
 					.setCancelable(true)
 					.setNegativeButton("OK", new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog,int id) {
@@ -754,8 +802,11 @@ public class MNavMainActivity extends MapActivity {
 							dialog.cancel();
 						}
 					});
+			hasSeenAlert3 = true;
 			break;		
 			case ALERT_INTRO_PROMPT_4:
+				if(hasSeenAlert4)
+					return;
 				alertDialogBuilder.setTitle("Note:");
 				alertDialogBuilder.setMessage("To find a new building, simply type it in the search bar above and press the pedestrian icon.")
 						.setCancelable(true)
@@ -766,6 +817,7 @@ public class MNavMainActivity extends MapActivity {
 								dialog.cancel();
 							}
 						});
+				hasSeenAlert4 = true;
 				break;
 		}
 		// create and show it
