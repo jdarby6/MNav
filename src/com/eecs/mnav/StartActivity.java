@@ -15,6 +15,7 @@ import android.content.Intent;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.SQLException;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -101,7 +102,7 @@ public class StartActivity extends Activity implements TextWatcher {
 		gInputFeedback = (TextView)findViewById(R.id.textView_input_feedback);
 		
 		address_box.addTextChangedListener(this);
-		address_box.setTextColor(getResources().getColor(R.color.black));
+		address_box.setTextColor(Color.BLACK);
 		address_box.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, item));
 
 		search.setOnClickListener(new OnClickListener() {
