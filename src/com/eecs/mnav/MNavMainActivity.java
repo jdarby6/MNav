@@ -89,12 +89,12 @@ public class MNavMainActivity extends MapActivity {
 	private static final int ALERT_INTRO_PROMPT_2 = 2;
 	private static final int ALERT_INTRO_PROMPT_3 = 3;
 	private static final int ALERT_INTRO_PROMPT_4 = 4;
-	
+
 	private boolean hasSeenAlert1 = false;
 	private boolean hasSeenAlert2 = false;
 	private boolean hasSeenAlert3 = false;
 	private boolean hasSeenAlert4 = false;
-	
+
 	//These are arbitrary numbers, used to call and remove the correct dialogs
 	private static final int DIALOG_SAVE_CURRENT_LOC = 0;
 	final static int DIALOG_DESTINATION_BLDG = 1;
@@ -144,12 +144,12 @@ public class MNavMainActivity extends MapActivity {
 		//DestName should be free of numbers and excess space now,  but just in case we'll keep the next line
 		gDestName = gDestName.replaceAll("[0-9]", "").trim();
 		gDestNum = gPreferences.getString("DESTNUM", "");
-		
+
 		hasSeenAlert1 = gPreferences.getBoolean("A1", false);
 		hasSeenAlert2 = gPreferences.getBoolean("A2", false);
 		hasSeenAlert3 = gPreferences.getBoolean("A3", false);
 		hasSeenAlert4 = gPreferences.getBoolean("A4", false);
-		
+
 
 
 		/** DATABASE STUFF **/
@@ -172,13 +172,13 @@ public class MNavMainActivity extends MapActivity {
 			}
 			//find column containing full names XXX Jeremy can you check this out? ideally I'd like this code to go into a method we can call every time the user changes desired destination name
 			try {
-			int bldg_name_full_col = cursor.getColumnIndexOrThrow("name_full");
-			gDestName_full = cursor.getString(bldg_name_full_col);
-			toastThis(gDestName_full, LONG);
+				int bldg_name_full_col = cursor.getColumnIndexOrThrow("name_full");
+				gDestName_full = cursor.getString(bldg_name_full_col);
+				toastThis(gDestName_full, LONG);
 			} catch (IllegalArgumentException e) {
 				Log.d("DATABASE SHIT", e.toString());
 			}
-			
+
 			cursor.close();
 			//grab a new cursor to get the lat/long of each door to put in doors[]
 			cursor = destination_db.getDoorsByBldgId(bldg_num);
@@ -231,7 +231,7 @@ public class MNavMainActivity extends MapActivity {
 
 		tvDestination = (EditText)findViewById(R.id.editText_map_destination);
 		tvDestination.setText(String.valueOf(gDestinationLat) + "," + String.valueOf(gDestinationLong));
-		
+
 		bPlotRoute = (Button) findViewById(R.id.button_plotroute);
 		bPlotRoute.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
@@ -350,12 +350,12 @@ public class MNavMainActivity extends MapActivity {
 		editor.putString("LASTLAT", String.valueOf(gCurrentLat));
 		editor.putString("LASTLONG", String.valueOf(gCurrentLong));
 		editor.putString("LASTLOCTIME", String.valueOf(gBestLocation.getTime()));
-		
+
 		editor.putBoolean("A1", hasSeenAlert1);
 		editor.putBoolean("A2", hasSeenAlert2);
 		editor.putBoolean("A3", hasSeenAlert3);
 		editor.putBoolean("A4", hasSeenAlert4);
-		
+
 		editor.commit();
 		Log.d("SAVED DATA", "Coords: "+String.valueOf(gCurrentLat)+","+String.valueOf(gCurrentLong));	
 		//Turn off GPS
@@ -578,14 +578,20 @@ public class MNavMainActivity extends MapActivity {
 
 	/**Gets best cached location from GPS and NETWORK. Called before searching for location */
 	private Location getCachedLocation() {
-		Location cachedLoc;
 		//Get cached location from GPS
-		cachedLoc = gLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-		//Compare cached GPS location to cached Network location, if it's better, use it
-		if(isBetterLocation(gLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER), gBestLocation))
-			cachedLoc = gLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-
-		return cachedLoc;
+		Location cachedGpsLoc = gLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+		//Get cached location from Network
+		Location cachedNetworkLoc = gLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+		
+		//If one or both of these are null, just return the other without calling isBetterLocation to avoid time and
+		//null pointer exceptions
+		if(cachedGpsLoc == null) return cachedNetworkLoc;
+		if(cachedNetworkLoc == null) return cachedGpsLoc;
+		
+		//If it hasn't returned by now, check which one is actually better and return it.
+		if(isBetterLocation(cachedGpsLoc, cachedNetworkLoc))
+			return cachedGpsLoc;
+		else return cachedNetworkLoc;
 	}
 
 	private void displayEnableGPSAlert() {
@@ -639,9 +645,9 @@ public class MNavMainActivity extends MapActivity {
 		gMyLocationOverlay = new MyLocationOverlay(this, gMapView);
 		//	gMyLocationOverlay.enableCompass();
 		mapOverlays.add(gMyLocationOverlay);
-		
+
 		gMyLocationOverlay.enableMyLocation();
-		
+
 
 		//Create the scalebar and add it to mapview
 		gScaleBarOverlay = new ScaleBarOverlay(this.getBaseContext(), gMapView);
@@ -719,11 +725,11 @@ public class MNavMainActivity extends MapActivity {
 
 		//Start looking for location information
 
-		//Check the cahced location, see if it's better than the best one we are using now
+		//Check the cached location, see if it's better than the best one we are using now
 		Location cachedLoc = getCachedLocation();
-		if(isBetterLocation(cachedLoc, gBestLocation))
+		if(!isBetterLocation(gBestLocation, cachedLoc))
 			//Since it's better, use it then start querying gps sources
-		gBestLocation = cachedLoc;
+			gBestLocation = cachedLoc;
 		gLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
 		gLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
 	}
@@ -761,15 +767,15 @@ public class MNavMainActivity extends MapActivity {
 			// set dialog message
 			alertDialogBuilder.setTitle("Destination Found!");
 			alertDialogBuilder.setMessage("The map is now centered at your location. " 
-			+ "To get walking directions, press the pedestrian icon above.")
-			.setCancelable(true)
-			.setNegativeButton("OK", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog,int id) {
-					// if this button is clicked, just close
-					// the dialog box and do nothing
-					dialog.cancel();
-				}
-			});
+					+ "To get walking directions, press the pedestrian icon above.")
+					.setCancelable(true)
+					.setNegativeButton("OK", new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog,int id) {
+							// if this button is clicked, just close
+							// the dialog box and do nothing
+							dialog.cancel();
+						}
+					});
 			hasSeenAlert1 = true;
 			break;
 		case ALERT_INTRO_PROMPT_2:
@@ -779,21 +785,6 @@ public class MNavMainActivity extends MapActivity {
 			alertDialogBuilder.setTitle("Note:");
 			alertDialogBuilder.setMessage("You can press the targeting icon in the top right corner to return to" +
 					" your current location or tap on the building pin for more options.")
-			.setCancelable(true)
-			.setNegativeButton("OK", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog,int id) {
-					// if this button is clicked, just close
-					// the dialog box and do nothing
-					dialog.cancel();
-				}
-			});
-			hasSeenAlert2 = true;
-			break;
-		case ALERT_INTRO_PROMPT_3:
-			if(hasSeenAlert3)
-				return;
-			alertDialogBuilder.setTitle("Note:");
-			alertDialogBuilder.setMessage("You can long-press the targeting icon to return to your destination building pin.")
 					.setCancelable(true)
 					.setNegativeButton("OK", new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog,int id) {
@@ -802,23 +793,38 @@ public class MNavMainActivity extends MapActivity {
 							dialog.cancel();
 						}
 					});
+			hasSeenAlert2 = true;
+			break;
+		case ALERT_INTRO_PROMPT_3:
+			if(hasSeenAlert3)
+				return;
+			alertDialogBuilder.setTitle("Note:");
+			alertDialogBuilder.setMessage("You can long-press the targeting icon to return to your destination building pin.")
+			.setCancelable(true)
+			.setNegativeButton("OK", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog,int id) {
+					// if this button is clicked, just close
+					// the dialog box and do nothing
+					dialog.cancel();
+				}
+			});
 			hasSeenAlert3 = true;
 			break;		
-			case ALERT_INTRO_PROMPT_4:
-				if(hasSeenAlert4)
-					return;
-				alertDialogBuilder.setTitle("Note:");
-				alertDialogBuilder.setMessage("To find a new building, simply type it in the search bar above and press the pedestrian icon.")
-						.setCancelable(true)
-						.setNegativeButton("OK", new DialogInterface.OnClickListener() {
-							public void onClick(DialogInterface dialog,int id) {
-								// if this button is clicked, just close
-								// the dialog box and do nothing
-								dialog.cancel();
-							}
-						});
-				hasSeenAlert4 = true;
-				break;
+		case ALERT_INTRO_PROMPT_4:
+			if(hasSeenAlert4)
+				return;
+			alertDialogBuilder.setTitle("Note:");
+			alertDialogBuilder.setMessage("To find a new building, simply type it in the search bar above and press the pedestrian icon.")
+			.setCancelable(true)
+			.setNegativeButton("OK", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog,int id) {
+					// if this button is clicked, just close
+					// the dialog box and do nothing
+					dialog.cancel();
+				}
+			});
+			hasSeenAlert4 = true;
+			break;
 		}
 		// create and show it
 		alertDialogBuilder.create().show();
