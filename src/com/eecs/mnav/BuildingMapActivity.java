@@ -10,8 +10,10 @@ import com.parse.ParseFile;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
+import com.parse.ProgressCallback;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -23,10 +25,12 @@ import android.widget.Button;
 public class BuildingMapActivity extends Activity{
 	ArrayList<Bitmap> floors = new ArrayList<Bitmap>();
 	int curFloor = 0;
+	int numFloors = 0;
 	ParseObject buildingMapObject;
 	TouchImageView touchImageMap;
 	Button bStairsUp;
 	Button bStairsDown;
+	ProgressDialog gProgressDialog;
 
 	String mBuildingName = "default"; //Default to saying we don't have the map
 
@@ -36,6 +40,13 @@ public class BuildingMapActivity extends Activity{
 		Log.d("OnCreate()", "OnCreate() called");
 		setContentView(R.layout.activity_building_map);
 
+		gProgressDialog = new ProgressDialog(this);
+		gProgressDialog.setMessage("Loading...");
+		gProgressDialog.setCancelable(false);
+		gProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+		gProgressDialog.setProgress(0); // set percentage completed to 0%
+		gProgressDialog.show();
+		
 		touchImageMap = (TouchImageView) findViewById(R.id.imageView_building_map);
 		touchImageMap.setMaxZoom(3f);
 
@@ -47,11 +58,15 @@ public class BuildingMapActivity extends Activity{
 		setBuildingName();
 		query.whereEqualTo("name", mBuildingName);
 		query.addAscendingOrder("name");
-		//query.whereExists("picture");
 		query.findInBackground(new FindCallback() {
 			public void done(List<ParseObject> mapList, ParseException e) {
 				if (e == null) {
 					Log.d("Parse Import", "Retrieved " + mapList.size() + " maps");
+					numFloors = mapList.size();
+					//Make the floors array big enough to hold our maps
+					while(floors.size() < numFloors) {
+						floors.add(null);
+					}
 					//Resolve the list of building maps into array of bitmaps
 					curFloor = 0; //Initialize curFloor to 0 so we can use it as an index in resolveMaps();
 					resolveMaps(mapList);
@@ -82,18 +97,20 @@ public class BuildingMapActivity extends Activity{
 
 	//Method to take the list of parseObjects and resolve them into the global array of bitmaps: floors
 	private void resolveMaps(final List<ParseObject> parseMapList) {
+		int tmp = curFloor+1;
+		gProgressDialog.setMessage("Loading Map "+tmp+" of "+numFloors+"...");
 		ParseObject tmpObj = parseMapList.get(curFloor);
 		if(tmpObj.has("picture")) {
 			Log.d("Parse Import", "The buildingMapObject has key: picture");
-			ParseFile tmpFile = (ParseFile)tmpObj.get("picture");
+			final ParseFile tmpFile = (ParseFile)tmpObj.get("picture");
 			Log.d("Parse Import", "Name of file: "+tmpFile.getName());
 			tmpFile.getDataInBackground(new GetDataCallback() {
 				public void done(byte[] data, ParseException e) {
 					if (e == null) {
 						// data has the bytes for the floor map
-						addFloor(curFloor, BitmapFactory.decodeByteArray(data, 0, data.length));
+						addFloor(Character.getNumericValue(tmpFile.getName().charAt(tmpFile.getName().length()-5)), BitmapFactory.decodeByteArray(data, 0, data.length));
 						curFloor++; //Increment the current floor after adding a floor
-						if(curFloor == parseMapList.size()) {
+						if(curFloor == numFloors) {
 							Log.d("Parse Import", "curFloor="+curFloor);
 							setCurFloor();
 							Log.d("Parse Import", "setCurFloor to: "+curFloor);
@@ -109,19 +126,31 @@ public class BuildingMapActivity extends Activity{
 						Log.d("Parse Import", "There was a ParseException!\n"+e);
 					}
 				}
+			},  new ProgressCallback() {
+				  public void done(Integer percentDone) {
+					  	gProgressDialog.incrementProgressBy(percentDone - gProgressDialog.getProgress());
+					  	if(gProgressDialog.getProgress() == 100){
+					  		Log.d("Parse Import", "Loading Progress curFloor="+curFloor+" numFloors="+numFloors);
+					  		if(curFloor == numFloors-1)					  				
+					  			gProgressDialog.dismiss();
+					  		else {
+					  			gProgressDialog.setProgress(0);
+					  		}
+					  	}
+					  }
 			});
 		}
 	}
 
 	/** Method to call which add floors to the floors arrayList and increments curFloor**/
 	public void addFloor(int pos, Bitmap bmp) {
-		Log.d("addFloor()", "pos="+pos+", curFloor="+curFloor);
-		floors.add(pos, bmp);
+		Log.d("addFloor()", "Adding floor to pos="+pos+". This is map number "+curFloor);
+		floors.set(pos, bmp);
 	}
 
 	/** Method to figure out what current floor we should display to the user **/
 	private void setCurFloor() {
-		curFloor = 0; //Start off in the basement. TODO
+		curFloor = 1; //Start off on the first floor. TODO
 	}
 
 	/** Method to set the building name to look for a set of maps **/
@@ -133,11 +162,17 @@ public class BuildingMapActivity extends Activity{
 	/**Method to call when up button pressed **/
 	private void goUpstairs() {
 		Log.d("BuildingMapActivity", "Trying to go Upstairs! curFloor="+curFloor+" floors size="+floors.size());
+		if(curFloor == floors.size() - 2) {
+			bStairsUp.setEnabled(false);
+		}
 		if(curFloor == (floors.size() - 1)){
 			Log.d("BuildingMapActivity", "BUMP! Can't go further..");
 			return;
 		}
 		else{
+			if(!bStairsDown.isEnabled()) {
+				bStairsDown.setEnabled(true);
+			}
 			curFloor++;
 			touchImageMap.setImageBitmap(floors.get(curFloor));
 			touchImageMap.invalidate();
@@ -148,11 +183,17 @@ public class BuildingMapActivity extends Activity{
 	/** Method to call when down button pressed **/
 	private void goDownstairs() {
 		Log.d("BuildingMapActivity", "Trying to go Downstairs! curFloor="+curFloor+" floors size="+floors.size());
+		if(curFloor == 1) {
+			bStairsDown.setEnabled(false);
+		}
 		if (curFloor == 0){
 			Log.d("BuildingMapActivity", "BUMP! Can't go further..");
 			return;
 		}
 		else{
+			if(!bStairsUp.isEnabled()) {
+				bStairsUp.setEnabled(true);
+			}
 			curFloor--;
 			touchImageMap.setImageBitmap(floors.get(curFloor));
 			touchImageMap.invalidate();
