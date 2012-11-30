@@ -3,13 +3,23 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="10dp" >
-
+
+    <TextView
+        android:id="@+id/textView_dialog_title"
+        android:layout_width="220dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="false"
+        android:layout_alignParentTop="true"
+        android:text="Electrical Engineering and Computer Science"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
     <TextView
         android:id="@+id/textView_dest_inst"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
+        android:layout_below="@id/textView_dialog_title"
+        android:layout_marginTop="5dp"
         android:text="@string/dest_bldg_instructions"
         android:textSize="18sp" />
 

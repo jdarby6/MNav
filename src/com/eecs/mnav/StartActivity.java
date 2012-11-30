@@ -144,7 +144,7 @@ public class StartActivity extends Activity implements TextWatcher {
 
 			public void onClick(View v) {
 
-				Intent scheduleIntent = new Intent(StartActivity.this, Schedule.class);
+				Intent scheduleIntent = new Intent(StartActivity.this, ScheduleActivity.class);
 				StartActivity.this.startActivity(scheduleIntent);
 
 			}
