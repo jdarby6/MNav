@@ -41,5 +41,6 @@
     <string name="class_hint">e.g. EECS 280</string>
     <string name="done">Done</string>
     <string name="no_events">No Events Found</string>
+    <string name="select_day_string">Select A Day</string>
 
 </resources>

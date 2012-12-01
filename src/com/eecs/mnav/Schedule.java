@@ -1,17 +1,19 @@
 package com.eecs.mnav;
 
+
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import android.os.Bundle;
 import android.app.Activity;
 import android.app.Dialog;
-import android.util.Log;
-import android.view.KeyEvent;
+
 import android.view.Menu;
 import android.view.View;
-import android.view.View.OnKeyListener;
+
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
+
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -21,15 +23,20 @@ import android.widget.TextView;
 public class Schedule extends Activity {
 	
 	private MEventArrayAdapter eventArrayAdapter;
+	
 	private ArrayList<MEvent> events_array = new ArrayList<MEvent>();
+	final String[] day_names = new String[] {"Every Day","Sunday", "Monday", "Tuesday", "Wednesday", 
+			"Thursday", "Friday", "Saturday" };
+	final String[] day_abbrs = new String[] {"NULL", "SU", "MO", "TU", "WE", 
+			"TH", "FR", "SA"};
 	private ListView list_data;
+	
 	private MEvent curEvent;
 	
 	private Button button_add_event;
 	
 	private Button button_cancel_edit;
-	private Button button_done;
-	
+	private Button button_done;	
 	private EditText editText_end_time;
 	private EditText editText_begin_time;
 	private EditText editText_location;
@@ -44,10 +51,13 @@ public class Schedule extends Activity {
 	private CheckBox checkBoxSunday;
 	
 	private TextView add_edit_title;
+	private TextView textView_today;
 
 	private static final int DIALOG_ADD_EVENT = 0;
 	private static final int DIALOG_CHANGE_EVENT = 1;
-	private static String CURRENTDAY = "MO";
+	private static String CURRENTDAY = "NULL";
+	
+	public static int CDI = 0; //current days int;
 	
 	private ScheduleDatabaseHandler db;
 	
@@ -55,6 +65,31 @@ public class Schedule extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_schedule);
+        
+        textView_today = (TextView) findViewById(R.id.textView_today);
+        
+        autoSetDay(textView_today);
+        
+        textView_today.setOnClickListener(new TextView.OnClickListener() { 
+			public void onClick(View v) {
+				CDI++; CDI %=8;
+				CURRENTDAY = day_abbrs[CDI];
+		        textView_today.setText(day_names[CDI]);
+		        loadEventsArray();
+			}
+		});
+        textView_today.setOnLongClickListener(new TextView.OnLongClickListener() { 
+			public boolean onLongClick(View v) {
+				Calendar calendar = Calendar.getInstance();
+		        int day = calendar.get(Calendar.DAY_OF_WEEK);
+		        CDI = day;
+		        CURRENTDAY = day_abbrs[day];
+		        textView_today.setText("Today's Schedule");
+		        loadEventsArray();
+		        return true;
+			}
+		});
+        
        
         curEvent = new MEvent();
         
@@ -74,7 +109,7 @@ public class Schedule extends Activity {
 			}
 		});
 		
-		//Set long-click listener to list items to display settings
+		//Set long-click listener to list items
 		list_data.setOnItemLongClickListener(new OnItemLongClickListener() {
 					public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
 							int pos, long id) {
@@ -91,7 +126,17 @@ public class Schedule extends Activity {
 				});
     }
 
-    @Override
+    private void autoSetDay(TextView title) {
+    	
+    	Calendar calendar = Calendar.getInstance();
+        int day = calendar.get(Calendar.DAY_OF_WEEK);
+        CDI = day;
+        CURRENTDAY = day_abbrs[day];
+        title.setText("Today's Schedule");
+        
+	}
+
+	@Override
     protected void onPrepareDialog(int id, Dialog dialog){
     	switch(id) {
     	case DIALOG_ADD_EVENT:
@@ -118,6 +163,7 @@ public class Schedule extends Activity {
     @Override
     protected Dialog onCreateDialog(int id){
    
+    	
     	final Dialog dialogEditEvent = new Dialog(this);
 		dialogEditEvent.setContentView(R.layout.add_edit_event);
 
@@ -138,8 +184,7 @@ public class Schedule extends Activity {
 		checkBoxSunday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxSunday);
 		
 		add_edit_title = (TextView) dialogEditEvent.findViewById(R.id.textView_add_event);
-		
-		
+	
     	switch(id) {
     	case DIALOG_ADD_EVENT:
     		
@@ -171,7 +216,7 @@ public class Schedule extends Activity {
 					if(checkBoxSaturday.isChecked()) tempdays+="SA";
 					if(checkBoxSunday.isChecked()) tempdays+="SU";
 					
-					addEvent(templabel,templocation,finalbegin,finalend,tempdays);
+					if (!tempdays.equals("NULL")) addEvent(templabel,templocation,finalbegin,finalend,tempdays);
 					
 					removeDialog(DIALOG_ADD_EVENT);
 				}
@@ -230,7 +275,6 @@ public class Schedule extends Activity {
 					
 					//remove old entry then add if different
 					//if only thing changed was taking away all days, dont add
-					Log.d("Schedule", tempdays);
 					
 					if(tempdays.equals( "NULL") && templabel.equals(curEvent.getLabel())
 							&& templocation.equals(curEvent.getLocation())
@@ -256,12 +300,14 @@ public class Schedule extends Activity {
 			});
 			
     		break;
+    	
     	default :
     		break;
     	
     	}
     	
-    	return dialogEditEvent;
+     return dialogEditEvent;
+
     }
     
     @Override

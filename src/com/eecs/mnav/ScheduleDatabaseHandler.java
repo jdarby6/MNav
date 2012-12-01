@@ -122,9 +122,9 @@ public class ScheduleDatabaseHandler extends SQLiteOpenHelper {
 				events.add(event);
 				
 			} while (cursor.moveToNext());
-			cursor.close();
+			
 		}
-		
+		cursor.close();
 		return events;
 	}
 	
