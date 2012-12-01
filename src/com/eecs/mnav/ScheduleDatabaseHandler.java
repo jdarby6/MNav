@@ -40,11 +40,11 @@ public class ScheduleDatabaseHandler extends SQLiteOpenHelper {
 		String CREATE_SAVEDEVENTS_TABLE = "CREATE TABLE " + TABLE_SAVEDEVENTS + "("
 				+ KEY_ID + " INTEGER PRIMARY KEY," 
 				+ KEY_EVENTINDEX + " INTEGER," 
-				+ KEY_LABEL + "TEXT," 
-				+ KEY_LOCATION + " TEXT," 
+				+ KEY_LABEL + " TEXT," 
+				+ KEY_LOCATION + " TEXT NOT NULL," 
 				+ KEY_TIMEBEGIN + " INTEGER," 
 				+ KEY_TIMEEND + " INTEGER," 
-				+ KEY_DAYS + " TEXT" + ")";
+				+ KEY_DAYS + " TEXT NOT NULL" + ")";
 		db.execSQL(CREATE_SAVEDEVENTS_TABLE);
 	}
 
@@ -81,7 +81,6 @@ public class ScheduleDatabaseHandler extends SQLiteOpenHelper {
 		// Inserting Row
 		db.insert(TABLE_SAVEDEVENTS, null, values);
 		
-		Log.d("DatabaseHandler", "Added event \"" + event.getLabel() + "\" to Schedule \"");
 	}
 	
 	//Adds a collection of timers to the table
@@ -91,18 +90,18 @@ public class ScheduleDatabaseHandler extends SQLiteOpenHelper {
 		}
 	}
 	
-	public ArrayList<MEvent> getList(String day) {//returns list for a day
+	public ArrayList<MEvent> getDay(String day) {//returns list for a day
 		ArrayList<MEvent> events = new ArrayList<MEvent>();
 		// Query //don't really need days, since only looking at certain day, but w/e
-		String query = "SELECT  " + KEY_LABEL + "," + KEY_LOCATION + "," 
-				+ KEY_EVENTINDEX + "," 
-				+ KEY_TIMEBEGIN + "," 
-				+ KEY_TIMEEND + ","
+		String query = "SELECT  " + KEY_LABEL + ", " + KEY_LOCATION + ", " 
+				+ KEY_EVENTINDEX + ", " 
+				+ KEY_TIMEBEGIN + ", " 
+				+ KEY_TIMEEND + ", "
 				+ KEY_DAYS + " FROM " 
 				+ TABLE_SAVEDEVENTS
-				+ " WHERE " + KEY_DAYS + "LIKE '%" + day
-				+ "' ORDER BY "
-				+ KEY_TIMEBEGIN + " ASC";
+				+ " WHERE " + KEY_DAYS + " LIKE '%" + day
+				+ "%'";
+		
 		
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(query, null);
@@ -121,13 +120,21 @@ public class ScheduleDatabaseHandler extends SQLiteOpenHelper {
 				event.restoreLabel(label);
 				// Adding contact to list
 				events.add(event);
+				
 			} while (cursor.moveToNext());
+			cursor.close();
 		}
 		
 		return events;
 	}
 	
-	//get event for current time using similar code to get days
-		//return -1 if no event
+	public void deleteEvent(String classname){
+		
+		SQLiteDatabase db = this.getWritableDatabase();
+		db.delete(TABLE_SAVEDEVENTS, KEY_LABEL + " = ?", new String[] { classname });
+		
+	}
+	
+	
 }
 	

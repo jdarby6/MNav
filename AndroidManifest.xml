@@ -31,15 +31,12 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ScheduleActivity"
+            android:name=".Schedule"
             android:label="@string/schedule" >
         </activity>
         <activity android:name="com.eecs.mnav.BuildingMapActivity" >
         </activity>
-        <activity
-            android:name=".ScheduleEditActivity"
-            android:label="@string/title_activity_schedule_edit" >
-        </activity>
+      
     </application>
 
 </manifest>

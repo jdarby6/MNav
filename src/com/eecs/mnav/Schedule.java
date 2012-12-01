@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import android.os.Bundle;
 import android.app.Activity;
 import android.app.Dialog;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.View;
@@ -34,11 +35,6 @@ public class Schedule extends Activity {
 	private EditText editText_location;
 	private EditText editText_class;
 	
-	private TextView textView_end_time;
-	private TextView textView_begin_time;
-	private TextView textView_location;
-	private TextView textView_class;
-	
 	private CheckBox checkBoxMonday;
 	private CheckBox checkBoxTuesday;
 	private CheckBox checkBoxWednesday;
@@ -46,9 +42,12 @@ public class Schedule extends Activity {
 	private CheckBox checkBoxFriday;
 	private CheckBox checkBoxSaturday;
 	private CheckBox checkBoxSunday;
+	
+	private TextView add_edit_title;
 
 	private static final int DIALOG_ADD_EVENT = 0;
 	private static final int DIALOG_CHANGE_EVENT = 1;
+	private static String CURRENTDAY = "MO";
 	
 	private ScheduleDatabaseHandler db;
 	
@@ -57,6 +56,7 @@ public class Schedule extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_schedule);
        
+        curEvent = new MEvent();
         
         db = new ScheduleDatabaseHandler(this);
         
@@ -65,11 +65,7 @@ public class Schedule extends Activity {
 		list_data.setAdapter(eventArrayAdapter);
 		list_data.setEmptyView(findViewById(R.id.textView_empty));//format problem keep button bottom
 		
-		//test entry to pre load
-		// MEvent tempo = new MEvent("class","location",5,5,5,"MOTUWETHFR");
-	       // ArrayList<MEvent> test = new ArrayList<MEvent>();
-	     //   events_array.add(tempo);
-        addEvent("class","location",5,5,"MOTUWETHFR");
+		loadEventsArray();
         
         button_add_event = (Button) findViewById(R.id.button_add_event);
 		button_add_event.setOnClickListener(new Button.OnClickListener() { 
@@ -83,7 +79,12 @@ public class Schedule extends Activity {
 					public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
 							int pos, long id) {
 						
-						curEvent = eventArrayAdapter.getItem(pos);
+						curEvent.setLabel(eventArrayAdapter.getItem(pos).getLabel());
+						curEvent.setLocation(eventArrayAdapter.getItem(pos).getLocation());
+						curEvent.setTimeBegin(eventArrayAdapter.getItem(pos).getTimeBegin());
+						curEvent.setTimeEnd(eventArrayAdapter.getItem(pos).getTimeEnd());
+						curEvent.setDays(eventArrayAdapter.getItem(pos).getDays());
+						
 						showDialog(DIALOG_CHANGE_EVENT);
 						return true;
 					}
@@ -116,27 +117,33 @@ public class Schedule extends Activity {
     
     @Override
     protected Dialog onCreateDialog(int id){
-    	Dialog dialog = null;
+   
+    	final Dialog dialogEditEvent = new Dialog(this);
+		dialogEditEvent.setContentView(R.layout.add_edit_event);
+
+		button_done = (Button) dialogEditEvent.findViewById(R.id.button_done);
+		button_cancel_edit = (Button) dialogEditEvent.findViewById(R.id.button_cancel_edit);
+
+		editText_end_time = (EditText) dialogEditEvent.findViewById(R.id.editText_end_time);
+		editText_begin_time = (EditText) dialogEditEvent.findViewById(R.id.editText_begin_time);
+		editText_location = (EditText) dialogEditEvent.findViewById(R.id.editText_location);
+		editText_class = (EditText) dialogEditEvent.findViewById(R.id.editText_class);
+		
+		checkBoxMonday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxMonday);
+		checkBoxTuesday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxTuesday);
+		checkBoxWednesday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxWednesday);
+		checkBoxThursday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxThursday);
+		checkBoxFriday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxFriday);
+		checkBoxSaturday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxSaturday);
+		checkBoxSunday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxSunday);
+		
+		add_edit_title = (TextView) dialogEditEvent.findViewById(R.id.textView_add_event);
+		
+		
     	switch(id) {
     	case DIALOG_ADD_EVENT:
-    		final Dialog dialogAddEvent = new Dialog(this);
-			dialogAddEvent.setContentView(R.layout.add_edit_event);
-
-			button_done = (Button) dialogAddEvent.findViewById(R.id.button_done);
-			button_cancel_edit = (Button) dialogAddEvent.findViewById(R.id.button_cancel_edit);
-
-			editText_end_time = (EditText) dialogAddEvent.findViewById(R.id.editText_end_time);
-			editText_begin_time = (EditText) dialogAddEvent.findViewById(R.id.editText_begin_time);
-			editText_location = (EditText) dialogAddEvent.findViewById(R.id.editText_location);
-			editText_class = (EditText) dialogAddEvent.findViewById(R.id.editText_class);
-			
-			checkBoxMonday = (CheckBox) dialogAddEvent.findViewById(R.id.checkBoxMonday);
-			checkBoxTuesday = (CheckBox) dialogAddEvent.findViewById(R.id.checkBoxTuesday);
-			checkBoxWednesday = (CheckBox) dialogAddEvent.findViewById(R.id.checkBoxWednesday);
-			checkBoxThursday = (CheckBox) dialogAddEvent.findViewById(R.id.checkBoxThursday);
-			checkBoxFriday = (CheckBox) dialogAddEvent.findViewById(R.id.checkBoxFriday);
-			checkBoxSaturday = (CheckBox) dialogAddEvent.findViewById(R.id.checkBoxSaturday);
-			checkBoxSunday = (CheckBox) dialogAddEvent.findViewById(R.id.checkBoxSunday);
+    		
+			add_edit_title.setText("Add Event");
 			
 			//set onKeylistener so use the enter key/dpad center to go to next field/remove keyboard
 			
@@ -146,7 +153,7 @@ public class Schedule extends Activity {
 					String templabel = "";
 					String tempbegin_time= "";
 					String tempend_time= "";
-					String tempdays= "";
+					String tempdays= "NULL";
 					int finalbegin = 0;
 					int finalend = 0;
 					//checks for values
@@ -164,15 +171,6 @@ public class Schedule extends Activity {
 					if(checkBoxSaturday.isChecked()) tempdays+="SA";
 					if(checkBoxSunday.isChecked()) tempdays+="SU";
 					
-					//set values and add event
-					
-					//check each field has values
-					//do more checks
-					
-					if(templocation == "" || templabel == "" || finalbegin < 0 || finalend < 0 ||
-							finalend < finalbegin || tempdays == "") //dialog pop up
-					
-					
 					addEvent(templabel,templocation,finalbegin,finalend,tempdays);
 					
 					removeDialog(DIALOG_ADD_EVENT);
@@ -185,32 +183,26 @@ public class Schedule extends Activity {
 					removeDialog(DIALOG_ADD_EVENT);
 				}
 			});
-			dialog = dialogAddEvent;
+			
     		break;
     	case DIALOG_CHANGE_EVENT:
     		//should come from long click on a list item
-    		final Dialog dialogChangeEvent = new Dialog(this);
-			dialogChangeEvent.setContentView(R.layout.add_edit_event);
-
-			button_done = (Button) dialogChangeEvent.findViewById(R.id.button_done);
-			button_cancel_edit = (Button) dialogChangeEvent.findViewById(R.id.button_cancel_edit);
-
-			editText_end_time = (EditText) dialogChangeEvent.findViewById(R.id.editText_end_time);
-			editText_begin_time = (EditText) dialogChangeEvent.findViewById(R.id.editText_begin_time);
-			editText_location = (EditText) dialogChangeEvent.findViewById(R.id.editText_location);
-			editText_class = (EditText) dialogChangeEvent.findViewById(R.id.editText_class);
 			
+			add_edit_title.setText("Edit Event");
 			
-			checkBoxMonday = (CheckBox) dialogChangeEvent.findViewById(R.id.checkBoxMonday);
-			checkBoxTuesday = (CheckBox) dialogChangeEvent.findViewById(R.id.checkBoxTuesday);
-			checkBoxWednesday = (CheckBox) dialogChangeEvent.findViewById(R.id.checkBoxWednesday);
-			checkBoxThursday = (CheckBox) dialogChangeEvent.findViewById(R.id.checkBoxThursday);
-			checkBoxFriday = (CheckBox) dialogChangeEvent.findViewById(R.id.checkBoxFriday);
-			checkBoxSaturday = (CheckBox) dialogChangeEvent.findViewById(R.id.checkBoxSaturday);
-			checkBoxSunday = (CheckBox) dialogChangeEvent.findViewById(R.id.checkBoxSunday);
+			//editText_end_time.setText(curEvent.getTimeEnd());
+		   // editText_begin_time.setText(curEvent.getTimeEnd());
+			editText_location.setText(curEvent.getLocation());
+			editText_class.setText(curEvent.getLabel());
 			
-			//set values from values already there
-			//look at curEvent and set
+			if (curEvent.getDays().indexOf("MO") != -1) checkBoxMonday.setChecked(true);
+			if (curEvent.getDays().indexOf("TU") != -1)checkBoxTuesday.setChecked(true);
+			if (curEvent.getDays().indexOf("WE") != -1)checkBoxWednesday.setChecked(true);
+			if (curEvent.getDays().indexOf("TH") != -1)checkBoxThursday.setChecked(true);
+			if (curEvent.getDays().indexOf("FR") != -1)checkBoxFriday.setChecked(true);
+			if (curEvent.getDays().indexOf("SA") != -1)checkBoxSaturday.setChecked(true);
+			if (curEvent.getDays().indexOf("SU") != -1)checkBoxSunday.setChecked(true);
+			
 			
 			button_done.setOnClickListener(new Button.OnClickListener() {
 				public void onClick(View v) {
@@ -218,7 +210,7 @@ public class Schedule extends Activity {
 					String templabel = "";
 					String tempbegin_time= "";
 					String tempend_time= "";
-					String tempdays= "";
+					String tempdays= "NULL";
 					int finalbegin = 0;
 					int finalend = 0;
 					//checks for values
@@ -236,18 +228,22 @@ public class Schedule extends Activity {
 					if(checkBoxSaturday.isChecked()) tempdays+="SA";
 					if(checkBoxSunday.isChecked()) tempdays+="SU";
 					
-					//set values and add event
+					//remove old entry then add if different
+					//if only thing changed was taking away all days, dont add
+					Log.d("Schedule", tempdays);
 					
-					//check each field has values
-					//do more checks
+					if(tempdays.equals( "NULL") && templabel.equals(curEvent.getLabel())
+							&& templocation.equals(curEvent.getLocation())
+							&& finalbegin == curEvent.getTimeBegin()
+							&& finalend == curEvent.getTimeEnd()){
+						removeEvent(templabel);
+					}
 					
-					if(templocation == "" || templabel == "" || finalbegin < 0 || finalend < 0 ||
-							finalend < finalbegin || tempdays == "") //dialog pop up
-					
-					
-					addEvent(templabel,templocation,finalbegin,finalend,tempdays);
-					
-					//Cancel the Dialog
+					else{
+						removeEvent(templabel);
+						addEvent(templabel,templocation,finalbegin,finalend,tempdays);
+						
+					}
 					removeDialog(DIALOG_CHANGE_EVENT);
 				}
 			});
@@ -258,15 +254,14 @@ public class Schedule extends Activity {
 					removeDialog(DIALOG_CHANGE_EVENT);
 				}
 			});
-			dialog = dialogChangeEvent;
+			
     		break;
     	default :
-    		dialog = null;
     		break;
     	
     	}
     	
-    	return dialog;
+    	return dialogEditEvent;
     }
     
     @Override
@@ -276,11 +271,21 @@ public class Schedule extends Activity {
     }
     
     private void addEvent(String classname, String location, int begin_time, int end_time, String days){
-    	//do stuff with database etc
+    	//adds everything from the database now need to fix database stuff
+    	
     	int index = 0;//index not really needed
     	MEvent tmp = new MEvent(classname, location, index, begin_time, end_time, days);
-		eventArrayAdapter.add(tmp);
-		eventArrayAdapter.notifyDataSetChanged();
+    	db.addEvent(tmp, "currentSchedule", index);
+    	
+    	loadEventsArray();
+    }
+    
+    private void removeEvent(String classname){
+    	
+    	//search db for correct event and remove it
+    	db.deleteEvent(classname);
+    	loadEventsArray();
+    	
     }
     
 	@Override
@@ -288,4 +293,16 @@ public class Schedule extends Activity {
 		db.close();
 		super.onDestroy();
 	}
+	public void loadEventsArray(){
+		ArrayList<MEvent>tmp_array = new ArrayList<MEvent>();
+    	tmp_array = db.getDay(CURRENTDAY);
+    	eventArrayAdapter.clear();
+    	for(int i = 0; i<tmp_array.size(); i++){
+    		
+    		eventArrayAdapter.add(tmp_array.get(i));
+    	}
+    	
+		eventArrayAdapter.notifyDataSetChanged();
+	}
+	
 }

@@ -94,6 +94,8 @@ public class StartActivity extends Activity implements TextWatcher {
 		   String mTitleRaw = cursor.getString(0);
 		   strings.add(mTitleRaw);
 		}
+		
+		cursor.close();
 		String[] item = (String[]) strings.toArray(new String[strings.size()]);
 
 		address_box = (AutoCompleteTextView)findViewById(R.id.autoCompleteTextView_address_box);
@@ -143,8 +145,8 @@ public class StartActivity extends Activity implements TextWatcher {
 		schedule.setOnClickListener(new OnClickListener() {
 
 			public void onClick(View v) {
-
-				Intent scheduleIntent = new Intent(StartActivity.this, ScheduleActivity.class);
+				
+				Intent scheduleIntent = new Intent(StartActivity.this, Schedule.class);
 				StartActivity.this.startActivity(scheduleIntent);
 
 			}

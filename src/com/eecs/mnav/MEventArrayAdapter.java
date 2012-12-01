@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences.Editor;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,11 +50,13 @@ public class MEventArrayAdapter extends ArrayAdapter<MEvent>{
 		textView_end_time.setText(String.valueOf(events.get(position).getTimeEnd()));
 		//remember checkboxes
 		
+		
 		button_schedule_search.setOnClickListener(new Button.OnClickListener() { 
 			public void onClick(View v) {
 				
 				//start activity with location as intent
-				String address = events.get(position).getLocation();
+				//String address = events.get(position).getLocation();
+				
 
 				//Save destination address
 				//need a way to pass it over now that original way different
