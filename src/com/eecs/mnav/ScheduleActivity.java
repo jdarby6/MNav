@@ -58,6 +58,7 @@ public class ScheduleActivity extends Activity {
 
 	private static final int DIALOG_ADD_EVENT = 0;
 	private static final int DIALOG_CHANGE_EVENT = 1;
+	private static final int TIME_PICK_DIALOG_ID = 2;
 	private static String CURRENTDAY = "NULL";
 	
 	public static int CDI = 0; //current days int;
@@ -171,35 +172,39 @@ public class ScheduleActivity extends Activity {
     
     @Override
     protected Dialog onCreateDialog(int id){
-   
-    	
-    	final Dialog dialogEditEvent = new Dialog(this);
-		dialogEditEvent.setContentView(R.layout.add_edit_event);
-
-		button_done = (Button) dialogEditEvent.findViewById(R.id.button_done);
-		button_cancel_edit = (Button) dialogEditEvent.findViewById(R.id.button_cancel_edit);
-
-		editText_end_time = (EditText) dialogEditEvent.findViewById(R.id.editText_end_time);
-		editText_begin_time = (EditText) dialogEditEvent.findViewById(R.id.editText_begin_time);
-		editText_location = (EditText) dialogEditEvent.findViewById(R.id.editText_location);
-		editText_class = (EditText) dialogEditEvent.findViewById(R.id.editText_class);
-		
-		checkBoxMonday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxMonday);
-		checkBoxTuesday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxTuesday);
-		checkBoxWednesday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxWednesday);
-		checkBoxThursday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxThursday);
-		checkBoxFriday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxFriday);
-		checkBoxSaturday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxSaturday);
-		checkBoxSunday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxSunday);
-		
-		add_edit_title = (TextView) dialogEditEvent.findViewById(R.id.textView_add_event);
-	
+    	final Dialog dialogEditEvent = new Dialog(this);		
     	switch(id) {
     	case DIALOG_ADD_EVENT:
+    		dialogEditEvent.setContentView(R.layout.add_edit_event);
+			dialogEditEvent.setTitle("Add Event");
     		
-			add_edit_title.setText("Add Event");
+			//----------------------- grab all the view elements
+			button_done = (Button) dialogEditEvent.findViewById(R.id.button_done);
+			button_cancel_edit = (Button) dialogEditEvent.findViewById(R.id.button_cancel_edit);
+			editText_end_time = (EditText) dialogEditEvent.findViewById(R.id.editText_end_time);
+			editText_begin_time = (EditText) dialogEditEvent.findViewById(R.id.editText_begin_time);
+			editText_location = (EditText) dialogEditEvent.findViewById(R.id.editText_location);
+			editText_class = (EditText) dialogEditEvent.findViewById(R.id.editText_class);
+			checkBoxMonday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxMonday);
+			checkBoxTuesday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxTuesday);
+			checkBoxWednesday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxWednesday);
+			checkBoxThursday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxThursday);
+			checkBoxFriday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxFriday);
+			checkBoxSaturday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxSaturday);
+			checkBoxSunday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxSunday);
+			//-------------------		
 			
-			//set onKeylistener so use the enter key/dpad center to go to next field/remove keyboard
+			//Allow click to produce time picker
+			editText_end_time.setOnClickListener(new View.OnClickListener() {
+			    public void onClick(View v) {
+			        showDialog(TIME_PICK_DIALOG_ID);
+			    }
+			});
+			editText_begin_time.setOnClickListener(new View.OnClickListener() {
+			    public void onClick(View v) {
+			        showDialog(TIME_PICK_DIALOG_ID);
+			    }
+			});
 			
 			button_done.setOnClickListener(new Button.OnClickListener() {
 				public void onClick(View v) {
@@ -210,8 +215,8 @@ public class ScheduleActivity extends Activity {
 					String tempdays= "NULL";
 					int finalbegin = 0;
 					int finalend = 0;
-					//checks for values
 					
+					//checks for values					
 					templocation = editText_location.getText().toString();
 					templabel = editText_class.getText().toString();
 					tempbegin_time = editText_begin_time.getText().toString();
@@ -240,15 +245,40 @@ public class ScheduleActivity extends Activity {
 			
     		break;
     	case DIALOG_CHANGE_EVENT:
-    		//should come from long click on a list item
+    		dialogEditEvent.setContentView(R.layout.add_edit_event);
+			dialogEditEvent.setTitle("Edit Event");
 			
-			add_edit_title.setText("Edit Event");
+			//----------------------- grab all the view elements
+			button_done = (Button) dialogEditEvent.findViewById(R.id.button_done);
+			button_cancel_edit = (Button) dialogEditEvent.findViewById(R.id.button_cancel_edit);
+			editText_end_time = (EditText) dialogEditEvent.findViewById(R.id.editText_end_time);
+			editText_begin_time = (EditText) dialogEditEvent.findViewById(R.id.editText_begin_time);
+			editText_location = (EditText) dialogEditEvent.findViewById(R.id.editText_location);
+			editText_class = (EditText) dialogEditEvent.findViewById(R.id.editText_class);
+			checkBoxMonday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxMonday);
+			checkBoxTuesday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxTuesday);
+			checkBoxWednesday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxWednesday);
+			checkBoxThursday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxThursday);
+			checkBoxFriday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxFriday);
+			checkBoxSaturday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxSaturday);
+			checkBoxSunday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxSunday);
+			//-------------------	
 			
-			//editText_end_time.setText(curEvent.getTimeEnd());
-		   // editText_begin_time.setText(curEvent.getTimeEnd());
+			//Allow click to produce time picker
+			editText_end_time.setOnClickListener(new View.OnClickListener() {
+			    public void onClick(View v) {
+			        showDialog(TIME_PICK_DIALOG_ID);
+			    }
+			});
+			editText_begin_time.setOnClickListener(new View.OnClickListener() {
+			    public void onClick(View v) {
+			        showDialog(TIME_PICK_DIALOG_ID);
+			    }
+			});
+			
+			//Restore dialog values based on event info
 			editText_location.setText(curEvent.getLocation());
 			editText_class.setText(curEvent.getLabel());
-			
 			if (curEvent.getDays().indexOf("MO") != -1) checkBoxMonday.setChecked(true);
 			if (curEvent.getDays().indexOf("TU") != -1)checkBoxTuesday.setChecked(true);
 			if (curEvent.getDays().indexOf("WE") != -1)checkBoxWednesday.setChecked(true);
@@ -256,7 +286,6 @@ public class ScheduleActivity extends Activity {
 			if (curEvent.getDays().indexOf("FR") != -1)checkBoxFriday.setChecked(true);
 			if (curEvent.getDays().indexOf("SA") != -1)checkBoxSaturday.setChecked(true);
 			if (curEvent.getDays().indexOf("SU") != -1)checkBoxSunday.setChecked(true);
-			
 			
 			button_done.setOnClickListener(new Button.OnClickListener() {
 				public void onClick(View v) {
@@ -309,7 +338,12 @@ public class ScheduleActivity extends Activity {
 			});
 			
     		break;
-    	
+    	case TIME_PICK_DIALOG_ID:
+    		dialogEditEvent.setContentView(R.layout.dialog_pick_time);
+    		
+			dialogEditEvent.setTitle("Add Event");
+    		
+    		break;
     	default :
     		break;
     	

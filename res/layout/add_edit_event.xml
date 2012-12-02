@@ -4,55 +4,49 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
-
-    <TextView
-        android:id="@+id/textView_add_event"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:gravity="center_horizontal"
-        android:text="@string/add_event"
-        android:textSize="30dp" />
-
+
     <RelativeLayout
         android:id="@+id/textEntryLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/textView_add_event"
         android:layout_marginTop="17dp" >
-
+
         <EditText
             android:id="@+id/editText_end_time"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/editText_begin_time"
-            android:layout_toRightOf="@+id/textView_begin_time"
-            android:ems="10"
             android:layout_marginBottom="3dp"
+            android:layout_toRightOf="@+id/textView_begin_time"
+            android:clickable="true"
+            android:ems="10"
+            android:focusableInTouchMode="false"
             android:hint="@string/zero_time"
             android:inputType="time" />
-
+
         <EditText
             android:id="@+id/editText_begin_time"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/editText_location"
-            android:layout_toRightOf="@+id/textView_begin_time"
-            android:ems="10"
             android:layout_marginBottom="3dp"
+            android:layout_toRightOf="@+id/textView_begin_time"
+            android:clickable="true"
+            android:ems="10"
+            android:focusableInTouchMode="false"
             android:hint="@string/zero_time"
             android:inputType="time" />
-
+
         <EditText
             android:id="@+id/editText_location"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/editText_class"
+            android:layout_marginBottom="3dp"
             android:layout_toRightOf="@+id/textView_begin_time"
             android:ems="10"
-            android:layout_marginBottom="3dp"
-            android:hint="@string/location_hint"
+            android:hint="@string/address_default"
             android:inputType="textPostalAddress" />
 
         <TextView
@@ -152,20 +146,20 @@
             android:text="@string/friday" />
 
         <CheckBox
-            android:id="@+id/checkBoxSaturday"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/checkBoxMonday"
-            android:layout_marginLeft="5dp"
-            android:text="@string/saturday" />
-
-        <CheckBox
             android:id="@+id/checkBoxSunday"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toRightOf="@+id/checkBoxSaturday"
-            android:layout_alignBaseline="@+id/checkBoxSaturday"
+            android:layout_alignLeft="@+id/checkBoxThursday"
+            android:layout_below="@+id/checkBoxThursday"
             android:text="@string/sunday" />
+
+        <CheckBox
+            android:id="@+id/checkBoxSaturday"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/checkBoxTuesday"
+            android:layout_toLeftOf="@+id/checkBoxWednesday"
+            android:text="@string/saturday" />
 
     </RelativeLayout>
 
