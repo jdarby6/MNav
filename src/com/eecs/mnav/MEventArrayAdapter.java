@@ -3,9 +3,12 @@ package com.eecs.mnav;
 import java.util.ArrayList;
 
 import android.content.Context;
+import android.content.Intent;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 
 import android.widget.ArrayAdapter;
@@ -45,6 +48,15 @@ public class MEventArrayAdapter extends ArrayAdapter<MEvent>{
 		textView_begin_time.setText(String.valueOf(events.get(position).getTimeBegin()));
 		textView_end_time.setText(String.valueOf(events.get(position).getTimeEnd()));
 		//remember checkboxes
+		 rowView.setOnClickListener( new View.OnClickListener()
+	        {
+	                public void onClick(View v)
+	                {
+	                	Log.d("Schedule", "got to inside click");
+	                	
+	    				Intent searchIntent = new Intent(context, MNavMainActivity.class);
+	    				context.startActivity(searchIntent);
+	                }});
 
 		return rowView;
 	}

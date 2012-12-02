@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
 
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 
@@ -102,7 +103,10 @@ public class Schedule extends Activity {
 		list_data.setAdapter(eventArrayAdapter);
 		list_data.setEmptyView(findViewById(R.id.textView_empty));//format problem keep button bottom
 		
+		
+		
 		loadEventsArray();
+		if(eventArrayAdapter.isEnabled(0)) Log.d("Schedule Items", "enabled");
         
         button_add_event = (Button) findViewById(R.id.button_add_event);
 		button_add_event.setOnClickListener(new Button.OnClickListener() { 
@@ -113,18 +117,11 @@ public class Schedule extends Activity {
 		
 
 		
-		list_data.setOnItemClickListener(new OnItemClickListener() {
-			public void onItemClick(AdapterView<?> arg0, View arg1,
-					int pos, long id) {
-				
-				Intent searchIntent = new Intent(arg1.getContext(), MNavMainActivity.class);
-				startActivity(searchIntent);
-			}
-		});
 		//Set long-click listener to list items
 		list_data.setOnItemLongClickListener(new OnItemLongClickListener() {
 					public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
 							int pos, long id) {
+						Log.d("Schedule", "got to inside long click");
 						
 						curEvent.setLabel(eventArrayAdapter.getItem(pos).getLabel());
 						curEvent.setLocation(eventArrayAdapter.getItem(pos).getLocation());

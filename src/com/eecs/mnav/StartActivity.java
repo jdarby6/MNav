@@ -101,6 +101,7 @@ public class StartActivity extends Activity implements TextWatcher {
 		}
 		
 		cursor.close();
+		destination_db.close();
 		String[] item = (String[]) strings.toArray(new String[strings.size()]);
 
 		address_box = (AutoCompleteTextView)findViewById(R.id.autoCompleteTextView_address_box);
