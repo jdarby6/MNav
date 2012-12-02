@@ -39,6 +39,7 @@ public class StartActivity extends Activity implements TextWatcher {
 	private Button search;
 	private AutoCompleteTextView address_box;
 	private Button schedule;
+	private Button info;
 	private TextView gInputFeedback;
 
 	private String destBldgName = "";
@@ -107,6 +108,7 @@ public class StartActivity extends Activity implements TextWatcher {
 		address_box = (AutoCompleteTextView)findViewById(R.id.autoCompleteTextView_address_box);
 		search = (Button)findViewById(R.id.button_search);
 		schedule = (Button)findViewById(R.id.button_schedule);
+		info = (Button)findViewById(R.id.button_info);
 		gInputFeedback = (TextView)findViewById(R.id.textView_input_feedback);
 		
 		address_box.addTextChangedListener(this);
@@ -208,6 +210,18 @@ public class StartActivity extends Activity implements TextWatcher {
 
 		});
 
+	
+	
+//TODO
+		info.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+			
+				Intent scheduleIntent = new Intent(StartActivity.this, InfoActivity.class);
+				StartActivity.this.startActivity(scheduleIntent);
+
+			}
+		});
+	
 	}
 
 	@Override
