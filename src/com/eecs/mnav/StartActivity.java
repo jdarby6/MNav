@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -25,6 +26,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -41,7 +43,9 @@ public class StartActivity extends Activity implements TextWatcher {
 
 	private String destBldgName = "";
 	private String destRoomNum = "";
-
+	
+	final String[] day_abbrs = new String[] {"NULL", "SU", "MO", "TU", "WE", 
+			"TH", "FR", "SA"};
 	private static final String REGEX_ROOM_NUM = "^[0-9]{1,4} [a-zA-Z]+ *";
 	private static final String REGEX_BLDG_NAME = "^[a-zA-Z][a-zA-Z &]+";
 	private static final int LONG = Toast.LENGTH_LONG;
@@ -59,6 +63,7 @@ public class StartActivity extends Activity implements TextWatcher {
 	public static String sPref = null;
 	
 	private DataBaseHelper destination_db;
+	private ScheduleDatabaseHandler schedule_db;
 
 	String item[]={
 			"January", "February", "March", "April",
@@ -148,6 +153,54 @@ public class StartActivity extends Activity implements TextWatcher {
 				
 				Intent scheduleIntent = new Intent(StartActivity.this, Schedule.class);
 				StartActivity.this.startActivity(scheduleIntent);
+
+			}
+
+
+		});
+		schedule.setOnLongClickListener(new OnLongClickListener() {
+
+			public boolean onLongClick(View v) {
+				//reach into db and get current time day
+				//for now, get first on list
+				
+				
+				Calendar calendar = Calendar.getInstance();
+		        int day = calendar.get(Calendar.DAY_OF_WEEK);
+		        
+		        schedule_db = new ScheduleDatabaseHandler(v.getContext());
+		        
+		        String tempAddress = "";
+		        ArrayList<MEvent>tmp_array = new ArrayList<MEvent>();
+		    	tmp_array = schedule_db.getDay(day_abbrs[day]);
+		    	tempAddress = tmp_array.get(0).getLocation();
+		    	//future loop events to see if time correct, right now just first event
+		    	schedule_db.close();
+		    	
+				
+				
+				gInputFeedback.setText("");
+				if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME)) {
+					if(tempAddress.matches(REGEX_ROOM_NUM)) {
+						destRoomNum = tempAddress.substring(0,tempAddress.indexOf(" "));
+						destBldgName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
+						Log.d("Schedule Button", "Matches REGEX_ROOM_NUM! RoomNum="+destRoomNum+" BldgName="+destBldgName);
+					} else {//It should just be the name of the bldg
+						destBldgName = tempAddress;
+						destRoomNum = "";
+						Log.d("Schedule Button", "Matches REGEX_BLDG_NAME! RoomNum="+destRoomNum+" BldgName="+destBldgName);
+					}
+				}
+				
+				Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
+				editor.putString("DESTNAME", destBldgName);
+				editor.putString("DESTROOM", destRoomNum);
+				editor.commit();
+				
+				Intent searchIntent = new Intent(StartActivity.this, MNavMainActivity.class);
+				StartActivity.this.startActivity(searchIntent);
+				
+				return true;
 
 			}
 

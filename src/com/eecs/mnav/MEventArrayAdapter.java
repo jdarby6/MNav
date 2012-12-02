@@ -3,16 +3,13 @@ package com.eecs.mnav;
 import java.util.ArrayList;
 
 import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences.Editor;
-import android.preference.PreferenceManager;
-import android.util.Log;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
+
 import android.widget.ArrayAdapter;
-import android.widget.Button;
+
 import android.widget.TextView;
 
 public class MEventArrayAdapter extends ArrayAdapter<MEvent>{
@@ -40,7 +37,6 @@ public class MEventArrayAdapter extends ArrayAdapter<MEvent>{
 		TextView textView_location = (TextView) rowView.findViewById(R.id.textView_location);
 		TextView textView_begin_time = (TextView) rowView.findViewById(R.id.textView_begin);
 		TextView textView_end_time = (TextView) rowView.findViewById(R.id.textView_end);
-		Button button_schedule_search = (Button) rowView.findViewById(R.id.button_schedule_search);
 		//do same for checkboxes
 		
 		//Set the textViews in the row_layout xml file
@@ -49,22 +45,6 @@ public class MEventArrayAdapter extends ArrayAdapter<MEvent>{
 		textView_begin_time.setText(String.valueOf(events.get(position).getTimeBegin()));
 		textView_end_time.setText(String.valueOf(events.get(position).getTimeEnd()));
 		//remember checkboxes
-		
-		
-		button_schedule_search.setOnClickListener(new Button.OnClickListener() { 
-			public void onClick(View v) {
-				
-				//start activity with location as intent
-				//String address = events.get(position).getLocation();
-				
-
-				//Save destination address
-				//need a way to pass it over now that original way different
-
-				Intent searchIntent = new Intent(context, MNavMainActivity.class);
-				context.startActivity(searchIntent);
-			}
-		});
 
 		return rowView;
 	}

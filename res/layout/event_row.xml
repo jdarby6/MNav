@@ -18,35 +18,12 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/textView_class"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/linearLayout1"
-        android:layout_alignTop="@+id/linearLayout1"
-        android:layout_marginLeft="29dp"
-        android:text="@string/class_string"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textSize="50dp" />
-
-    <Button
-        android:id="@+id/button_schedule_search"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_alignBaseline="@+id/textView_class"
-        android:layout_alignBottom="@+id/textView_class"
-        android:layout_alignRight="@+id/linearLayout1"
-        android:layout_marginRight="16dp"
-        android:background="@drawable/button_search_drawable"
-        android:gravity="center_vertical"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
-
-    <TextView
         android:id="@+id/textView_begin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/button_schedule_search"
-        android:layout_marginLeft="25dp"
-        android:layout_toRightOf="@+id/textView_class"
+        android:layout_toRightOf="@+id/textView_location"
+        android:layout_alignBaseline="@+id/textView_location"
+        android:layout_marginLeft="5dp"
         android:text="@string/zero_time"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
@@ -54,9 +31,8 @@
         android:id="@+id/textView_location"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/textView_class"
+        android:layout_marginLeft="20dp"
         android:layout_below="@+id/textView_class"
-        android:layout_marginLeft="17dp"
         android:text="@string/location"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
@@ -64,9 +40,20 @@
         android:id="@+id/textView_end"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/textView_begin"
-        android:layout_below="@+id/textView_begin"
+        android:layout_toRightOf="@+id/textView_begin"
+        android:layout_alignBaseline="@+id/textView_location"
+        android:layout_marginLeft="5dp"
         android:text="@string/zero_time"
         android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <TextView
+        android:id="@+id/textView_class"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/linearLayout1"
+        android:layout_alignTop="@+id/linearLayout1"
+        android:layout_marginLeft="10dp"
+        android:text="@string/class_string"
+        android:textSize="45dp" />
 
 </RelativeLayout>

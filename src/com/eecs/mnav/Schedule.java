@@ -7,6 +7,7 @@ import java.util.Calendar;
 import android.os.Bundle;
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Intent;
 
 import android.view.Menu;
 import android.view.View;
@@ -14,6 +15,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
 
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -109,6 +111,16 @@ public class Schedule extends Activity {
 			}
 		});
 		
+
+		
+		list_data.setOnItemClickListener(new OnItemClickListener() {
+			public void onItemClick(AdapterView<?> arg0, View arg1,
+					int pos, long id) {
+				
+				Intent searchIntent = new Intent(arg1.getContext(), MNavMainActivity.class);
+				startActivity(searchIntent);
+			}
+		});
 		//Set long-click listener to list items
 		list_data.setOnItemLongClickListener(new OnItemLongClickListener() {
 					public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
