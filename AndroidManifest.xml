@@ -31,7 +31,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".Schedule"
+            android:name=".ScheduleActivity"
             android:label="@string/schedule" >
         </activity>
         <activity android:name="com.eecs.mnav.BuildingMapActivity" >

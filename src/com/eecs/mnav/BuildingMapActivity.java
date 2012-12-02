@@ -41,7 +41,7 @@ public class BuildingMapActivity extends Activity{
 		setContentView(R.layout.activity_building_map);
 
 		gProgressDialog = new ProgressDialog(this);
-		gProgressDialog.setMessage("Loading...");
+		gProgressDialog.setMessage("Establishing Connection...");
 		gProgressDialog.setCancelable(false);
 		gProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 		gProgressDialog.setProgress(0); // set percentage completed to 0%
