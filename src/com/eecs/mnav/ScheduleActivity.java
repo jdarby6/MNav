@@ -322,7 +322,7 @@ public class ScheduleActivity extends Activity {
 					}
 					
 					else{
-						removeEvent(templabel);
+						removeEvent(curEvent.getLabel());
 						addEvent(templabel,templocation,finalbegin,finalend,tempdays);
 						
 					}
