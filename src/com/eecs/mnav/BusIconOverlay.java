@@ -23,12 +23,11 @@ public class BusIconOverlay extends ItemizedOverlay<OverlayItem> {
 	public BusIconOverlay(Drawable defaultMarker) {
 		super(boundCenterBottom(defaultMarker));
 		myOverlays = new ArrayList<OverlayItem>();
-		populate();
+		//populate();
 	}
 
 	public void addOverlay(OverlayItem overlay){
 		myOverlays.add(overlay);
-		populate();
 	}
 
 	@Override
@@ -39,7 +38,7 @@ public class BusIconOverlay extends ItemizedOverlay<OverlayItem> {
 	// Removes overlay item i
 	public void removeItem(int i){
 		if(i >= 0) myOverlays.remove(i);
-		populate();
+		//populate();
 	}
 
 	// Handle tap events on overlay icons
@@ -67,5 +66,9 @@ public class BusIconOverlay extends ItemizedOverlay<OverlayItem> {
 	@Override
 	public int size() {
 		return myOverlays.size();
+	}
+	
+	public void populateIt() {
+		this.populate();
 	}
 }

@@ -89,6 +89,7 @@ public class BusRoutesActivity extends MapActivity {
 			itemizedOverlay.addOverlay(new OverlayItem( new GeoPoint(lat, lon), "", ""));
 		}
 		mapOverlays.add(itemizedOverlay);
+		itemizedOverlay.populateIt();
 		mapView.postInvalidate();
 
 	}
