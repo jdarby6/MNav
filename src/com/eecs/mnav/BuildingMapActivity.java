@@ -14,6 +14,8 @@ import com.parse.ProgressCallback;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -52,7 +54,12 @@ public class BuildingMapActivity extends Activity{
 		
 		gProgressDialog = new ProgressDialog(this);
 		gProgressDialog.setMessage("Establishing Connection...");
-		gProgressDialog.setCancelable(false);
+		gProgressDialog.setCancelable(true);
+		gProgressDialog.setOnCancelListener(new OnCancelListener() {
+			public void onCancel(DialogInterface dialog) {
+				finish();
+			}
+		});
 		gProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 		gProgressDialog.setProgress(0); // set percentage completed to 0%
 		gProgressDialog.show();
