@@ -84,7 +84,7 @@ public class BuildingMapActivity extends Activity{
 		ParseQuery query = new ParseQuery("BuildingMap");
 		//Set constraints to look in COL name matching mBuildingName
 		setBuildingName();
-		query.whereEqualTo("name", mBuildingName);
+		query.whereEqualTo("name", mBuildingName.toLowerCase());
 		query.addAscendingOrder("name");
 		query.findInBackground(new FindCallback() {
 			public void done(List<ParseObject> mapList, ParseException e) {

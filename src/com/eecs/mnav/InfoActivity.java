@@ -12,9 +12,4 @@ public class InfoActivity extends Activity {
         setContentView(R.layout.activity_info);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_info, menu);
-        return true;
-    }
 }

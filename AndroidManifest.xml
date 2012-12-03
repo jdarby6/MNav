@@ -18,17 +18,17 @@
         android:theme="@style/Theme.Light.NoTitleBar.Workaround" >
         <uses-library android:name="com.google.android.maps" />
 
-        <activity
-            android:name="com.eecs.mnav.MNavMainActivity"
-            android:label="@string/title_activity_main"
-            android:screenOrientation="portrait" >
-        </activity>
         <activity android:name=".StartActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name="com.eecs.mnav.MNavMainActivity"
+            android:label="@string/title_activity_main"
+            android:screenOrientation="portrait" >
         </activity>
         <activity
             android:name=".ScheduleActivity"
@@ -38,9 +38,7 @@
         </activity>
         <activity android:name="com.eecs.mnav.BusRoutesActivity" >
         </activity>
-        <activity
-            android:name=".InfoActivity"
-            android:label="@string/title_activity_info" >
+        <activity android:name="com.eecs.mnav.InfoActivity" >
         </activity>
     </application>
 
