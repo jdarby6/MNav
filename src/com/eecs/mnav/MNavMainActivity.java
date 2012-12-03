@@ -256,7 +256,7 @@ public class MNavMainActivity extends MapActivity {
 					//GeoPoint start = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
 					GeoPoint start = gMyLocationOverlay.getMyLocation();
 					buildAlertDialog(ALERT_INTRO_PROMPT_2);
-					if(start.equals(dest))
+					if(start == null || start.equals(dest))
 						return;
 					new GetDirectionsTask().execute(start, dest);
 				}
