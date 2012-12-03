@@ -40,7 +40,7 @@ public class StartActivity extends Activity implements TextWatcher {
 	private AutoCompleteTextView address_box;
 	private Button schedule;
 	private Button button_bus_routes;
-	private Button info;
+	private Button button_app_info;
 	private TextView gInputFeedback;
 
 	private String destBldgName = "";
@@ -66,12 +66,6 @@ public class StartActivity extends Activity implements TextWatcher {
 	
 	private DataBaseHelper destination_db;
 	private ScheduleDatabaseHandler schedule_db;
-
-	String item[]={
-			"January", "February", "March", "April",
-			"May", "June", "July", "August",
-			"September", "October", "November", "December"
-	};
 	
 	static Context context;
 
@@ -114,7 +108,7 @@ public class StartActivity extends Activity implements TextWatcher {
 		search = (Button)findViewById(R.id.button_search);
 		schedule = (Button)findViewById(R.id.button_schedule);
 		button_bus_routes = (Button)findViewById(R.id.button_bus_routes);
-		info = (Button)findViewById(R.id.button_info);
+		button_app_info = (Button)findViewById(R.id.button_info);
 		gInputFeedback = (TextView)findViewById(R.id.textView_input_feedback);
 		
 		address_box.addTextChangedListener(this);
@@ -224,12 +218,9 @@ public class StartActivity extends Activity implements TextWatcher {
 			
 		});
 
-	
-	
-//TODO
-		info.setOnClickListener(new OnClickListener() {
+		button_app_info.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-			
+				//TODO Create the info activity
 				Intent scheduleIntent = new Intent(StartActivity.this, InfoActivity.class);
 				StartActivity.this.startActivity(scheduleIntent);
 
