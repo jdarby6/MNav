@@ -39,6 +39,7 @@ public class StartActivity extends Activity implements TextWatcher {
 	private Button search;
 	private AutoCompleteTextView address_box;
 	private Button schedule;
+	private Button button_bus_routes;
 	private TextView gInputFeedback;
 
 	private String destBldgName = "";
@@ -70,11 +71,15 @@ public class StartActivity extends Activity implements TextWatcher {
 			"May", "June", "July", "August",
 			"September", "October", "November", "December"
 	};
+	
+	static Context context;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_start);
+		
+		context = getApplicationContext();
 		
 		//Initialize destination db
 		destination_db = new DataBaseHelper(this, "destination_db");
@@ -107,6 +112,7 @@ public class StartActivity extends Activity implements TextWatcher {
 		address_box = (AutoCompleteTextView)findViewById(R.id.autoCompleteTextView_address_box);
 		search = (Button)findViewById(R.id.button_search);
 		schedule = (Button)findViewById(R.id.button_schedule);
+		button_bus_routes = (Button)findViewById(R.id.button_bus_routes);
 		gInputFeedback = (TextView)findViewById(R.id.textView_input_feedback);
 		
 		address_box.addTextChangedListener(this);
@@ -206,6 +212,14 @@ public class StartActivity extends Activity implements TextWatcher {
 			}
 
 
+		});
+		
+		button_bus_routes.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				Intent intent = new Intent(StartActivity.this, BusRoutesActivity.class);
+				StartActivity.this.startActivity(intent);
+			}
+			
 		});
 
 	}
@@ -316,7 +330,6 @@ public class StartActivity extends Activity implements TextWatcher {
 	
 	/** Helper function for displaying a toast. Takes the string to be displayed and the length: LONG or SHORT **/
 	private void toastThis(String toast, int duration) {
-		Context context = getApplicationContext();
 		Toast t = Toast.makeText(context, toast, duration);
 		t.show();
 	}
