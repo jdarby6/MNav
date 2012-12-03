@@ -49,7 +49,7 @@
         android:text="@string/_" />
 
     <Button
-        android:id="@+id/button3"
+        android:id="@+id/button_info"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_alignParentBottom="true"
@@ -63,7 +63,7 @@
         android:id="@+id/layout_mbus_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/button3"
+        android:layout_above="@+id/button_info"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="43dp"
         android:orientation="vertical" >
@@ -88,7 +88,7 @@
         android:id="@+id/layout_find_building_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignRight="@+id/button3"
+        android:layout_alignRight="@+id/button_info"
         android:layout_alignTop="@+id/layout_mbus_button"
         android:orientation="vertical" >
 
@@ -118,12 +118,13 @@
         android:layout_alignTop="@+id/layout_mbus_button"
         android:layout_marginLeft="23dp"
         android:orientation="vertical" >
-
+
         <Button
             android:id="@+id/button_schedule"
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:layout_gravity="center_horizontal"
+            android:background="@drawable/button_schedule_drawable"
             android:text="@string/_" />
 
         <TextView

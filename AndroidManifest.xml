@@ -38,6 +38,10 @@
         </activity>
         <activity android:name="com.eecs.mnav.BusRoutesActivity" >
         </activity>
+        <activity
+            android:name=".InfoActivity"
+            android:label="@string/title_activity_info" >
+        </activity>
     </application>
 
 </manifest>

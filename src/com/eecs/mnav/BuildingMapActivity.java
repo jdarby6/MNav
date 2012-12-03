@@ -14,22 +14,32 @@ import com.parse.ProgressCallback;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.TextView;
 
 public class BuildingMapActivity extends Activity{
 	ArrayList<Bitmap> floors = new ArrayList<Bitmap>();
 	int curFloor = 0;
 	int numFloors = 0;
+	String gDestName_full = "";
+	String gDestName = "";
+	TextView tvTitle;
+	boolean mapsNotAvailable = true;
 	ParseObject buildingMapObject;
 	TouchImageView touchImageMap;
 	Button bStairsUp;
 	Button bStairsDown;
+	SharedPreferences gPreferences;
 	ProgressDialog gProgressDialog;
 
 	String mBuildingName = "default"; //Default to saying we don't have the map
@@ -40,12 +50,30 @@ public class BuildingMapActivity extends Activity{
 		Log.d("OnCreate()", "OnCreate() called");
 		setContentView(R.layout.activity_building_map);
 
+		tvTitle = (TextView) findViewById(R.id.textView_building_title);
+		
 		gProgressDialog = new ProgressDialog(this);
 		gProgressDialog.setMessage("Establishing Connection...");
-		gProgressDialog.setCancelable(false);
+		gProgressDialog.setCancelable(true);
+		gProgressDialog.setOnCancelListener(new OnCancelListener() {
+			public void onCancel(DialogInterface dialog) {
+				finish();
+			}
+		});
 		gProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 		gProgressDialog.setProgress(0); // set percentage completed to 0%
 		gProgressDialog.show();
+		
+		//Load stored data
+		gPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+		
+		//Load last known latitude, longitude default is the Diag
+		gDestName_full = gPreferences.getString("DESTNAMEFULL", "");
+		gDestName = gPreferences.getString("DESTNAME", "");
+		
+		tvTitle.setText(gDestName_full);
+		Log.d("BuildingMapActivity", "gDestName_full:"+gDestName_full+" gDestName:"+gDestName);
+		
 		
 		touchImageMap = (TouchImageView) findViewById(R.id.imageView_building_map);
 		touchImageMap.setMaxZoom(3f);
@@ -63,15 +91,22 @@ public class BuildingMapActivity extends Activity{
 				if (e == null) {
 					Log.d("Parse Import", "Retrieved " + mapList.size() + " maps");
 					numFloors = mapList.size();
+					//Check to see if we got any maps from Parse. If not, set the bool and we'll display the default map later
+					if (numFloors == 0) {
+						mapsNotAvailable = true;
+					}
+					else 
+						mapsNotAvailable = false;
+					
 					//Make the floors array big enough to hold our maps
-					while(floors.size() < numFloors) {
+					while(floors.size() < numFloors+1) { //numFloors + 1 will allow 0 basement floors
 						floors.add(null);
 					}
 					//Resolve the list of building maps into array of bitmaps
 					curFloor = 0; //Initialize curFloor to 0 so we can use it as an index in resolveMaps();
 					resolveMaps(mapList);
 				} else {
-					Log.d("score", "Error: " + e.getMessage());
+					Log.d("Parse Import", "Error: " + e.getMessage());
 				}
 			}
 		});
@@ -97,8 +132,14 @@ public class BuildingMapActivity extends Activity{
 
 	//Method to take the list of parseObjects and resolve them into the global array of bitmaps: floors
 	private void resolveMaps(final List<ParseObject> parseMapList) {
-		int tmp = curFloor+1;
-		gProgressDialog.setMessage("Loading Map "+tmp+" of "+numFloors+"...");
+		if(mapsNotAvailable) {
+			touchImageMap.setBackgroundDrawable(getResources().getDrawable(R.drawable.defaultmap));
+			gProgressDialog.dismiss();
+			bStairsDown.setEnabled(false);
+			bStairsUp.setEnabled(false);
+			return;
+		}
+		gProgressDialog.setMessage("Loading Map "+(curFloor+1)+" of "+numFloors+"...");
 		ParseObject tmpObj = parseMapList.get(curFloor);
 		if(tmpObj.has("picture")) {
 			Log.d("Parse Import", "The buildingMapObject has key: picture");
@@ -117,6 +158,12 @@ public class BuildingMapActivity extends Activity{
 							touchImageMap.setImageBitmap(floors.get(curFloor));
 							bStairsUp.setEnabled(true);
 							bStairsDown.setEnabled(true);
+							//Check if the basement map was included by seeing if it was added or not
+							if(floors.get(0) == null){
+								floors.remove(0);
+								bStairsDown.setEnabled(false);
+							} else if (floors.get(floors.size()-1)==null)
+								floors.remove(floors.size()-1);
 							return;
 						} else {
 							resolveMaps(parseMapList); //Recursive call upon grabbing data and putting it in arrayList
@@ -155,8 +202,7 @@ public class BuildingMapActivity extends Activity{
 
 	/** Method to set the building name to look for a set of maps **/
 	private void setBuildingName() {
-		//mBuildingName = code to get name from previous activity; TODO
-		mBuildingName = "eecs";
+		mBuildingName = gDestName;
 	}
 
 	/**Method to call when up button pressed **/

@@ -22,9 +22,11 @@ class RouteOverlay extends Overlay {
 	private final Point p;
 	private final Paint paint;
 
-	public RouteOverlay(final Route route, final int defaultColour) {
+	public RouteOverlay(final Route route, final GeoPoint start, final GeoPoint end, final int defaultColour) {
 		super();
 		routePoints = route.getPoints();
+		routePoints.add(0, start);
+		routePoints.add(end);
 		colour = defaultColour;
 		path = new Path();
 		p = new Point();
