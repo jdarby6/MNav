@@ -12,7 +12,8 @@ public class Route {
 	private String copyright;
 	private String warning;
 	private String country;
-	private int length;
+	private String distance;
+	private String duration;
 	private String polyline;
 
 	public Route() {
@@ -72,12 +73,20 @@ public class Route {
 		return country;
 	}
 
-	public void setLength(int length) {
-		this.length = length;
+	public void setDistance(String distance) {
+		this.distance = distance;
 	}
 
-	public int getLength() {
-		return length;
+	public String getDistance() {
+		return distance;
+	}
+	
+	public void setDuration(String time) {
+		this.duration = time;
+	}
+	
+	public String getDuration() {
+		return duration;
 	}
 
 	public void setPolyline(String polyline) {

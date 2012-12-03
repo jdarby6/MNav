@@ -55,7 +55,9 @@ public class GoogleParser {
 			//Get google's copyright notice (tos requirement)
 			route.setCopyright(jsonRoute.getString("copyrights"));
 			//Get the total length of the route.
-			route.setLength(leg.getJSONObject("distance").getInt("value"));
+			route.setDistance(leg.getJSONObject("distance").getString("text"));
+			//Get the total duration of the route.
+			route.setDuration(leg.getJSONObject("duration").getString("text"));
 			//Get any warnings provided (tos requirement)
 			if (!jsonRoute.getJSONArray("warnings").isNull(0)) {
 				route.setWarning(jsonRoute.getJSONArray("warnings").getString(0));

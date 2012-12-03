@@ -7,8 +7,10 @@ import java.util.List;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -33,6 +35,7 @@ import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -48,34 +51,51 @@ import com.parse.Parse;
 import com.parse.ParseObject;
 
 public class MNavMainActivity extends MapActivity {
-	//Declare globals  //g is for global
-	private float gBearing = 0;
-	private float gSpeed = 0;
-	private double gCurrentLong = 0.0;
-	private double gCurrentLat = 0.0;
-	private double gDestinationLong = 0.0;
-	private double gDestinationLat = 0.0;
-	private Location gBestLocation = null;
+	//Layout globals
 	private MapView gMapView = null;
-	private MapController gMapController = null;
-	private SharedPreferences gPreferences = null;
-	private LocationManager gLocationManager;
-	private boolean overlaysInitialized = false;
 	private Button bPlotRoute;
 	private Button bSatellite;
 	private Button bTargetReticle;
 	private Button bZoomIn;
 	private Button bZoomOut;
-	private EditText tvDestination;
+
+	// Intro tips booleans
+	private boolean hasSeenAlert1 = false;
+	private boolean hasSeenAlert2 = false;
+	private boolean hasSeenAlert3 = false;
+	private boolean hasSeenAlert4 = false;
+
+	//Our location globals
+	private float gBearing = 0;
+	private float gSpeed = 0;
+	private double gCurrentLong = 0.0;
+	private double gCurrentLat = 0.0;
+	private Location gBestLocation = null;
+
+	//Destination globals
+	private EditText editTextDestination;
 	private String gDestName = "the diag";
 	private String gDestNum = "";
 	private String gDestName_full ="";
+	private String gDistanceToDest;
+	private String gTimeToDest;
+	private double gDestinationLong = 0.0;
+	private double gDestinationLat = 0.0;
+
+	//Helper globals
 	private LocalDatabaseHandler local_db;
-	private DataBaseHelper destination_db; 
-	private CurrentRouteOverlay gRouteOverlay = null;
+	private DataBaseHelper destination_db;
+	private MapController gMapController = null;
+	private LocationManager gLocationManager;
+	private SharedPreferences gPreferences = null;
+
+	//Overlay globals
+	private PinOverlay gPinOverlay = null;
+	private RouteOverlay gRouteOverlay = null;
 	private MyLocationOverlay gMyLocationOverlay = null;
 	private ScaleBarOverlay gScaleBarOverlay = null;
 
+	//Constants
 	private static final int LONG = Toast.LENGTH_LONG;
 	private static final int SHORT = Toast.LENGTH_SHORT;
 	private static final int FIVE_MINUTES = 1000 * 60 * 5;
@@ -83,21 +103,16 @@ public class MNavMainActivity extends MapActivity {
 	private static final int ZOOM_LEVEL_SKY = 17;
 	private static final int ZOOM_LEVEL_CAMPUS = 18;
 	private static final int ZOOM_LEVEL_BUILDING = 19;
-
+	//Alert IDs
 	private static final int ALERT_INVALID_DEST = 0;
 	private static final int ALERT_INTRO_PROMPT_1 = 1;
 	private static final int ALERT_INTRO_PROMPT_2 = 2;
 	private static final int ALERT_INTRO_PROMPT_3 = 3;
 	private static final int ALERT_INTRO_PROMPT_4 = 4;
-
-	private boolean hasSeenAlert1 = false;
-	private boolean hasSeenAlert2 = false;
-	private boolean hasSeenAlert3 = false;
-	private boolean hasSeenAlert4 = false;
-
-	//These are arbitrary numbers, used to call and remove the correct dialogs
+	//Dialog IDs
 	private static final int DIALOG_SAVE_CURRENT_LOC = 0;
-	final static int DIALOG_DESTINATION_BLDG = 1;
+	public final static int DIALOG_DESTINATION_BLDG = 1;
+	private final static int DIALOG_SETTINGS = 2;
 
 	private class Coords {
 		double latitude;
@@ -170,7 +185,7 @@ public class MNavMainActivity extends MapActivity {
 			for(int i = 0; i < num_doors; i++) {
 				doors[i] = new Coords();
 			}
-			//find column containing full names XXX Jeremy can you check this out? ideally I'd like this code to go into a method we can call every time the user changes desired destination name
+			//find column containing full names 
 			try {
 				int bldg_name_full_col = cursor.getColumnIndexOrThrow("name_full");
 				gDestName_full = cursor.getString(bldg_name_full_col);
@@ -198,8 +213,7 @@ public class MNavMainActivity extends MapActivity {
 
 		Log.d("LOADED DATA", "Coords: "+String.valueOf(gCurrentLat)+","+String.valueOf(gCurrentLong)+
 				" destAddr: "+gDestName+" roomNum: "+gDestNum);
-		toastThis("LOADED\nCoords: "+String.valueOf(gCurrentLat)+","+String.valueOf(gCurrentLong)+
-				" destAddr: "+gDestName+" roomNum: "+gDestNum, LONG);
+
 		//Put last known info as current location
 		Location location = new Location(LocationManager.GPS_PROVIDER);
 		location.setLatitude(gCurrentLat);
@@ -229,39 +243,25 @@ public class MNavMainActivity extends MapActivity {
 			gDestinationLong = doors[closestDoorIndex].longitude;
 		}
 
-		tvDestination = (EditText)findViewById(R.id.editText_map_destination);
-		tvDestination.setText(String.valueOf(gDestinationLat) + "," + String.valueOf(gDestinationLong));
+		editTextDestination = (EditText)findViewById(R.id.editText_map_destination);
+		editTextDestination.setText(gDestName);
 
 		bPlotRoute = (Button) findViewById(R.id.button_plotroute);
 		bPlotRoute.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				Log.d("GetRouteClicked", "Calculating Route");
+
 				//Grab the user input lat/long
-				String temp = tvDestination.getText().toString();
+				//	String temp = editTextDestination.getText().toString();
 
-				if(temp != null && temp.length() > 0) {
-					gDestinationLat = Double.parseDouble(temp.substring(0, temp.indexOf(",")));
-					gDestinationLong = Double.parseDouble(temp.substring(temp.indexOf(",")+1,temp.length()));
-					//create a geopoint for dest
-					GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
+				//	if(temp != null && temp.length() > 0) {
+				//create a geopoint for dest
+				GeoPoint dest = getDirections(); //Query Google for directions to dest and return the dest 
 
-
-					//XXX Set "Desination" to full building name
-					OverlayItem overlayitem = new OverlayItem(dest, "Destination", "This is your current destination");
-
-					gRouteOverlay.addOverlay(overlayitem);
-					gMapView.getOverlays().add(gRouteOverlay); 
-
-					zoomTo(dest, ZOOM_LEVEL_BUILDING);
-					//GeoPoint start = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
-					GeoPoint start = gMyLocationOverlay.getMyLocation();
-					buildAlertDialog(ALERT_INTRO_PROMPT_2);
-					if(start == null || start.equals(dest))
-						return;
-					new GetDirectionsTask().execute(start, dest);
-				}
-
+				zoomTo(dest, ZOOM_LEVEL_BUILDING);
 			}
+
+			//	}
 		});
 
 
@@ -289,7 +289,8 @@ public class MNavMainActivity extends MapActivity {
 		bTargetReticle.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				startGPS();
-				GeoPoint currentLoc = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
+				//		GeoPoint currentLoc = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
+				GeoPoint currentLoc = gMyLocationOverlay.getMyLocation();
 				zoomTo(currentLoc, ZOOM_LEVEL_BUILDING);
 				buildAlertDialog(ALERT_INTRO_PROMPT_3);
 			}
@@ -338,6 +339,12 @@ public class MNavMainActivity extends MapActivity {
 		super.onPause();
 		// when our activity pauses, we want to remove listening for location updates
 		gMyLocationOverlay.disableMyLocation();
+
+		Editor editor = gPreferences.edit();
+		editor.putString("DESTNAMEFULL", gDestName_full);
+		editor.putString("DESTNAME", gDestName);
+		editor.commit();
+		Log.d("MNavMainActivity", "gDestName_full:"+gDestName_full+" gDestName:"+gDestName);
 	}
 
 	@Override
@@ -351,6 +358,7 @@ public class MNavMainActivity extends MapActivity {
 		editor.putString("LASTLONG", String.valueOf(gCurrentLong));
 		editor.putString("LASTLOCTIME", String.valueOf(gBestLocation.getTime()));
 
+
 		editor.putBoolean("A1", hasSeenAlert1);
 		editor.putBoolean("A2", hasSeenAlert2);
 		editor.putBoolean("A3", hasSeenAlert3);
@@ -361,6 +369,7 @@ public class MNavMainActivity extends MapActivity {
 		//Turn off GPS
 		if(gLocationManager != null)
 			gLocationManager.removeUpdates(locationListener);
+		destination_db.close();
 	}	
 
 
@@ -375,6 +384,9 @@ public class MNavMainActivity extends MapActivity {
 		case R.id.menu_satellite:
 			showDialog(DIALOG_SAVE_CURRENT_LOC);
 			break;
+		case R.id.menu_settings:
+			showDialog(DIALOG_SETTINGS);
+			break;
 		default:
 			return false;
 		}
@@ -384,18 +396,18 @@ public class MNavMainActivity extends MapActivity {
 	@Override
 	protected Dialog onCreateDialog(int id) {
 		Dialog dialog = null;
+		final Dialog dialogTemp = new Dialog(this);
 		switch(id) {
 		case DIALOG_SAVE_CURRENT_LOC:
-			final Dialog dialog_saveCurrentLoc = new Dialog(this);
-			dialog_saveCurrentLoc.setContentView(R.layout.dialog_save_current_loc);
-			dialog_saveCurrentLoc.setTitle("Save Current Location");
+			dialogTemp.setContentView(R.layout.dialog_save_current_loc);
+			dialogTemp.setTitle("Save Current Location");
 
-			final EditText editText_BldgAbbr = (EditText)dialog_saveCurrentLoc.findViewById(R.id.editText_BldgAbbr);
-			final EditText editText_DoorNick = (EditText)dialog_saveCurrentLoc.findViewById(R.id.editText_DoorNick);
-			final TextView textView_CurrentLat = (TextView)dialog_saveCurrentLoc.findViewById(R.id.textView_CurrentLat);
-			final TextView textView_CurrentLong = (TextView)dialog_saveCurrentLoc.findViewById(R.id.textView_CurrentLong);
-			final Button button_Save = (Button)dialog_saveCurrentLoc.findViewById(R.id.button_Save);
-			final Button button_Cancel = (Button)dialog_saveCurrentLoc.findViewById(R.id.button_Cancel);
+			final EditText editText_BldgAbbr = (EditText)dialogTemp.findViewById(R.id.editText_BldgAbbr);
+			final EditText editText_DoorNick = (EditText)dialogTemp.findViewById(R.id.editText_DoorNick);
+			final TextView textView_CurrentLat = (TextView)dialogTemp.findViewById(R.id.textView_CurrentLat);
+			final TextView textView_CurrentLong = (TextView)dialogTemp.findViewById(R.id.textView_CurrentLong);
+			final Button button_Save = (Button)dialogTemp.findViewById(R.id.button_Save);
+			final Button button_Cancel = (Button)dialogTemp.findViewById(R.id.button_Cancel);
 
 			textView_CurrentLat.setText("Current lat: " + gCurrentLat);
 			textView_CurrentLong.setText("Current long: " + gCurrentLong);
@@ -440,19 +452,15 @@ public class MNavMainActivity extends MapActivity {
 					removeDialog(DIALOG_SAVE_CURRENT_LOC);
 				}
 			});
-
-			dialog = dialog_saveCurrentLoc;
 			break;
-		case DIALOG_DESTINATION_BLDG:
-			final Dialog dialog_destinationBldg = new Dialog(this);
-			dialog_destinationBldg.requestWindowFeature(Window.FEATURE_NO_TITLE);
-			dialog_destinationBldg.setContentView(R.layout.dialog_destination_building);
-			final TextView title = (TextView)dialog_destinationBldg.findViewById(R.id.textView_dialog_title);
 
-			//TODO Put the destination name here
-			title.setText("Electrical Engineering and Computer Science");
-			final Button bViewMap = (Button)dialog_destinationBldg.findViewById(R.id.button_viewmap);
-			final Button bGetDirections = (Button)dialog_destinationBldg.findViewById(R.id.button_getdirections);
+		case DIALOG_DESTINATION_BLDG:
+			dialogTemp.requestWindowFeature(Window.FEATURE_NO_TITLE);
+			dialogTemp.setContentView(R.layout.dialog_destination_building);
+			final TextView title = (TextView)dialogTemp.findViewById(R.id.textView_dialog_title);
+			title.setText(gDestName_full);
+			final Button bViewMap = (Button)dialogTemp.findViewById(R.id.button_viewmap);
+			final Button bGetDirections = (Button)dialogTemp.findViewById(R.id.button_getdirections);
 
 			bViewMap.setOnClickListener(new Button.OnClickListener() {
 				public void onClick(View v) {
@@ -465,26 +473,39 @@ public class MNavMainActivity extends MapActivity {
 
 			bGetDirections.setOnClickListener(new Button.OnClickListener() {
 				public void onClick(View v) {
-					//Call method to get directions
-					GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
-					GeoPoint start = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
-					if(start.equals(dest))
-						return;
-					new GetDirectionsTask().execute(start, dest);
+					getDirections();
 					removeDialog(DIALOG_DESTINATION_BLDG);
 				}
 			});
+			break;
 
-			dialog = dialog_destinationBldg;
+		case DIALOG_SETTINGS:
+			dialogTemp.setContentView(R.layout.dialog_settings);
+			dialogTemp.setTitle("Settings");
+
+			final CheckBox resetTips = (CheckBox) dialogTemp.findViewById(R.id.checkBox_restore_tips);
+			final Button bDone = (Button) dialogTemp.findViewById(R.id.button_done);
+			bDone.setOnClickListener(new Button.OnClickListener() {
+				public void onClick(View v) {
+					if(resetTips.isChecked()){
+						hasSeenAlert1 = false;
+						hasSeenAlert2 = false;
+						hasSeenAlert3 = false;
+						hasSeenAlert4 = false;
+						toastThis("Intro tips reset", LONG);
+					}
+					removeDialog(DIALOG_SETTINGS);
+				}
+			});
 			break;
 		}
+		dialog = dialogTemp;
 		return dialog;
 	}
 
 	@Override
 	protected boolean isRouteDisplayed() {
-
-		return false;
+		return true;
 	}
 
 
@@ -498,7 +519,6 @@ public class MNavMainActivity extends MapActivity {
 			gCurrentLat = gBestLocation.getLatitude();
 			gCurrentLong = gBestLocation.getLongitude();
 			gSpeed = gBestLocation.getSpeed();
-
 			/*	String toast = "Speed: " + gSpeed + "m/s \nBearing: " + gBearing + " degrees E of N \nLong: "
 					+ gCurrentLong + " \nLat: " + gCurrentLat;
 			toastThis(toast, SHORT); */
@@ -516,6 +536,9 @@ public class MNavMainActivity extends MapActivity {
 
 		public void onProviderDisabled(String provider) {}
 	};
+	private ProgressDialog gProgressDialog;
+	private GeoPoint gStartGeo;
+	private GeoPoint gDestGeo;
 
 	protected boolean isBetterLocation(Location location, Location currentBestLocation) {
 		if (currentBestLocation == null) {
@@ -582,12 +605,12 @@ public class MNavMainActivity extends MapActivity {
 		Location cachedGpsLoc = gLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 		//Get cached location from Network
 		Location cachedNetworkLoc = gLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-		
+
 		//If one or both of these are null, just return the other without calling isBetterLocation to avoid time and
 		//null pointer exceptions
 		if(cachedGpsLoc == null) return cachedNetworkLoc;
 		if(cachedNetworkLoc == null) return cachedGpsLoc;
-		
+
 		//If it hasn't returned by now, check which one is actually better and return it.
 		if(isBetterLocation(cachedGpsLoc, cachedNetworkLoc))
 			return cachedGpsLoc;
@@ -612,20 +635,6 @@ public class MNavMainActivity extends MapActivity {
 		alertDialog.show();
 	}
 
-	//
-	public void updateUserPosition(Location location) {
-		GeoPoint p = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
-
-		//Remove all existing overlays
-		List<Overlay> mapOverlays = gMapView.getOverlays();
-		mapOverlays.clear();
-
-		OverlayItem overlayitem = new OverlayItem(p, "Current Location", "You are here!");
-
-		gRouteOverlay.replaceOverlay(overlayitem, 0);
-		mapOverlays.add(gRouteOverlay);
-	}
-
 	public void initOverlays() {
 		//Remove all existing overlays
 		List<Overlay> mapOverlays = gMapView.getOverlays();
@@ -633,8 +642,8 @@ public class MNavMainActivity extends MapActivity {
 
 		Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
 		//Create our route overlay
-		gRouteOverlay = new CurrentRouteOverlay(drawable, this);
-		gRouteOverlay.setTapListener(this);
+		gPinOverlay = new PinOverlay(drawable, this);
+		gPinOverlay.setTapListener(this);
 		/**
 		 * OverlayItem overlayitem = new OverlayItem(p, "Current Location", "You are here!");
 		 * gRouteOverlay.addOverlay(overlayitem);
@@ -643,7 +652,6 @@ public class MNavMainActivity extends MapActivity {
 		 **/
 
 		gMyLocationOverlay = new MyLocationOverlay(this, gMapView);
-		//	gMyLocationOverlay.enableCompass();
 		mapOverlays.add(gMyLocationOverlay);
 
 		gMyLocationOverlay.enableMyLocation();
@@ -658,23 +666,29 @@ public class MNavMainActivity extends MapActivity {
 			//create a geopoint for dest
 			GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
 
-
-			//XXX Set "Desination" to full building name
-			OverlayItem overlayitem = new OverlayItem(dest, "Destination", "This is your current destination");
-
-			gRouteOverlay.addOverlay(overlayitem);
-			gMapView.getOverlays().add(gRouteOverlay); 
+			OverlayItem overlayitem = new OverlayItem(dest, "gDestName_full", "This is your current destination");
+			gPinOverlay.addOverlay(overlayitem);
+			gMapView.getOverlays().add(gPinOverlay); 
 
 			zoomTo(dest, ZOOM_LEVEL_BUILDING);
 		} else {
-			GeoPoint p = gMyLocationOverlay.getMyLocation();
-			if(gMapController == null)
-				gMapController = gMapView.getController();
-			gMapController.animateTo(p);
-			gMapController.setZoom(ZOOM_LEVEL_BUILDING);
-		}
+			gProgressDialog = new ProgressDialog(this);
+			gProgressDialog.setMessage("Finding you...");
+			gProgressDialog.setCancelable(false);
+			gProgressDialog.setIndeterminate(true);
+			gProgressDialog.show();
 
-		overlaysInitialized = true;
+			gMyLocationOverlay.runOnFirstFix(new Runnable() {
+				public void run() {
+					gProgressDialog.dismiss();
+					GeoPoint p = gMyLocationOverlay.getMyLocation();
+					if(gMapController == null)
+						gMapController = gMapView.getController();
+					gMapController.animateTo(p);
+					gMapController.setZoom(ZOOM_LEVEL_BUILDING);
+				}
+			});
+		}
 	}
 
 	private Route directions(final GeoPoint start, final GeoPoint dest) {
@@ -690,6 +704,7 @@ public class MNavMainActivity extends MapActivity {
 		sBuf.append(',');
 		sBuf.append(dest.getLongitudeE6()/1E6);
 		sBuf.append("&sensor=true&mode=walking");
+		//sBuf.append("&sensor=true&mode=transit&departure_time="+(System.currentTimeMillis()+FIVE_MINUTES));
 		googleParser = new GoogleParser(sBuf.toString());
 		Route r =  googleParser.parse();
 		return r;
@@ -698,6 +713,7 @@ public class MNavMainActivity extends MapActivity {
 	private void zoomTo(GeoPoint p, int level) {
 		if(gMapController == null)
 			gMapController = gMapView.getController();
+		gMapController.stopPanning();
 		gMapController.animateTo(p);
 		int zoomLevel = gMapView.getZoomLevel();
 		try{
@@ -776,7 +792,6 @@ public class MNavMainActivity extends MapActivity {
 							dialog.cancel();
 						}
 					});
-			hasSeenAlert1 = true;
 			break;
 		case ALERT_INTRO_PROMPT_2:
 			if(hasSeenAlert2)
@@ -852,19 +867,57 @@ public class MNavMainActivity extends MapActivity {
 
 	// Implementation of AsyncTask used to get walking directions from current location to destination
 	private class GetDirectionsTask extends AsyncTask<GeoPoint, Void, Route> {
+
 		@Override
 		protected Route doInBackground(GeoPoint... geopoints) {
 			//Creates Url and queries google directions api
 			return directions(geopoints[0], geopoints[1]);
-
-			//catch exception here or something TODODODODODODO
-
 		}
 
 		@Override
-		protected void onPostExecute(Route route) {  
-			RouteOverlay routeOverlay = new RouteOverlay(route, getResources().getColor(R.color.kelly));
-			gMapView.getOverlays().add(routeOverlay);
+		protected void onPostExecute(Route route) {
+			List<Overlay> tmp = gMapView.getOverlays();
+			//Remove the route if there's one there already
+			if(tmp.contains(gRouteOverlay)) {
+				tmp.remove(gRouteOverlay);
+			}
+			gRouteOverlay = new RouteOverlay(route, gStartGeo, gDestGeo, getResources().getColor(R.color.fireBrickRed));
+			tmp.add(gRouteOverlay);
+
+			gDistanceToDest = route.getDistance();
+			gTimeToDest = route.getDuration();
+			
+			toastThis("Distance: "+gDistanceToDest + "\nTravel Duration: "+gTimeToDest, LONG);
+
+			if(gProgressDialog.isShowing())
+				gProgressDialog.dismiss();
+			gMapView.invalidate();
 		}
 	}
+
+	private GeoPoint getDirections() {
+		gProgressDialog = new ProgressDialog(MNavMainActivity.this);
+		gProgressDialog.setMessage("Calculating Route...");
+		gProgressDialog.setCancelable(true);
+		gProgressDialog.setIndeterminate(true);
+		gProgressDialog.show();
+		hasSeenAlert1 = true;
+		//create a geopoint for dest
+		GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
+		GeoPoint start;
+		if(gMyLocationOverlay != null)
+			start = gMyLocationOverlay.getMyLocation();
+		else //if MyLocation isn't working, use default from diag
+			start = new GeoPoint((int)(42.276956 * 1e6), (int)(-83.738234 * 1e6));
+
+		buildAlertDialog(ALERT_INTRO_PROMPT_2);
+		if(start == null || start.equals(dest))
+			return dest;
+
+		gStartGeo = start;
+		gDestGeo = dest;
+		new GetDirectionsTask().execute(start, dest);
+		return dest;
+	}
+
 }

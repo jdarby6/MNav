@@ -27,7 +27,7 @@ public class ScaleBarOverlay extends Overlay{
 	boolean enabled = true;
 
 	float xOffset = 10;
-	float yOffset = 10;
+	float yOffset = -15;
 	float lineWidth = 2;
 	int textSize = 12;
 
@@ -235,6 +235,8 @@ public class ScaleBarOverlay extends Overlay{
 
 		if (latitudeBar) {
 			String xMsg = scaleBarLengthText(xMetersPerInch, imperial, nautical);
+			Log.d("latitudeBar", "xMsg:"+xMsg);
+			xMsg = xMsg.substring(0, xMsg.indexOf('.')+2)+" "+xMsg.substring(xMsg.indexOf(' '), xMsg.length());
 			Rect xTextRect = new Rect();
 			textPaint.getTextBounds(xMsg, 0, xMsg.length(), xTextRect);
 
@@ -277,11 +279,11 @@ public class ScaleBarOverlay extends Overlay{
 	private String scaleBarLengthText(float meters, boolean imperial, boolean nautical) {
 		if (this.imperial) {
 			if (meters >= 1609.344) {
-				return (meters / 1609.344) + "mi";
+				return (meters / 1609.344) + " mi";
 			} else if (meters >= 1609.344/10) {
-				return ((meters / 160.9344) / 10.0) + "mi";
+				return ((meters / 160.9344) / 10.0) + " mi";
 			} else {
-				return (meters * 3.2808399) + "ft";
+				return (meters * 3.2808399) + " ft";
 			}
 		} else if (this.nautical) {
 			if (meters >= 1852) {

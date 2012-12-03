@@ -44,5 +44,6 @@
     <string name="select_day_string">Select A Day</string>
     <string name="title_activity_info">InfoActivity</string>
     <string name="help_hints">Help &amp; Hints</string>
+    <string name="restore_intro">Restore \'Tip:\' prompts</string>
 
 </resources>

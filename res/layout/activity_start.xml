@@ -118,12 +118,13 @@
         android:layout_alignTop="@+id/layout_mbus_button"
         android:layout_marginLeft="23dp"
         android:orientation="vertical" >
-
+
         <Button
             android:id="@+id/button_schedule"
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:layout_gravity="center_horizontal"
+            android:background="@drawable/button_schedule_drawable"
             android:text="@string/_" />
 
         <TextView

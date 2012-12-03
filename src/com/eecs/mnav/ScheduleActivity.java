@@ -387,7 +387,6 @@ public class ScheduleActivity extends Activity {
     	tmp_array = db.getDay(CURRENTDAY);
     	eventArrayAdapter.clear();
     	for(int i = 0; i<tmp_array.size(); i++){
-    		
     		eventArrayAdapter.add(tmp_array.get(i));
     	}
     	
