@@ -376,7 +376,7 @@ public class ScheduleActivity extends Activity {
 
 					if(id == TIME_PICK_END_DIALOG_ID){
 						editText_end_time.setText(time);
-						removeDialog(TIME_PICK_BEGIN_DIALOG_ID);
+						removeDialog(TIME_PICK_END_DIALOG_ID);
 					} else {
 						editText_begin_time.setText(time);
 						removeDialog(TIME_PICK_BEGIN_DIALOG_ID);
