@@ -43,6 +43,7 @@ public class BusRoutesActivity extends MapActivity {
 	//Layout globals
 	private MapView gMapView = null;
 	private Button bSatellite;
+	private Button bTargetReticle;
 	private Button bZoomIn;
 	private Button bZoomOut;
 
@@ -66,6 +67,7 @@ public class BusRoutesActivity extends MapActivity {
 	private static final int SHORT = Toast.LENGTH_SHORT;
 	private static final int FOUR_SECONDS = 4000;
 	private static final int LAYER_TYPE_SOFTWARE = 1;
+	private static final int ZOOM_LEVEL_BUILDING = 19;
 
 	// Item == bus
 	public static class Item {
@@ -124,6 +126,16 @@ public class BusRoutesActivity extends MapActivity {
 					bSatellite.setBackgroundResource(R.drawable.ic_satellite);
 				}
 
+			}
+		});
+		
+		bTargetReticle = (Button) findViewById(R.id.button_return);
+		bTargetReticle.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				startGPS();
+				//		GeoPoint currentLoc = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
+				GeoPoint currentLoc = gMyLocationOverlay.getMyLocation();
+				zoomTo(currentLoc, ZOOM_LEVEL_BUILDING);
 			}
 		});
 
