@@ -356,24 +356,9 @@ public class ScheduleActivity extends Activity {
 			button_set.setOnClickListener(new OnClickListener() {
 				public void onClick(View v) {
 					Integer hour = timePicker.getCurrentHour();
-					String am_pm = "";
-					String time = "";
-					if(hour < 12 && hour >= 0) { //It's morning
-						am_pm = "am";
-					} else if(hour >= 12) { //It's night
-						hour -= 12;
-						am_pm = "pm";
-					}
-					if(hour == 0) {
-						hour = 12; 
-					}
-					time += hour+":";
 					Integer min = timePicker.getCurrentMinute();
-					if(min < 10) {
-						time+="0"+min+am_pm;
-					} else
-						time+=min+am_pm;
-
+					String time = "";
+					time = timeToString(hour, min);
 					if(id == TIME_PICK_END_DIALOG_ID){
 						editText_end_time.setText(time);
 						removeDialog(TIME_PICK_END_DIALOG_ID);
@@ -431,6 +416,26 @@ public class ScheduleActivity extends Activity {
 		}
 
 		eventArrayAdapter.notifyDataSetChanged();
+	}
+	
+	private String timeToString(int hour, int min) {
+		String am_pm = "";
+		String time = "";
+		if(hour < 12 && hour >= 0) { //It's morning
+			am_pm = "am";
+		} else if(hour >= 12) { //It's night
+			hour -= 12;
+			am_pm = "pm";
+		}
+		if(hour == 0) {
+			hour = 12; 
+		}
+		time += hour+":";
+		if(min < 10) {
+			time+="0"+min+am_pm;
+		} else
+			time+=min+am_pm;
+		return time;
 	}
 
 }
