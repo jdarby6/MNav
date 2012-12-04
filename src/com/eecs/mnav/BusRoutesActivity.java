@@ -306,9 +306,13 @@ public class BusRoutesActivity extends MapActivity {
 	}
 
 	public void setBusOverlays() {
-		mapOverlays = gMapView.getOverlays();
+		//clear and re-add all overlays
+		List<Overlay> mapOverlays = gMapView.getOverlays();
 		mapOverlays.clear();
-		Drawable busIcon = this.getResources().getDrawable(R.drawable.busred); 
+		mapOverlays.add(gMyLocationOverlay);
+		mapOverlays.add(gScaleBarOverlay);
+		Drawable busIcon = this.getResources().getDrawable(R.drawable.busred);
+		//this overlay needs a drawable in its constructor, but we change it later
 		busIconOverlay = new BusIconOverlay(busIcon); 
 
 		try {
