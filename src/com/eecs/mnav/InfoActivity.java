@@ -1,8 +1,7 @@
 package com.eecs.mnav;
 
-import android.os.Bundle;
 import android.app.Activity;
-import android.view.Menu;
+import android.os.Bundle;
 
 public class InfoActivity extends Activity {
 
