@@ -1,19 +1,14 @@
 package com.eecs.mnav;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.List;
 
 import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
 
-import android.util.Xml;
+import android.util.Log;
 
 public class MbusLocationFeedXmlParser {
-	// We don't use namespaces
-	private static final String ns = null;
-	
 	// Item == bus
 	public static class Item {
 		public String id = "";
@@ -25,67 +20,60 @@ public class MbusLocationFeedXmlParser {
 		public String busroutecolor = "";
 	}
 
-	public List<Item> parse(InputStream in) throws XmlPullParserException, IOException {
+	public static String parse(URL text) {
+		// This pattern takes more than one param but we'll just use the first
 		try {
-			XmlPullParser parser = Xml.newPullParser();
-			parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
-			parser.setInput(in, null);
-			parser.nextTag();
-			return readFeed(parser);
-		} finally {
-			in.close();
-		}
-	}
+			XmlPullParserFactory parserCreator;
+			parserCreator = XmlPullParserFactory.newInstance();
+			XmlPullParser parser = parserCreator.newPullParser();
+			parser.setInput(text.openStream(), null);
 
-	private List<Item> readFeed(XmlPullParser parser) throws XmlPullParserException, IOException {
-		List<Item> items = new ArrayList<Item>();
-		while(!parser.getName().equals("livefeed"))
-		{
-			parser.next();
-		}
-		//parser.require(XmlPullParser.START_TAG, ns, "livefeed");
-		while (parser.next() != XmlPullParser.END_TAG) {
-			if (parser.getEventType() != XmlPullParser.START_TAG) {
-				continue;
-			}
-			String name = parser.getName();
-			//each bus is an 'item'
-			if (name.equals("item")) {
-				items.add(readItem(parser));
-			}
-		}  
-		return items;
-	}
+			Log.d("MbusLocationFeedXmlParser", "Parsing XML...");
 
-	private Item readItem(XmlPullParser parser) throws XmlPullParserException, IOException {
-		parser.require(XmlPullParser.START_TAG, ns, "item");
-		Item item = new Item();
+			int parserEvent = parser.getEventType();
+			Item currentItem = new Item();
+			BusRoutesActivity.items = new ArrayList<Item>();
 
-		while (parser.next() != XmlPullParser.END_TAG) {
-			if (parser.getEventType() != XmlPullParser.START_TAG) {
-				continue;
+			// Parse the XML returned on the network
+			while (parserEvent != XmlPullParser.END_DOCUMENT) {
+				switch (parserEvent) {
+				case XmlPullParser.START_TAG:
+					String tag = parser.getName();
+					if(tag.compareTo("item") == 0) {
+						parser.require(XmlPullParser.START_TAG, null, "item");
+						while (parser.next() != XmlPullParser.END_TAG) {
+							if (parser.getEventType() != XmlPullParser.START_TAG) {
+								continue;
+							}
+							String name = parser.getName();
+							if (name.equals("id")) {
+								currentItem.id = BusRoutesActivity.readText(parser);
+							} else if (name.equals("latitude")) {
+								currentItem.latitude = BusRoutesActivity.readText(parser);
+							} else if (name.equals("longitude")) {
+								currentItem.longitude = BusRoutesActivity.readText(parser);
+							} else if (name.equals("heading")) {
+								currentItem.heading = BusRoutesActivity.readText(parser);
+							} else if (name.equals("route")) {
+								currentItem.route = BusRoutesActivity.readText(parser);
+							} else if (name.equals("routeid")) {
+								currentItem.routeid = BusRoutesActivity.readText(parser);
+							} else if (name.equals("busroutecolor")) {
+								currentItem.busroutecolor = BusRoutesActivity.readText(parser);
+							}
+						}
+						BusRoutesActivity.items.add(currentItem);
+						currentItem = new Item();
+					}
+					break;
+				}
+				parserEvent = parser.next();
 			}
-			
-			String name = parser.getName();
-			
-			if (name.equals("id")) {
-				item.id = parser.getText();
-			} else if (name.equals("latitude")) {
-				item.latitude = parser.getText();
-			} else if (name.equals("longitude")) {
-				item.longitude = parser.getText();
-			} else if (name.equals("heading")) {
-				item.heading = parser.getText();
-			} else if (name.equals("route")) {
-				item.route = parser.getText();
-			} else if (name.equals("routeid")) {
-				item.routeid = parser.getText();
-			} else if (name.equals("busroutecolor")) {
-				item.busroutecolor = parser.getText();
-			}
-			
-			parser.nextTag();
+		} catch (Exception e) {
+			Log.i("RouteLoader", "Failed in parsing XML", e);
+			return "Finished with failure.";
 		}
-		return item;
+
+		return "Done...";
 	}
 }
