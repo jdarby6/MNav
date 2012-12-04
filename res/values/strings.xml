@@ -45,5 +45,7 @@
     <string name="title_activity_info">InfoActivity</string>
     <string name="help_hints">Help &amp; Hints</string>
     <string name="restore_intro">Restore \'Tip:\' prompts</string>
+    <string name="ok">Ok</string>
+    <string name="set">Set</string>
 
 </resources>

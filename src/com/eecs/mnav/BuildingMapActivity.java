@@ -1,9 +1,14 @@
 package com.eecs.mnav;
 
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.jakewharton.DiskLruCache;
 import com.parse.FindCallback;
 import com.parse.GetDataCallback;
 import com.parse.ParseFile;
@@ -21,6 +26,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.util.LruCache;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -29,6 +35,7 @@ import android.widget.TextView;
 
 public class BuildingMapActivity extends Activity{
 	ArrayList<Bitmap> floors = new ArrayList<Bitmap>();
+	private DiskLruCache bitmapCache;
 	int curFloor = 0;
 	int numFloors = 0;
 	String gDestName_full = "";
@@ -41,9 +48,13 @@ public class BuildingMapActivity extends Activity{
 	Button bStairsDown;
 	SharedPreferences gPreferences;
 	ProgressDialog gProgressDialog;
-
 	String mBuildingName = "default"; //Default to saying we don't have the map
 
+
+	private static final int DISK_CACHE_SIZE = 5 * 1024 * 1024; // 5MiB ~ This equates to about 5 sets of 5 building maps of EECS map quality
+	private static final String DISK_CACHE_SUBDIR = "building_maps";
+	
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -77,6 +88,26 @@ public class BuildingMapActivity extends Activity{
 		
 		touchImageMap = (TouchImageView) findViewById(R.id.imageView_building_map);
 		touchImageMap.setMaxZoom(3f);
+		
+		/*XXX/Define the cache
+		   File cacheDir = getDir(DISK_CACHE_SUBDIR, 0);
+		   //We'll be using the destName abbreviation for the cache key
+		    /**
+		     * Opens the cache in {@code directory}, creating a cache if none exists
+		     * there.
+		     *
+		     * @param directory a writable directory
+		     * @param appVersion
+		     * @param valueCount the number of values per cache entry. Must be positive.
+		     * @param maxSize the maximum number of bytes this cache should use to store
+		     * @throws IOException if reading or writing the cache directory fails
+		     *
+		   try {
+			bitmapCache = DiskLruCache.open(cacheDir, 100, 1, DISK_CACHE_SIZE);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}*/
 
 		buildingMapObject = new ParseObject("BuildingMap");
 
@@ -86,6 +117,7 @@ public class BuildingMapActivity extends Activity{
 		setBuildingName();
 		query.whereEqualTo("name", mBuildingName.toLowerCase());
 		query.addAscendingOrder("name");
+		query.setCachePolicy(ParseQuery.CachePolicy.CACHE_ELSE_NETWORK);
 		query.findInBackground(new FindCallback() {
 			public void done(List<ParseObject> mapList, ParseException e) {
 				if (e == null) {
@@ -107,6 +139,8 @@ public class BuildingMapActivity extends Activity{
 					resolveMaps(mapList);
 				} else {
 					Log.d("Parse Import", "Error: " + e.getMessage());
+					mapsNotAvailable = true;
+					resolveMaps(mapList);
 				}
 			}
 		});
@@ -142,14 +176,16 @@ public class BuildingMapActivity extends Activity{
 		gProgressDialog.setMessage("Loading Map "+(curFloor+1)+" of "+numFloors+"...");
 		ParseObject tmpObj = parseMapList.get(curFloor);
 		if(tmpObj.has("picture")) {
-			Log.d("Parse Import", "The buildingMapObject has key: picture");
 			final ParseFile tmpFile = (ParseFile)tmpObj.get("picture");
-			Log.d("Parse Import", "Name of file: "+tmpFile.getName());
+			final String filename = tmpFile.getName();
+			final String key = filename.substring(filename.lastIndexOf('-')+1, filename.length()-4);
+			Log.d("Parse Import", "Name of file: "+filename+"\nKey used: "+key);
+			
 			tmpFile.getDataInBackground(new GetDataCallback() {
 				public void done(byte[] data, ParseException e) {
 					if (e == null) {
 						// data has the bytes for the floor map
-						addFloor(Character.getNumericValue(tmpFile.getName().charAt(tmpFile.getName().length()-5)), BitmapFactory.decodeByteArray(data, 0, data.length));
+						addFloor(Character.getNumericValue(filename.charAt(filename.length()-5)), BitmapFactory.decodeByteArray(data, 0, data.length), key);
 						curFloor++; //Increment the current floor after adding a floor
 						if(curFloor == numFloors) {
 							Log.d("Parse Import", "curFloor="+curFloor);
@@ -190,9 +226,10 @@ public class BuildingMapActivity extends Activity{
 	}
 
 	/** Method to call which add floors to the floors arrayList and increments curFloor**/
-	public void addFloor(int pos, Bitmap bmp) {
+	public void addFloor(int pos, Bitmap bmp, String key) {
 		Log.d("addFloor()", "Adding floor to pos="+pos+". This is map number "+curFloor);
 		floors.set(pos, bmp);
+	//XXX	addBitmapToMemoryCache(key, bmp);
 	}
 
 	/** Method to figure out what current floor we should display to the user **/
@@ -246,4 +283,52 @@ public class BuildingMapActivity extends Activity{
 			Log.d("BuildingMapActivity", "Went down! curFloor="+curFloor);
 		}
 	}
+	
+	/*public void addBitmapToMemoryCache(String key, Bitmap bitmap) {
+	    if (getBitmapFromMemCache(key) == null) {
+	    	Log.d("LRUCache","Added "+key+" to cache.");
+	        bitmapCache.put(key, bitmap);
+	    }
+	    throws IOException, FileNotFoundException {
+	        OutputStream out = null;
+	        try {
+	            out = new BufferedOutputStream( editor.newOutputStream( 0 ), 8*1024 );
+	            return bitmap.compress( mCompressFormat, mCompressQuality, out );
+	        } finally {
+	            if ( out != null ) {
+	                out.close();
+	            }
+	        }
+	}
+
+	public Bitmap getBitmapFromMemCache(String key) {
+		 Bitmap bitmap = null;
+	     DiskLruCache.Snapshot snapshot = null;
+	     try {
+
+	            snapshot = bitmapCache.get( key );
+	            if ( snapshot == null ) {
+	                return null;
+	            }
+	            final InputStream in = snapshot.getInputStream( 0 );
+	            if ( in != null ) {
+	                final BufferedInputStream buffIn = 
+	                new BufferedInputStream( in, 8*1024 );
+	                bitmap = BitmapFactory.decodeStream( buffIn );              
+	            }   
+	        } catch ( IOException e ) {
+	            e.printStackTrace();
+	        } finally {
+	            if ( snapshot != null ) {
+	                snapshot.close();
+	            }
+	        }
+
+	        if ( BuildConfig.DEBUG ) {
+	            Log.d( "cache_test_DISK_", bitmap == null ? "" : "image read from disk " + key);
+	        }
+
+	        return bitmap;
+	}
+*/	
 }
