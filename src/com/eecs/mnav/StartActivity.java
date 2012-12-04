@@ -151,18 +151,14 @@ public class StartActivity extends Activity implements TextWatcher {
 		});
 
 		schedule.setOnClickListener(new OnClickListener() {
-
 			public void onClick(View v) {
-				
 				Intent scheduleIntent = new Intent(StartActivity.this, ScheduleActivity.class);
 				StartActivity.this.startActivity(scheduleIntent);
-
 			}
 
 
 		});
 		schedule.setOnLongClickListener(new OnLongClickListener() {
-
 			public boolean onLongClick(View v) {
 				//reach into db and get current time day
 				//for now, get first on list
