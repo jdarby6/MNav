@@ -9,7 +9,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_start">StartActivity</string>
     <string name="_"></string>
-    <string name="lat_long">lat,long</string>
+    <string name="search_campus">Search campus</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="current_lat">Current lat:</string>

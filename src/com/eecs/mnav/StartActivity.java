@@ -45,7 +45,7 @@ public class StartActivity extends Activity implements TextWatcher {
 
 	private String destBldgName = "";
 	private String destRoomNum = "";
-	
+
 	final String[] day_abbrs = new String[] {"NULL", "SU", "MO", "TU", "WE", 
 			"TH", "FR", "SA"};
 	private static final String REGEX_ROOM_NUM = "^[0-9]{1,4} [a-zA-Z]+ *";
@@ -63,19 +63,19 @@ public class StartActivity extends Activity implements TextWatcher {
 	// Whether the display should be refreshed.
 	public static boolean refreshDisplay = true; 
 	public static String sPref = null;
-	
+
 	private DataBaseHelper destination_db;
 	private ScheduleDatabaseHandler schedule_db;
-	
+
 	static Context context;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_start);
-		
+
 		context = getApplicationContext();
-		
+
 		//Initialize destination db
 		destination_db = new DataBaseHelper(this, "destination_db");
 		try {
@@ -91,15 +91,15 @@ public class StartActivity extends Activity implements TextWatcher {
 			throw sqle;
 
 		}
-		
+
 		Cursor cursor = destination_db.getAllBldgs();
-		
+
 		ArrayList<String> strings = new ArrayList<String>();
 		for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
-		   String mTitleRaw = cursor.getString(0);
-		   strings.add(mTitleRaw);
+			String mTitleRaw = cursor.getString(0);
+			strings.add(mTitleRaw);
 		}
-		
+
 		cursor.close();
 		destination_db.close();
 		String[] item = (String[]) strings.toArray(new String[strings.size()]);
@@ -110,7 +110,7 @@ public class StartActivity extends Activity implements TextWatcher {
 		button_bus_routes = (Button)findViewById(R.id.button_bus_routes);
 		button_app_info = (Button)findViewById(R.id.button_info);
 		gInputFeedback = (TextView)findViewById(R.id.textView_input_feedback);
-		
+
 		address_box.addTextChangedListener(this);
 		address_box.setTextColor(Color.BLACK);
 		address_box.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, item));
@@ -120,7 +120,7 @@ public class StartActivity extends Activity implements TextWatcher {
 				//hide the soft keyboard
 				InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
 				imm.hideSoftInputFromWindow(address_box.getWindowToken(), 0);
-				
+
 				String tempAddress = address_box.getText().toString();
 				gInputFeedback.setText("");
 				if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME)) {
@@ -133,17 +133,21 @@ public class StartActivity extends Activity implements TextWatcher {
 						destRoomNum = "";
 						Log.d("Search Button", "Matches REGEX_BLDG_NAME! RoomNum="+destRoomNum+" BldgName="+destBldgName);
 					}
-				} else {
+				} else if(tempAddress != null && tempAddress.length() > 0){
 					//It doesn't match our regEx so it's an invalid entry.
 					gInputFeedback.setText("Invalid destination entry.");
 					return;
 				}
 				//Save destination address
 				Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
-				editor.putString("DESTNAME", destBldgName);
-				editor.putString("DESTROOM", destRoomNum);
+				if(tempAddress == null || tempAddress.length() == 0) {
+					editor.putString("DESTNAME", "the diag");
+					editor.putString("DESTROOM", "");
+				} else {
+					editor.putString("DESTNAME", destBldgName);
+					editor.putString("DESTROOM", destRoomNum);
+				}
 				editor.commit();
-				
 				Intent searchIntent = new Intent(StartActivity.this, MNavMainActivity.class);
 				StartActivity.this.startActivity(searchIntent);
 			}
@@ -162,22 +166,22 @@ public class StartActivity extends Activity implements TextWatcher {
 			public boolean onLongClick(View v) {
 				//reach into db and get current time day
 				//for now, get first on list
-				
-				
+
+
 				Calendar calendar = Calendar.getInstance();
-		        int day = calendar.get(Calendar.DAY_OF_WEEK);
-		        
-		        schedule_db = new ScheduleDatabaseHandler(v.getContext());
-		        
-		        String tempAddress = "";
-		        ArrayList<MEvent>tmp_array = new ArrayList<MEvent>();
-		    	tmp_array = schedule_db.getDay(day_abbrs[day]);
-		    	tempAddress = tmp_array.get(0).getLocation();
-		    	//future loop events to see if time correct, right now just first event
-		    	schedule_db.close();
-		    	
-				
-				
+				int day = calendar.get(Calendar.DAY_OF_WEEK);
+
+				schedule_db = new ScheduleDatabaseHandler(v.getContext());
+
+				String tempAddress = "";
+				ArrayList<MEvent>tmp_array = new ArrayList<MEvent>();
+				tmp_array = schedule_db.getDay(day_abbrs[day]);
+				tempAddress = tmp_array.get(0).getLocation();
+				//future loop events to see if time correct, right now just first event
+				schedule_db.close();
+
+
+
 				gInputFeedback.setText("");
 				if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME)) {
 					if(tempAddress.matches(REGEX_ROOM_NUM)) {
@@ -190,39 +194,38 @@ public class StartActivity extends Activity implements TextWatcher {
 						Log.d("Schedule Button", "Matches REGEX_BLDG_NAME! RoomNum="+destRoomNum+" BldgName="+destBldgName);
 					}
 				}
-				
+
 				Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
 				editor.putString("DESTNAME", destBldgName.toUpperCase());
 				editor.putString("DESTROOM", destRoomNum);
 				editor.commit();
-				
+
 				Intent searchIntent = new Intent(StartActivity.this, MNavMainActivity.class);
 				StartActivity.this.startActivity(searchIntent);
-				
+
 				return true;
 
 			}
 
 
 		});
-		
+
 		button_bus_routes.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				Intent intent = new Intent(StartActivity.this, BusRoutesActivity.class);
 				StartActivity.this.startActivity(intent);
 			}
-			
+
 		});
 
 		button_app_info.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				//TODO Create the info activity
 				Intent scheduleIntent = new Intent(StartActivity.this, InfoActivity.class);
 				StartActivity.this.startActivity(scheduleIntent);
 
 			}
 		});
-	
+
 	}
 
 	@Override
@@ -328,12 +331,12 @@ public class StartActivity extends Activity implements TextWatcher {
 		// TODO Auto-generated method stub
 
 	}
-	
+
 	/** Helper function for displaying a toast. Takes the string to be displayed and the length: LONG or SHORT **/
 	private void toastThis(String toast, int duration) {
 		Toast t = Toast.makeText(context, toast, duration);
 		t.show();
 	}
-	
-	
+
+
 }
