@@ -47,5 +47,6 @@
     <string name="restore_intro">Restore \'Tip:\' prompts</string>
     <string name="ok">Ok</string>
     <string name="set">Set</string>
+    <string name="reset_map">Reset Map</string>
 
 </resources>

@@ -24,6 +24,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -183,25 +185,22 @@ public class BusRoutesActivity extends MapActivity {
 	}	
 
 
-	/*@Override
+	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.activity_main, menu);
+		getMenuInflater().inflate(R.menu.activity_bus_routes, menu);
 		return true;
 	}
 
 	public boolean onOptionsItemSelected (MenuItem item) {
 		switch (item.getItemId()){
-		case R.id.menu_satellite:
-			showDialog(DIALOG_SAVE_CURRENT_LOC);
-			break;
-		case R.id.menu_settings:
-			showDialog(DIALOG_SETTINGS);
+		case R.id.menu_reset_map:
+			zoomTo(new GeoPoint((int)(gDefaultLat*1E6), (int)(gDefaultLong*1E6)), gDefaultZoom);
 			break;
 		default:
 			return false;
 		}
 		return true;
-	}*/
+	}
 
 	@Override
 	protected boolean isRouteDisplayed() {
@@ -326,7 +325,7 @@ public class BusRoutesActivity extends MapActivity {
 				String imageString = "bus_route_"+routeid+"_heading_"+heading2+".png";
 				busIcon = Drawable.createFromStream(getAssets().open("icons/"+imageString), imageString);
 				busIcon.setBounds(-busIcon.getIntrinsicWidth(), -busIcon.getIntrinsicHeight(),
-		                 busIcon.getIntrinsicWidth(), busIcon.getIntrinsicHeight());
+						busIcon.getIntrinsicWidth(), busIcon.getIntrinsicHeight());
 				OverlayItem overlayItem = new OverlayItem(new GeoPoint(lat, lon), "", "");
 				overlayItem.setMarker(busIcon);
 				busIconOverlay.addOverlay(overlayItem);
