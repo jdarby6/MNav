@@ -21,6 +21,7 @@ import android.graphics.drawable.Drawable;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
@@ -77,6 +78,13 @@ public class BusRoutesActivity extends MapActivity {
 	static ArrayList<Item> items;
 	static final String locationFeedURL = "http://mbus.pts.umich.edu/shared/location_feed.xml";
 	private List<Overlay> mapOverlays;
+	//Number of points to interpolate a move by (chop up the update of bus icon into this many parts
+	//before fetching the XML again)
+	private int splitMove = 4;
+
+	private int m_interval = FOUR_SECONDS;
+	private Handler m_handler;
+	static BusIconOverlay busIconOverlay;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -144,6 +152,9 @@ public class BusRoutesActivity extends MapActivity {
 			Log.i("NETWORK", "Failed to generate valid URL");
 		}
 
+		m_handler = new Handler();
+		startRepeatingTask();
+
 	}
 
 	@Override
@@ -152,6 +163,7 @@ public class BusRoutesActivity extends MapActivity {
 		//Initialize the map overlays (scale, currentLocation indicator)
 		initOverlays();
 		gMyLocationOverlay.enableMyLocation();
+		startRepeatingTask();
 		//start gps;
 	}
 
@@ -160,6 +172,7 @@ public class BusRoutesActivity extends MapActivity {
 		super.onPause();
 		// when our activity pauses, we want to remove listening for location updates
 		gMyLocationOverlay.disableMyLocation();
+		stopRepeatingTask();
 		//stop gps
 	}
 
@@ -267,21 +280,87 @@ public class BusRoutesActivity extends MapActivity {
 		t.show();
 	}
 
-	public void setBusOverlays() {
-		mapOverlays = gMapView.getOverlays();	
-		Drawable busIcon = this.getResources().getDrawable(R.drawable.busred); 
-		BusIconOverlay busIconOverlay = new BusIconOverlay(busIcon); 
-		// Display all buses at once
-		for(int i = 0; i < items.size(); i++) {
-			int lat = (int)(Double.parseDouble(items.get(i).latitude)*1E6);
-			int lon = (int)(Double.parseDouble(items.get(i).longitude)*1E6);
-			busIconOverlay.addOverlay(new OverlayItem(new GeoPoint(lat, lon), "", ""));
+	Runnable m_statusChecker = new Runnable()
+	{ 
+		public void run() {
+			Log.d("Ya", "I'm all runnable");
+
+			try {
+				new GetLocationsTask().execute(new URL(locationFeedURL));
+			} catch (MalformedURLException e) {
+				Log.i("NETWORK", "Failed to generate valid URL");
+			}
+
+			m_handler.postDelayed(m_statusChecker, m_interval);
 		}
+	};
+
+	void startRepeatingTask()
+	{
+		m_statusChecker.run(); 
+	}
+
+	void stopRepeatingTask()
+	{
+		m_handler.removeCallbacks(m_statusChecker);
+	}
+
+	public void setBusOverlays() {
+		mapOverlays = gMapView.getOverlays();
+		mapOverlays.clear();
+		Drawable busIcon = this.getResources().getDrawable(R.drawable.busred); 
+		busIconOverlay = new BusIconOverlay(busIcon); 
+
+		try {
+			// Display all buses at once
+			for(int i = 0; i < items.size(); i++) {
+				int lat = (int)(Double.parseDouble(items.get(i).latitude)*1E6);
+				int lon = (int)(Double.parseDouble(items.get(i).longitude)*1E6);
+				int heading = Integer.parseInt(items.get(i).heading);
+				String routeid = items.get(i).routeid;
+				String heading2 = getHeading2(heading);
+				String imageString = "bus_route_"+routeid+"_heading_"+heading2+".png";
+				busIcon = Drawable.createFromStream(getAssets().open("icons/"+imageString), imageString);
+				busIcon.setBounds(-busIcon.getIntrinsicWidth(), -busIcon.getIntrinsicHeight(),
+		                 busIcon.getIntrinsicWidth(), busIcon.getIntrinsicHeight());
+				OverlayItem overlayItem = new OverlayItem(new GeoPoint(lat, lon), "", "");
+				overlayItem.setMarker(busIcon);
+				busIconOverlay.addOverlay(overlayItem);
+			}
+		} catch (Exception e) {
+			Log.d("setBusOverlays", e.getMessage());
+		}
+
 		mapOverlays.add(busIconOverlay);
 		busIconOverlay.populateIt();
 
 		// Added symbols will be displayed when map is redrawn so force redraw now
 		gMapView.postInvalidate(); 
+	}
+
+	/* Chooses the closest 45 degree angle at which to orient the bus based
+	 * on its actual heading. MBus uses this value to choose the appropriate
+	 * icon file.
+	 */
+	private String getHeading2(int heading) {
+		int heading2 = (heading + 90) % 360;
+
+		if(heading2 > 25 && heading2 < 65)
+			return "45";
+		else if(heading2 > 65 && heading2 < 115)
+			return "90";
+		else if(heading2 > 115 && heading2 < 155)
+			return "135";
+		else if(heading2 > 155 && heading2 < 205)
+			return "180";
+		else if(heading2 > 205 && heading2 < 245)
+			return "225";
+		else if(heading2 > 245 && heading2 < 290)
+			return "270";
+		else if(heading2 > 290 && heading2 < 340)
+			return "315";
+		else
+			return "";
 	}
 
 	private class GetLocationsTask extends AsyncTask<URL, String, String> {
@@ -377,61 +456,4 @@ public class BusRoutesActivity extends MapActivity {
 		}
 		return result;
 	}
-
-	/*
-	// Implementation of AsyncTask used to get walking directions from current location to destination
-	private class GetDirectionsTask extends AsyncTask<GeoPoint, Void, Route> {
-
-		@Override
-		protected Route doInBackground(GeoPoint... geopoints) {
-			//Creates Url and queries google directions api
-			return directions(geopoints[0], geopoints[1]);
-		}
-
-		@Override
-		protected void onPostExecute(Route route) {
-			List<Overlay> tmp = gMapView.getOverlays();
-			//Remove the route if there's one there already
-			if(tmp.contains(gRouteOverlay)) {
-				tmp.remove(gRouteOverlay);
-			}
-			gRouteOverlay = new RouteOverlay(route, gStartGeo, gDestGeo, getResources().getColor(R.color.fireBrickRed));
-			tmp.add(gRouteOverlay);
-
-			gDistanceToDest = route.getDistance();
-			gTimeToDest = route.getDuration();
-
-			toastThis("Distance: "+gDistanceToDest + "\nTravel Duration: "+gTimeToDest, LONG);
-
-			if(gProgressDialog.isShowing())
-				gProgressDialog.dismiss();
-			gMapView.invalidate();
-		}
-	}
-
-	private GeoPoint getDirections() {
-		gProgressDialog = new ProgressDialog(MNavMainActivity.this);
-		gProgressDialog.setMessage("Calculating Route...");
-		gProgressDialog.setCancelable(true);
-		gProgressDialog.setIndeterminate(true);
-		gProgressDialog.show();
-		hasSeenAlert1 = true;
-		//create a geopoint for dest
-		GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
-		GeoPoint start;
-		if(gMyLocationOverlay != null)
-			start = gMyLocationOverlay.getMyLocation();
-		else //if MyLocation isn't working, use default from diag
-			start = new GeoPoint((int)(42.276956 * 1e6), (int)(-83.738234 * 1e6));
-
-		buildAlertDialog(ALERT_INTRO_PROMPT_2);
-		if(start == null || start.equals(dest))
-			return dest;
-
-		gStartGeo = start;
-		gDestGeo = dest;
-		new GetDirectionsTask().execute(start, dest);
-		return dest;
-	}
-	 */
 }

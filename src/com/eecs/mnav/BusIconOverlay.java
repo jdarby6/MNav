@@ -7,6 +7,7 @@ import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
+import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;
 
 public class BusIconOverlay extends ItemizedOverlay<OverlayItem> {
@@ -14,7 +15,7 @@ public class BusIconOverlay extends ItemizedOverlay<OverlayItem> {
 	private ArrayList<OverlayItem> myOverlays;
 
 	public BusIconOverlay(Drawable defaultMarker) {
-		super(boundCenterBottom(defaultMarker));
+		super(boundCenter(defaultMarker));
 		myOverlays = new ArrayList<OverlayItem>();
 		//populate();
 	}
@@ -59,6 +60,11 @@ public class BusIconOverlay extends ItemizedOverlay<OverlayItem> {
 	@Override
 	public int size() {
 		return myOverlays.size();
+	}
+	
+	@Override
+	public void draw(android.graphics.Canvas canvas, MapView mapView, boolean shadow) {
+		super.draw(canvas, mapView, false);
 	}
 	
 	public void populateIt() {
