@@ -192,7 +192,7 @@ public class StartActivity extends Activity implements TextWatcher {
 				}
 				
 				Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
-				editor.putString("DESTNAME", destBldgName);
+				editor.putString("DESTNAME", destBldgName.toUpperCase());
 				editor.putString("DESTROOM", destRoomNum);
 				editor.commit();
 				
