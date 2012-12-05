@@ -42,7 +42,7 @@
             android:id="@+id/editText_location"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/editText_class"
+            android:layout_below="@+id/autoCompleteTextView_class"
             android:layout_marginBottom="3dp"
             android:layout_toRightOf="@+id/textView_begin_time"
             android:ems="10"
@@ -58,8 +58,8 @@
             android:text="@string/location"
             android:textSize="20dp" />
 
-        <EditText
-            android:id="@+id/editText_class"
+        <AutoCompleteTextView
+            android:id="@+id/autoCompleteTextView_class"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
@@ -67,7 +67,8 @@
             android:layout_toRightOf="@+id/textView_begin_time"
             android:ems="10"
             android:hint="@string/class_hint"
-            android:inputType="textPostalAddress" />
+            android:inputType="textPostalAddress" 
+            android:completionThreshold="2" />
 
         <TextView
             android:id="@+id/textView_class"

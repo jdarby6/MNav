@@ -98,23 +98,28 @@ public class DataBaseHelper extends SQLiteOpenHelper{
 		//Open your local db as the input stream
 		InputStream myInput = myContext.getAssets().open(DB_NAME);
 
-		// Path to the just created empty db
-		String outFileName = DB_PATH + DB_NAME;
+		try{
+			// Path to the just created empty db
+			String outFileName = DB_PATH + DB_NAME;
 
-		//Open the empty db as the output stream
-		OutputStream myOutput = new FileOutputStream(outFileName);
+			//Open the empty db as the output stream
+			OutputStream myOutput = new FileOutputStream(outFileName);
 
-		//transfer bytes from the inputfile to the outputfile
-		byte[] buffer = new byte[1024];
-		int length;
-		while ((length = myInput.read(buffer))>0){
-			myOutput.write(buffer, 0, length);
+			//transfer bytes from the inputfile to the outputfile
+			byte[] buffer = new byte[1024];
+			int length;
+			while ((length = myInput.read(buffer))>0){
+				myOutput.write(buffer, 0, length);
+			}
+
+			//Close the streams
+			myOutput.flush();
+			myOutput.close();
+			myInput.close();
 		}
-
-		//Close the streams
-		myOutput.flush();
-		myOutput.close();
-		myInput.close();
+		catch (IOException e) {
+			
+		}
 
 	}
 
@@ -153,11 +158,11 @@ public class DataBaseHelper extends SQLiteOpenHelper{
 	public Cursor getDoorsByBldgId(int bldg_num) {
 		return myDataBase.rawQuery("SELECT door_lat, door_long FROM doors WHERE bldg_num=" + bldg_num, null);
 	}
-	
+
 	public Cursor getAllBldgs() {
 		return myDataBase.rawQuery("SELECT name_full, name_abbr FROM buildings", null);
 	}
-	
+
 	public Cursor getAllBldgAbbrs() {
 		return myDataBase.rawQuery("SELECT name_abbr FROM buildings", null);
 	}
@@ -165,5 +170,9 @@ public class DataBaseHelper extends SQLiteOpenHelper{
 	public Cursor getSections(String classname) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public Cursor getAllClasses() {
+		return myDataBase.rawQuery("SELECT * FROM class_info", null);
 	}
 }

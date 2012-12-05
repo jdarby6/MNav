@@ -1,6 +1,7 @@
 package com.eecs.mnav;
 
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -8,8 +9,13 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences.Editor;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -18,6 +24,8 @@ import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -25,7 +33,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
-public class ScheduleActivity extends Activity {
+public class ScheduleActivity extends Activity implements TextWatcher {
 
 	private MEventArrayAdapter eventArrayAdapter;
 
@@ -49,7 +57,7 @@ public class ScheduleActivity extends Activity {
 	private EditText editText_end_time;
 	private EditText editText_begin_time;
 	private EditText editText_location;
-	private EditText editText_class;
+	private AutoCompleteTextView autoCompleteTextView_class;
 
 	private CheckBox checkBoxMonday;
 	private CheckBox checkBoxTuesday;
@@ -71,8 +79,12 @@ public class ScheduleActivity extends Activity {
 
 	public static int CDI = 0; //current days int;
 
-	private DataBaseHelper classes_db;
+	private DataBaseHelper all_classes_db;
 	private ScheduleDatabaseHandler db;
+	Cursor cursor_all_classes;
+	ArrayAdapter<String> adapter;
+
+	private DataBaseHelper destination_db;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -128,7 +140,7 @@ public class ScheduleActivity extends Activity {
 
 			public void onItemClick(AdapterView<?> arg0, View arg1, int pos,
 					long id) {
-				
+
 				curEvent.setLabel(eventArrayAdapter.getItem(pos).getLabel());
 				curEvent.setLocation(eventArrayAdapter.getItem(pos).getLocation());
 				curEvent.setIndex(eventArrayAdapter.getItem(pos).getIndex());
@@ -137,8 +149,8 @@ public class ScheduleActivity extends Activity {
 				curEvent.setDays(eventArrayAdapter.getItem(pos).getDays());
 
 				showDialog(DIALOG_OPTION);
-				
-				
+
+
 			}});
 
 		//Set long-click listener to list items
@@ -177,7 +189,7 @@ public class ScheduleActivity extends Activity {
 			editText_end_time.setText("");
 			editText_begin_time.setText("");
 			editText_location.setText("");
-			editText_class.setText("");
+			autoCompleteTextView_class.setText("");
 			checkBoxMonday.setChecked(false);
 			checkBoxTuesday.setChecked(false);
 			checkBoxWednesday.setChecked(false);
@@ -208,7 +220,7 @@ public class ScheduleActivity extends Activity {
 			editText_end_time = (EditText) dialogEditEvent.findViewById(R.id.editText_end_time);
 			editText_begin_time = (EditText) dialogEditEvent.findViewById(R.id.editText_begin_time);
 			editText_location = (EditText) dialogEditEvent.findViewById(R.id.editText_location);
-			editText_class = (EditText) dialogEditEvent.findViewById(R.id.editText_class);
+			autoCompleteTextView_class = (AutoCompleteTextView) dialogEditEvent.findViewById(R.id.autoCompleteTextView_class);
 			checkBoxMonday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxMonday);
 			checkBoxTuesday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxTuesday);
 			checkBoxWednesday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxWednesday);
@@ -217,6 +229,76 @@ public class ScheduleActivity extends Activity {
 			checkBoxSaturday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxSaturday);
 			checkBoxSunday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxSunday);
 			//-------------------		
+
+			//Initialize classes db
+			all_classes_db = new DataBaseHelper(this, "all_classes_db");
+			try {
+				all_classes_db.createDataBase();
+			} 
+			catch (IOException ioe) {
+				throw new Error("Unable to create database");
+			}
+			try {
+				all_classes_db.openDataBase();
+			} 
+			catch(SQLException sqle) {	
+				throw sqle;
+
+			}
+
+			cursor_all_classes = all_classes_db.getAllClasses();
+
+			ArrayList<String> strings = new ArrayList<String>();
+			for(cursor_all_classes.moveToFirst(); !cursor_all_classes.isAfterLast(); cursor_all_classes.moveToNext()) {
+				String subject = cursor_all_classes.getString(2).trim();
+				int startParen = subject.indexOf('(');
+				int endParen = subject.indexOf(')');
+				String department = subject.substring(startParen+1, endParen);
+				String catalog_num = cursor_all_classes.getString(3).trim();
+				String section = cursor_all_classes.getString(4).trim();
+				strings.add(department + " " + catalog_num + "." + section);
+			}
+
+			String[] item = (String[]) strings.toArray(new String[strings.size()]);
+
+			autoCompleteTextView_class.addTextChangedListener(this);
+			autoCompleteTextView_class.setTextColor(Color.BLACK);
+			adapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, item);
+			autoCompleteTextView_class.setAdapter(adapter);
+			/*autoCompleteTextView_class.setOnItemClickListener(new OnItemClickListener() { 
+
+				public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
+					int adj_pos = adapter.getPosition(autoCompleteTextView_class.getText().toString());
+					cursor_all_classes.moveToFirst();
+					cursor_all_classes.move(adj_pos);
+
+					if(cursor_all_classes.getString(7).toString() != null && cursor_all_classes.getString(7).toString().length() != 0) {
+						checkBoxMonday.setChecked(true);
+					}
+					if(cursor_all_classes.getString(8).toString() != null && cursor_all_classes.getString(8).toString().length() != 0) {
+						checkBoxTuesday.setChecked(true);
+					}
+					if(cursor_all_classes.getString(9).toString() != null && cursor_all_classes.getString(9).toString().length() != 0) {
+						checkBoxWednesday.setChecked(true);
+					}
+					if(cursor_all_classes.getString(10).toString() != null && cursor_all_classes.getString(10).toString().length() != 0) {
+						checkBoxThursday.setChecked(true);
+					}
+					if(cursor_all_classes.getString(11).toString() != null && cursor_all_classes.getString(11).toString().length() != 0) {
+						checkBoxFriday.setChecked(true);
+					}
+					if(cursor_all_classes.getString(12).toString() != null && cursor_all_classes.getString(12).toString().length() != 0) {
+						checkBoxSaturday.setChecked(true);
+					}
+					if(cursor_all_classes.getString(13).toString() != null && cursor_all_classes.getString(13).toString().length() != 0) {
+						checkBoxSunday.setChecked(true);
+					}
+					editText_location.setText(cursor_all_classes.getString(15));
+					int period = autoCompleteTextView_class.getText().toString().indexOf('.');
+					autoCompleteTextView_class.setText(autoCompleteTextView_class.getText().toString().substring(0, period));
+
+				}
+			});*/
 
 			//Allow click to produce time picker
 			editText_end_time.setOnClickListener(new View.OnClickListener() {
@@ -241,7 +323,7 @@ public class ScheduleActivity extends Activity {
 
 					//checks for values					
 					templocation = editText_location.getText().toString();
-					templabel = editText_class.getText().toString();
+					templabel = autoCompleteTextView_class.getText().toString();
 					tempbegin_time = editText_begin_time.getText().toString();
 					tempend_time = editText_end_time.getText().toString();
 
@@ -252,7 +334,7 @@ public class ScheduleActivity extends Activity {
 					if(checkBoxFriday.isChecked()) tempdays+="FR";
 					if(checkBoxSaturday.isChecked()) tempdays+="SA";
 					if(checkBoxSunday.isChecked()) tempdays+="SU";
-					
+
 					tempindex = makeIndex(tempbegin_time);
 
 					if (!tempdays.equals("NULL")) addEvent(templabel,templocation, tempindex, tempbegin_time,tempend_time,tempdays);
@@ -279,7 +361,7 @@ public class ScheduleActivity extends Activity {
 			editText_end_time = (EditText) dialogEditEvent.findViewById(R.id.editText_end_time);
 			editText_begin_time = (EditText) dialogEditEvent.findViewById(R.id.editText_begin_time);
 			editText_location = (EditText) dialogEditEvent.findViewById(R.id.editText_location);
-			editText_class = (EditText) dialogEditEvent.findViewById(R.id.editText_class);
+			autoCompleteTextView_class = (AutoCompleteTextView) dialogEditEvent.findViewById(R.id.autoCompleteTextView_class);
 			checkBoxMonday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxMonday);
 			checkBoxTuesday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxTuesday);
 			checkBoxWednesday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxWednesday);
@@ -303,7 +385,7 @@ public class ScheduleActivity extends Activity {
 
 			//Restore dialog values based on event info
 			editText_location.setText(curEvent.getLocation());
-			editText_class.setText(curEvent.getLabel());
+			autoCompleteTextView_class.setText(curEvent.getLabel());
 			editText_begin_time.setText(curEvent.getTimeBegin());
 			editText_end_time.setText(curEvent.getTimeEnd());
 			if (curEvent.getDays().indexOf("MO") != -1) checkBoxMonday.setChecked(true);
@@ -325,7 +407,7 @@ public class ScheduleActivity extends Activity {
 					//checks for values
 
 					templocation = editText_location.getText().toString();
-					templabel = editText_class.getText().toString();
+					templabel = autoCompleteTextView_class.getText().toString();
 					tempbegin_time = editText_begin_time.getText().toString();
 					tempend_time = editText_end_time.getText().toString();
 
@@ -399,7 +481,7 @@ public class ScheduleActivity extends Activity {
 			});
 			break;
 		case DIALOG_OPTION:
-			
+
 			dialogEditEvent.requestWindowFeature(Window.FEATURE_NO_TITLE);
 			dialogEditEvent.setContentView(R.layout.dialog_destination_building);
 			final TextView title = (TextView)dialogEditEvent.findViewById(R.id.textView_dialog_title);
@@ -411,22 +493,22 @@ public class ScheduleActivity extends Activity {
 				public void onClick(View v) {
 					//Call intent to new activity
 					String tempAddress = curEvent.getLocation();
-                	if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME)) {
-    					if(tempAddress.matches(REGEX_ROOM_NUM)) {
-    						destRoomNum = tempAddress.substring(0,tempAddress.indexOf(" "));
-    						destBldgName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
-    						Log.d("Schedule Item Click", "Matches REGEX_ROOM_NUM! RoomNum="+destRoomNum+" BldgName="+destBldgName);
-    					} else {//It should just be the name of the bldg
-    						destBldgName = tempAddress;
-    						destRoomNum = "";
-    						Log.d("Schedule Item Click", "Matches REGEX_BLDG_NAME! RoomNum="+destRoomNum+" BldgName="+destBldgName);
-    					}
-    				}
-    				
-    				Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
-    				editor.putString("DESTNAME", destBldgName);
-    				editor.putString("DESTROOM", destRoomNum);
-    				editor.commit();
+					if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME)) {
+						if(tempAddress.matches(REGEX_ROOM_NUM)) {
+							destRoomNum = tempAddress.substring(0,tempAddress.indexOf(" "));
+							destBldgName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
+							Log.d("Schedule Item Click", "Matches REGEX_ROOM_NUM! RoomNum="+destRoomNum+" BldgName="+destBldgName);
+						} else {//It should just be the name of the bldg
+							destBldgName = tempAddress;
+							destRoomNum = "";
+							Log.d("Schedule Item Click", "Matches REGEX_BLDG_NAME! RoomNum="+destRoomNum+" BldgName="+destBldgName);
+						}
+					}
+
+					Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
+					editor.putString("DESTNAME", destBldgName);
+					editor.putString("DESTROOM", destRoomNum);
+					editor.commit();
 					Intent intent = new Intent(ScheduleActivity.this, BuildingMapActivity.class);
 					startActivity(intent);
 					removeDialog(DIALOG_OPTION);
@@ -436,36 +518,36 @@ public class ScheduleActivity extends Activity {
 			bGetDirections.setOnClickListener(new Button.OnClickListener() {
 				public void onClick(View v) {
 					Log.d("Schedule", "got to inside click");
-                	String tempAddress = curEvent.getLocation();
-                	if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME)) {
-    					if(tempAddress.matches(REGEX_ROOM_NUM)) {
-    						destRoomNum = tempAddress.substring(0,tempAddress.indexOf(" "));
-    						destBldgName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
-    						Log.d("Schedule Item Click", "Matches REGEX_ROOM_NUM! RoomNum="+destRoomNum+" BldgName="+destBldgName);
-    					} else {//It should just be the name of the bldg
-    						destBldgName = tempAddress;
-    						destRoomNum = "";
-    						Log.d("Schedule Item Click", "Matches REGEX_BLDG_NAME! RoomNum="+destRoomNum+" BldgName="+destBldgName);
-    					}
-    				}
-    				
-    				Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
-    				editor.putString("DESTNAME", destBldgName);
-    				editor.putString("DESTROOM", destRoomNum);
-    				editor.commit();
-    				Intent searchIntent = new Intent(ScheduleActivity.this, MNavMainActivity.class);
-    				startActivity(searchIntent);
+					String tempAddress = curEvent.getLocation();
+					if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME)) {
+						if(tempAddress.matches(REGEX_ROOM_NUM)) {
+							destRoomNum = tempAddress.substring(0,tempAddress.indexOf(" "));
+							destBldgName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
+							Log.d("Schedule Item Click", "Matches REGEX_ROOM_NUM! RoomNum="+destRoomNum+" BldgName="+destBldgName);
+						} else {//It should just be the name of the bldg
+							destBldgName = tempAddress;
+							destRoomNum = "";
+							Log.d("Schedule Item Click", "Matches REGEX_BLDG_NAME! RoomNum="+destRoomNum+" BldgName="+destBldgName);
+						}
+					}
+
+					Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
+					editor.putString("DESTNAME", destBldgName);
+					editor.putString("DESTROOM", destRoomNum);
+					editor.commit();
+					Intent searchIntent = new Intent(ScheduleActivity.this, MNavMainActivity.class);
+					startActivity(searchIntent);
 					removeDialog(DIALOG_OPTION);
 				}
 			});
 			break;
-		/*case DIALOG_SECTION:
+			/*case DIALOG_SECTION:
 			dialogEditEvent.requestWindowFeature(Window.FEATURE_NO_TITLE);
 			dialogEditEvent.setContentView(R.layout.dialog_set_section);
 			final AutoCompleteTextView auto_section = (AutoCompleteTextView)dialogEditEvent.findViewById(R.id.auto_section);
 			final Button button_set_section = (Button)dialogEditEvent.findViewById(R.id.button_set_section);
 			//Initialize destination db
-			
+
 			classes_db = new DataBaseHelper(this, "destination_db");
 			try {
 				classes_db.createDataBase();
@@ -481,7 +563,7 @@ public class ScheduleActivity extends Activity {
 
 			}
 			String classname = "";
-			
+
 			Cursor cursor = classes_db.getSections(classname);
 
 			ArrayList<String> strings = new ArrayList<String>();
@@ -493,24 +575,24 @@ public class ScheduleActivity extends Activity {
 			cursor.close();
 			classes_db.close();
 			String[] item = (String[]) strings.toArray(new String[strings.size()]);
-			
+
 
 			auto_section.setTextColor(Color.BLACK);
 			auto_section.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, item));
 			button_set_section.setOnClickListener(new Button.OnClickListener() {
 				public void onClick(View v) {
-					
+
 					//use the database to do whatever
 					//editText_location.setText();
 					//editText_class.setText();
 					//editText_begin_time.setText();
 					//editText_end_time.setText();
 					//and set check boxes
-					
-					
+
+
 					removeDialog(DIALOG_SECTION);
 				}});
-			
+
 			break;*/
 		default :
 			break;
@@ -530,7 +612,7 @@ public class ScheduleActivity extends Activity {
 	private void addEvent(String classname, String location, int index, String tempbegin_time, String tempend_time, String days){
 		//adds everything from the database now need to fix database stuff
 
-		
+
 		MEvent tmp = new MEvent(classname, location, index, tempbegin_time, tempend_time, days);
 		db.addEvent(tmp, "currentSchedule");
 
@@ -544,9 +626,11 @@ public class ScheduleActivity extends Activity {
 		loadEventsArray();
 
 	}
-	
+
 	@Override
 	public void onDestroy() {
+		cursor_all_classes.close();
+		all_classes_db.close();
 		db.close();
 		super.onDestroy();
 	}
@@ -564,20 +648,20 @@ public class ScheduleActivity extends Activity {
 
 	public int makeIndex(String time){
 		int tempi = 0;
-		
+
 		if (time.matches(""))return 0;
-		
+
 		int int1 = Integer.parseInt(time.substring(0, time.indexOf(':')));
 		int int2 = Integer.parseInt(time.substring(time.indexOf(':')+1, time.length()-2));
 		String str = time.substring(time.length()-2, time.length());
-		
+
 		if(str.matches("pm") && int1 != 12) int1+=12;
 		int1*=60;
 		tempi = int1+int2;
-		
+
 		return tempi;
 	}
-	
+
 	private String timeToString(int hour, int min) {
 		String am_pm = "";
 		String time = "";
@@ -596,6 +680,22 @@ public class ScheduleActivity extends Activity {
 		} else
 			time+=min+am_pm;
 		return time;
+
+	}
+
+	public void afterTextChanged(Editable arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void beforeTextChanged(CharSequence arg0, int arg1, int arg2,
+			int arg3) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onTextChanged(CharSequence s, int start, int before, int count) {
+		// TODO Auto-generated method stub
 
 	}
 
