@@ -2,6 +2,7 @@ package com.eecs.mnav;
 
 import java.util.ArrayList;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences.Editor;
@@ -9,8 +10,10 @@ import android.content.SharedPreferences.Editor;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 
 import android.widget.ArrayAdapter;
@@ -20,15 +23,9 @@ import android.widget.TextView;
 public class MEventArrayAdapter extends ArrayAdapter<MEvent>{
 	private final Context context;
 	private final ArrayList<MEvent> events;
-	private String destBldgName = "";
-	private String destRoomNum = "";
-	
+	public final int BUILDING_OR_ROUTE = 0;
 	final String[] day_abbrs = new String[] {"NULL", "SU", "MO", "TU", "WE", 
 			"TH", "FR", "SA"};
-	private static final String REGEX_ROOM_NUM = "^[0-9]{1,4} [a-zA-Z]+ *";
-	private static final String REGEX_BLDG_NAME = "^[a-zA-Z][a-zA-Z &]+";
-	
-
 	public MEventArrayAdapter(Context context, ArrayList<MEvent> events) {
 		super(context, R.layout.event_row, events);//define row layout in xml
 		this.context = context;
@@ -57,10 +54,20 @@ public class MEventArrayAdapter extends ArrayAdapter<MEvent>{
 		textView_begin_time.setText(String.valueOf(events.get(position).getTimeBegin()));
 		textView_end_time.setText(String.valueOf(events.get(position).getTimeEnd()));
 		//remember checkboxes
+		
+		rowView.setOnTouchListener(new OnTouchListener(){
+
+			public boolean onTouch(View v, MotionEvent event) {
+				Log.d("ARRAYADAPTER", "got touch");
+				
+				return false;
+			}});
+		/*
 		 rowView.setOnClickListener( new View.OnClickListener()
 	        {
+			 
 	                public void onClick(View v)
-	                {
+	                {	
 	                	Log.d("Schedule", "got to inside click");
 	                	String tempAddress = events.get(position).getLocation();
 	                	if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME)) {
@@ -82,9 +89,10 @@ public class MEventArrayAdapter extends ArrayAdapter<MEvent>{
 	    				Intent searchIntent = new Intent(context, MNavMainActivity.class);
 	    				context.startActivity(searchIntent);
 	                }});
-
+		 */
 		return rowView;
 	}
+	
 	
 	public int size() {
 		return events.size();
@@ -94,5 +102,6 @@ public class MEventArrayAdapter extends ArrayAdapter<MEvent>{
 		return events;
 	}
 
+	
 
 }

@@ -170,18 +170,32 @@ public class StartActivity extends Activity implements TextWatcher {
 				
 				Calendar calendar = Calendar.getInstance();
 		        int day = calendar.get(Calendar.DAY_OF_WEEK);
+		        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+		        int time = calendar.get(Calendar.MINUTE)+(hour*60);
 		        
 		        schedule_db = new ScheduleDatabaseHandler(v.getContext());
 		        
-		        String tempAddress = "";
+		        String tempAddress = "NULL";
+		        boolean found = false;
+		        int etime = 0;
 		        ArrayList<MEvent>tmp_array = new ArrayList<MEvent>();
 		    	tmp_array = schedule_db.getDay(day_abbrs[day]);
-		    	tempAddress = tmp_array.get(0).getLocation();
-		    	//future loop events to see if time correct, right now just first event
+		    	for(int i = 0; i < tmp_array.size(); i++){
+		    		etime = tmp_array.get(i).getIndex();
+		    		if(time > etime && etime >= (time - 15)){//if event started within past 15 minutes
+		    			found = true;
+		    			tempAddress=tmp_array.get(i).getLocation();
+		    		}
+		    		else if(time<etime && time +30 >= etime){
+		    			found = true;
+		    			tempAddress=tmp_array.get(i).getLocation();
+		    		}
+		    	}
+		    	
 		    	schedule_db.close();
 		    	
 				
-				
+				if(found){
 				gInputFeedback.setText("");
 				if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME)) {
 					if(tempAddress.matches(REGEX_ROOM_NUM)) {
@@ -202,21 +216,21 @@ public class StartActivity extends Activity implements TextWatcher {
 				
 				Intent searchIntent = new Intent(StartActivity.this, MNavMainActivity.class);
 				StartActivity.this.startActivity(searchIntent);
-				
+				}
 				return true;
 
 			}
 
 
 		});
-		
+		/*
 		button_bus_routes.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				Intent intent = new Intent(StartActivity.this, BusRoutesActivity.class);
 				StartActivity.this.startActivity(intent);
 			}
 			
-		});
+		});*/
 
 		button_app_info.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {

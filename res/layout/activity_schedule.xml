@@ -12,12 +12,13 @@
         android:layout_gravity="center|center_horizontal|center_vertical"
         android:gravity="center_horizontal"
         android:text="@string/today_string"
-        android:textSize="35dp" />
+        android:textSize="40dp" />
     
     <ListView android:id="@+id/list_data"
               android:layout_height="match_parent"
               android:layout_width="match_parent"
               android:layout_weight="1"
+              android:layout_marginTop="5dp"
               />
     
     <TextView
