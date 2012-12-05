@@ -554,7 +554,7 @@ public class ScheduleActivity extends Activity {
 		int int2 = Integer.parseInt(time.substring(time.indexOf(':')+1, time.length()-2));
 		String str = time.substring(time.length()-2, time.length());
 		
-		if(str.matches("pm")) int1+=12;
+		if(str.matches("pm") && int1 != 12) int1+=12;
 		int1*=60;
 		tempi = int1+int2;
 		
