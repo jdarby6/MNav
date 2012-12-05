@@ -86,7 +86,7 @@ public class MNavMainActivity extends MapActivity {
 	private SharedPreferences gPreferences = null;
 
 	//Overlay globals
-	private PinOverlay gPinOverlay = null;
+	//private PinOverlay gPinOverlay = null;
 	private RouteOverlay gRouteOverlay = null;
 	private MyLocationOverlay gMyLocationOverlay = null;
 	private ScaleBarOverlay gScaleBarOverlay = null;
@@ -642,8 +642,8 @@ public class MNavMainActivity extends MapActivity {
 
 		Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
 		//Create our route overlay
-		gPinOverlay = new PinOverlay(drawable, this);
-		gPinOverlay.setTapListener(this);
+	//	gPinOverlay = new PinOverlay(drawable, this);
+		//gPinOverlay.setTapListener(this);
 		/**
 		 * OverlayItem overlayitem = new OverlayItem(p, "Current Location", "You are here!");
 		 * gRouteOverlay.addOverlay(overlayitem);
@@ -667,8 +667,8 @@ public class MNavMainActivity extends MapActivity {
 			GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
 
 			OverlayItem overlayitem = new OverlayItem(dest, "gDestName_full", "This is your current destination");
-			gPinOverlay.addOverlay(overlayitem);
-			gMapView.getOverlays().add(gPinOverlay); 
+		//	gPinOverlay.addOverlay(overlayitem);
+		//	gMapView.getOverlays().add(gPinOverlay); 
 
 			zoomTo(dest, ZOOM_LEVEL_BUILDING);
 		} else {

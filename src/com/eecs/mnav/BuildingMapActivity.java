@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.jakewharton.DiskLruCache;
+//import com.jakewharton.DiskLruCache;
 import com.parse.FindCallback;
 import com.parse.GetDataCallback;
 import com.parse.ParseFile;
@@ -37,6 +38,7 @@ public class BuildingMapActivity extends Activity{
 	ArrayList<Bitmap> floors = new ArrayList<Bitmap>();
 	private DiskLruCache bitmapCache;
 	TouchImageView touchImageViewMap;
+
 	int curFloor = 0;
 	int numFloors = 0;
 	String gDestName_full = "";

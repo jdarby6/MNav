@@ -1,12 +1,7 @@
 package com.eecs.mnav;
 
 import java.util.ArrayList;
-
 import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences.Editor;
-import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,14 +11,9 @@ import android.widget.TextView;
 public class MEventArrayAdapter extends ArrayAdapter<MEvent>{
 	private final Context context;
 	private final ArrayList<MEvent> events;
-	private String destBldgName = "";
-	private String destRoomNum = "";
-
+	public final int BUILDING_OR_ROUTE = 0;
 	final String[] day_abbrs = new String[] {"NULL", "SU", "MO", "TU", "WE", 
 			"TH", "FR", "SA"};
-	private static final String REGEX_ROOM_NUM = "^[0-9]{1,4} [a-zA-Z]+ *";
-	private static final String REGEX_BLDG_NAME = "^[a-zA-Z][a-zA-Z &]+";
-
 
 	public MEventArrayAdapter(Context context, ArrayList<MEvent> events) {
 		super(context, R.layout.event_row, events);//define row layout in xml
@@ -53,31 +43,6 @@ public class MEventArrayAdapter extends ArrayAdapter<MEvent>{
 		textView_begin_time.setText(String.valueOf(events.get(position).getTimeBegin()));
 		textView_end_time.setText(String.valueOf(events.get(position).getTimeEnd()));
 		//remember checkboxes
-		rowView.setOnClickListener( new View.OnClickListener()
-		{
-			public void onClick(View v)
-			{
-				Log.d("Schedule", "got to inside click");
-				String tempAddress = events.get(position).getLocation();
-				if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME)) {
-					if(tempAddress.matches(REGEX_ROOM_NUM)) {
-						destRoomNum = tempAddress.substring(0,tempAddress.indexOf(" "));
-						destBldgName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
-						Log.d("Schedule Item Click", "Matches REGEX_ROOM_NUM! RoomNum="+destRoomNum+" BldgName="+destBldgName);
-					} else {//It should just be the name of the bldg
-						destBldgName = tempAddress;
-						destRoomNum = "";
-						Log.d("Schedule Item Click", "Matches REGEX_BLDG_NAME! RoomNum="+destRoomNum+" BldgName="+destBldgName);
-					}
-				}
-
-				Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
-				editor.putString("DESTNAME", destBldgName);
-				editor.putString("DESTROOM", destRoomNum);
-				editor.commit();
-				Intent searchIntent = new Intent(context, MNavMainActivity.class);
-				context.startActivity(searchIntent);
-			}});
 
 		return rowView;
 	}
@@ -90,5 +55,6 @@ public class MEventArrayAdapter extends ArrayAdapter<MEvent>{
 		return events;
 	}
 
+	
 
 }

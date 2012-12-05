@@ -27,7 +27,7 @@
     <string name="title_activity_schedule_edit">MainActivity</string>
     <string name="today_string">Today\'s Schedule</string>
     <string name="select_event_edit">Select Event to Edit</string>
-    <string name="add_event">Add Event</string>
+    <string name="add_event">Add Class</string>
     <string name="begin_time">Begin Time</string>
     <string name="end_time">End Time</string>
     <string name="monday">Mo</string>
@@ -40,13 +40,14 @@
     <string name="location_hint">e.g. 1670 BBB</string>
     <string name="class_hint">e.g. EECS 280</string>
     <string name="done">Done</string>
-    <string name="no_events">No Events Found</string>
+    <string name="no_events">No Classes Found</string>
     <string name="select_day_string">Select A Day</string>
     <string name="title_activity_info">InfoActivity</string>
     <string name="help_hints">Help &amp; Hints</string>
     <string name="restore_intro">Restore \'Tip:\' prompts</string>
     <string name="ok">Ok</string>
     <string name="set">Set</string>
+    <string name="dash">-</string>
     <string name="reset_map">Reset Map</string>
 
 </resources>
