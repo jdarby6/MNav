@@ -632,8 +632,8 @@ public class MNavMainActivity extends MapActivity {
 
 		Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
 		//Create our route overlay
-		gPinOverlay = new PinOverlay(drawable, this);
-		gPinOverlay.setTapListener(this);
+	//	gPinOverlay = new PinOverlay(drawable, this);
+		//gPinOverlay.setTapListener(this);
 		/**
 		 * OverlayItem overlayitem = new OverlayItem(p, "Current Location", "You are here!");
 		 * gRouteOverlay.addOverlay(overlayitem);

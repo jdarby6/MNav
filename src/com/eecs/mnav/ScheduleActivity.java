@@ -1,23 +1,28 @@
 package com.eecs.mnav;
 
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
-
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
-
+import android.content.SharedPreferences.Editor;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.graphics.Color;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
+import android.view.Window;
 import android.view.View.OnClickListener;
-
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
-
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -34,6 +39,10 @@ public class ScheduleActivity extends Activity {
 			"Thursday", "Friday", "Saturday" };
 	final String[] day_abbrs = new String[] {"NULL", "SU", "MO", "TU", "WE", 
 			"TH", "FR", "SA"};
+	private String destBldgName = "";
+	private String destRoomNum = "";
+	private static final String REGEX_ROOM_NUM = "^[0-9]{1,4} [a-zA-Z]+ *";
+	private static final String REGEX_BLDG_NAME = "^[a-zA-Z][a-zA-Z &]+";
 	private ListView list_data;
 
 	private MEvent curEvent;
@@ -55,17 +64,19 @@ public class ScheduleActivity extends Activity {
 	private CheckBox checkBoxSaturday;
 	private CheckBox checkBoxSunday;
 
-	private TextView add_edit_title;
 	private TextView textView_today;
 
 	private static final int DIALOG_ADD_EVENT = 0;
 	private static final int DIALOG_CHANGE_EVENT = 1;
 	private static final int TIME_PICK_BEGIN_DIALOG_ID = 2;
 	private static final int TIME_PICK_END_DIALOG_ID = 3;
+	private static final int DIALOG_OPTION = 4;
+	private static final int DIALOG_SECTION = 5;
 	private static String CURRENTDAY = "NULL";
 
 	public static int CDI = 0; //current days int;
 
+	private DataBaseHelper classes_db;
 	private ScheduleDatabaseHandler db;
 
 	@Override
@@ -118,8 +129,22 @@ public class ScheduleActivity extends Activity {
 				showDialog(DIALOG_ADD_EVENT);
 			}
 		});
+		list_data.setOnItemClickListener(new OnItemClickListener(){
 
+			public void onItemClick(AdapterView<?> arg0, View arg1, int pos,
+					long id) {
+				
+				curEvent.setLabel(eventArrayAdapter.getItem(pos).getLabel());
+				curEvent.setLocation(eventArrayAdapter.getItem(pos).getLocation());
+				curEvent.setIndex(eventArrayAdapter.getItem(pos).getIndex());
+				curEvent.setTimeBegin(eventArrayAdapter.getItem(pos).getTimeBegin());
+				curEvent.setTimeEnd(eventArrayAdapter.getItem(pos).getTimeEnd());
+				curEvent.setDays(eventArrayAdapter.getItem(pos).getDays());
 
+				showDialog(DIALOG_OPTION);
+				
+				
+			}});
 
 		//Set long-click listener to list items
 		list_data.setOnItemLongClickListener(new OnItemLongClickListener() {
@@ -129,6 +154,7 @@ public class ScheduleActivity extends Activity {
 
 				curEvent.setLabel(eventArrayAdapter.getItem(pos).getLabel());
 				curEvent.setLocation(eventArrayAdapter.getItem(pos).getLocation());
+				curEvent.setIndex(eventArrayAdapter.getItem(pos).getIndex());
 				curEvent.setTimeBegin(eventArrayAdapter.getItem(pos).getTimeBegin());
 				curEvent.setTimeEnd(eventArrayAdapter.getItem(pos).getTimeEnd());
 				curEvent.setDays(eventArrayAdapter.getItem(pos).getDays());
@@ -179,7 +205,7 @@ public class ScheduleActivity extends Activity {
 		switch(id) {
 		case DIALOG_ADD_EVENT:
 			dialogEditEvent.setContentView(R.layout.add_edit_event);
-			dialogEditEvent.setTitle("Add Event");
+			dialogEditEvent.setTitle("Add Class");
 
 			//----------------------- grab all the view elements
 			button_done = (Button) dialogEditEvent.findViewById(R.id.button_done);
@@ -216,8 +242,7 @@ public class ScheduleActivity extends Activity {
 					String tempbegin_time= "";
 					String tempend_time= "";
 					String tempdays= "NULL";
-					int finalbegin = 0;
-					int finalend = 0;
+					int tempindex = 0;
 
 					//checks for values					
 					templocation = editText_location.getText().toString();
@@ -232,8 +257,10 @@ public class ScheduleActivity extends Activity {
 					if(checkBoxFriday.isChecked()) tempdays+="FR";
 					if(checkBoxSaturday.isChecked()) tempdays+="SA";
 					if(checkBoxSunday.isChecked()) tempdays+="SU";
+					
+					tempindex = makeIndex(tempbegin_time);
 
-					if (!tempdays.equals("NULL")) addEvent(templabel,templocation,finalbegin,finalend,tempdays);
+					if (!tempdays.equals("NULL")) addEvent(templabel,templocation, tempindex, tempbegin_time,tempend_time,tempdays);
 
 					removeDialog(DIALOG_ADD_EVENT);
 				}
@@ -249,7 +276,7 @@ public class ScheduleActivity extends Activity {
 			break;
 		case DIALOG_CHANGE_EVENT:
 			dialogEditEvent.setContentView(R.layout.add_edit_event);
-			dialogEditEvent.setTitle("Edit Event");
+			dialogEditEvent.setTitle("Edit Class");
 
 			//----------------------- grab all the view elements
 			button_done = (Button) dialogEditEvent.findViewById(R.id.button_done);
@@ -282,6 +309,8 @@ public class ScheduleActivity extends Activity {
 			//Restore dialog values based on event info
 			editText_location.setText(curEvent.getLocation());
 			editText_class.setText(curEvent.getLabel());
+			editText_begin_time.setText(curEvent.getTimeBegin());
+			editText_end_time.setText(curEvent.getTimeEnd());
 			if (curEvent.getDays().indexOf("MO") != -1) checkBoxMonday.setChecked(true);
 			if (curEvent.getDays().indexOf("TU") != -1)checkBoxTuesday.setChecked(true);
 			if (curEvent.getDays().indexOf("WE") != -1)checkBoxWednesday.setChecked(true);
@@ -297,8 +326,7 @@ public class ScheduleActivity extends Activity {
 					String tempbegin_time= "";
 					String tempend_time= "";
 					String tempdays= "NULL";
-					int finalbegin = 0;
-					int finalend = 0;
+					int tempindex = 0;
 					//checks for values
 
 					templocation = editText_location.getText().toString();
@@ -317,16 +345,20 @@ public class ScheduleActivity extends Activity {
 					//remove old entry then add if different
 					//if only thing changed was taking away all days, dont add
 
-					if(tempdays.equals( "NULL") && templabel.equals(curEvent.getLabel())
-							&& templocation.equals(curEvent.getLocation())
-							&& finalbegin == curEvent.getTimeBegin()
-							&& finalend == curEvent.getTimeEnd()){
+					if(tempdays.equals( "NULL")
+							//&& templabel.equals(curEvent.getLabel())
+							//&& templocation.equals(curEvent.getLocation())
+							//&& tempbegin_time == curEvent.getTimeBegin()
+							//&& tempend_time == curEvent.getTimeEnd()){
+							){
 						removeEvent(templabel);
 					}
 
 					else{
 						removeEvent(curEvent.getLabel());
-						addEvent(templabel,templocation,finalbegin,finalend,tempdays);
+						Log.d("schedule", tempbegin_time);
+						tempindex = makeIndex(tempbegin_time);
+						addEvent(templabel,templocation,tempindex, tempbegin_time,tempend_time,tempdays);
 
 					}
 					removeDialog(DIALOG_CHANGE_EVENT);
@@ -351,6 +383,8 @@ public class ScheduleActivity extends Activity {
 				dialogEditEvent.setTitle("Begin Time");
 
 			final TimePicker timePicker = (TimePicker) dialogEditEvent.findViewById(R.id.timePicker);
+			timePicker.setCurrentHour(12);
+			timePicker.setCurrentMinute(0);
 
 			Button button_set = (Button) dialogEditEvent.findViewById(R.id.button_set_time);
 			button_set.setOnClickListener(new OnClickListener() {
@@ -369,6 +403,103 @@ public class ScheduleActivity extends Activity {
 				}
 			});
 			break;
+		case DIALOG_OPTION:
+			
+			dialogEditEvent.requestWindowFeature(Window.FEATURE_NO_TITLE);
+			dialogEditEvent.setContentView(R.layout.dialog_destination_building);
+			final TextView title = (TextView)dialogEditEvent.findViewById(R.id.textView_dialog_title);
+			title.setText(curEvent.getLabel());
+			final Button bViewMap = (Button)dialogEditEvent.findViewById(R.id.button_viewmap);
+			final Button bGetDirections = (Button)dialogEditEvent.findViewById(R.id.button_getdirections);
+
+			bViewMap.setOnClickListener(new Button.OnClickListener() {
+				public void onClick(View v) {
+					//Call intent to new activity
+					Intent intent = new Intent(ScheduleActivity.this, BuildingMapActivity.class);
+					startActivity(intent);
+					removeDialog(DIALOG_OPTION);
+				}
+			});
+
+			bGetDirections.setOnClickListener(new Button.OnClickListener() {
+				public void onClick(View v) {
+					Log.d("Schedule", "got to inside click");
+                	String tempAddress = curEvent.getLocation();
+                	if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME)) {
+    					if(tempAddress.matches(REGEX_ROOM_NUM)) {
+    						destRoomNum = tempAddress.substring(0,tempAddress.indexOf(" "));
+    						destBldgName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
+    						Log.d("Schedule Item Click", "Matches REGEX_ROOM_NUM! RoomNum="+destRoomNum+" BldgName="+destBldgName);
+    					} else {//It should just be the name of the bldg
+    						destBldgName = tempAddress;
+    						destRoomNum = "";
+    						Log.d("Schedule Item Click", "Matches REGEX_BLDG_NAME! RoomNum="+destRoomNum+" BldgName="+destBldgName);
+    					}
+    				}
+    				
+    				Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
+    				editor.putString("DESTNAME", destBldgName);
+    				editor.putString("DESTROOM", destRoomNum);
+    				editor.commit();
+    				Intent searchIntent = new Intent(ScheduleActivity.this, MNavMainActivity.class);
+    				startActivity(searchIntent);
+					removeDialog(DIALOG_OPTION);
+				}
+			});
+			break;
+		/*case DIALOG_SECTION:
+			dialogEditEvent.requestWindowFeature(Window.FEATURE_NO_TITLE);
+			dialogEditEvent.setContentView(R.layout.dialog_set_section);
+			final AutoCompleteTextView auto_section = (AutoCompleteTextView)dialogEditEvent.findViewById(R.id.auto_section);
+			final Button button_set_section = (Button)dialogEditEvent.findViewById(R.id.button_set_section);
+			//Initialize destination db
+			
+			classes_db = new DataBaseHelper(this, "destination_db");
+			try {
+				classes_db.createDataBase();
+			} 
+			catch (IOException ioe) {
+				throw new Error("Unable to create database");
+			}
+			try {
+				classes_db.openDataBase();
+			} 
+			catch(SQLException sqle) {	
+				throw sqle;
+
+			}
+			String classname = "";
+			
+			Cursor cursor = classes_db.getSections(classname);
+
+			ArrayList<String> strings = new ArrayList<String>();
+			for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+				String mTitleRaw = cursor.getString(0);
+				strings.add(mTitleRaw);
+			}
+
+			cursor.close();
+			classes_db.close();
+			String[] item = (String[]) strings.toArray(new String[strings.size()]);
+			
+
+			auto_section.setTextColor(Color.BLACK);
+			auto_section.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, item));
+			button_set_section.setOnClickListener(new Button.OnClickListener() {
+				public void onClick(View v) {
+					
+					//use the database to do whatever
+					//editText_location.setText();
+					//editText_class.setText();
+					//editText_begin_time.setText();
+					//editText_end_time.setText();
+					//and set check boxes
+					
+					
+					removeDialog(DIALOG_SECTION);
+				}});
+			
+			break;*/
 		default :
 			break;
 
@@ -384,12 +515,12 @@ public class ScheduleActivity extends Activity {
 		return true;
 	}
 
-	private void addEvent(String classname, String location, int begin_time, int end_time, String days){
+	private void addEvent(String classname, String location, int index, String tempbegin_time, String tempend_time, String days){
 		//adds everything from the database now need to fix database stuff
 
-		int index = 0;//index not really needed
-		MEvent tmp = new MEvent(classname, location, index, begin_time, end_time, days);
-		db.addEvent(tmp, "currentSchedule", index);
+		
+		MEvent tmp = new MEvent(classname, location, index, tempbegin_time, tempend_time, days);
+		db.addEvent(tmp, "currentSchedule");
 
 		loadEventsArray();
 	}
@@ -401,7 +532,7 @@ public class ScheduleActivity extends Activity {
 		loadEventsArray();
 
 	}
-
+	
 	@Override
 	public void onDestroy() {
 		db.close();
@@ -413,9 +544,26 @@ public class ScheduleActivity extends Activity {
 		eventArrayAdapter.clear();
 		for(int i = 0; i<tmp_array.size(); i++){
 			eventArrayAdapter.add(tmp_array.get(i));
+			Log.d("Addition", tmp_array.get(i).getTimeBegin());
 		}
 
 		eventArrayAdapter.notifyDataSetChanged();
+	}
+
+	public int makeIndex(String time){
+		int tempi = 0;
+		
+		if (time.matches(""))return 0;
+		
+		int int1 = Integer.parseInt(time.substring(0, time.indexOf(':')));
+		int int2 = Integer.parseInt(time.substring(time.indexOf(':')+1, time.length()-2));
+		String str = time.substring(time.length()-2, time.length());
+		
+		if(str.matches("pm")) int1+=12;
+		int1*=60;
+		tempi = int1+int2;
+		
+		return tempi;
 	}
 	
 	private String timeToString(int hour, int min) {
@@ -436,6 +584,7 @@ public class ScheduleActivity extends Activity {
 		} else
 			time+=min+am_pm;
 		return time;
+
 	}
 
 }

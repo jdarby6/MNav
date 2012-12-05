@@ -27,7 +27,7 @@
     <string name="title_activity_schedule_edit">MainActivity</string>
     <string name="today_string">Today\'s Schedule</string>
     <string name="select_event_edit">Select Event to Edit</string>
-    <string name="add_event">Add Event</string>
+    <string name="add_event">Add Class</string>
     <string name="begin_time">Begin Time</string>
     <string name="end_time">End Time</string>
     <string name="monday">Mo</string>
@@ -40,17 +40,19 @@
     <string name="location_hint">e.g. 1670 BBB</string>
     <string name="class_hint">e.g. EECS 280</string>
     <string name="done">Done</string>
-    <string name="no_events">No Events Found</string>
+    <string name="no_events">No Classes Found</string>
     <string name="select_day_string">Select A Day</string>
     <string name="title_activity_info">InfoActivity</string>
     <string name="help_hints">Help &amp; Hints</string>
     <string name="restore_intro">Restore \'Tip:\' prompts</string>
     <string name="ok">Ok</string>
     <string name="set">Set</string>
+    <string name="dash">-</string>
     <string name="reset_map">Reset Map</string>
     <string name="info_dest">You can enter a building name or abbreviation with or without a room number. Alternatively, you can leave it blank and hit search to view the map from your current location.</string>
     <string name="info_schedule">Here you can enter in your class schedule and MNav will route to your classes automatically throughout the day.</string>
     <string name="info_bus_routes">Quickly view a live map of all the buses on campus as broadcasted by the Magic Bus XML feed.</string>
     <string name="info_building_finder">Easily find any building on campus by browsing a comprehensive list and pressing the building you would like to find.</string>
+    <string name="section">Section Number</string>
 
 </resources>

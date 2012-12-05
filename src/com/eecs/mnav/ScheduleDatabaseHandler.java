@@ -40,10 +40,10 @@ public class ScheduleDatabaseHandler extends SQLiteOpenHelper {
 		String CREATE_SAVEDEVENTS_TABLE = "CREATE TABLE " + TABLE_SAVEDEVENTS + "("
 				+ KEY_ID + " INTEGER PRIMARY KEY," 
 				+ KEY_EVENTINDEX + " INTEGER," 
-				+ KEY_LABEL + " TEXT," 
+				+ KEY_LABEL + " TEXT NOT NULL," 
 				+ KEY_LOCATION + " TEXT NOT NULL," 
-				+ KEY_TIMEBEGIN + " INTEGER," 
-				+ KEY_TIMEEND + " INTEGER," 
+				+ KEY_TIMEBEGIN + " TEXT," 
+				+ KEY_TIMEEND + " TEXT," 
 				+ KEY_DAYS + " TEXT NOT NULL" + ")";
 		db.execSQL(CREATE_SAVEDEVENTS_TABLE);
 	}
@@ -66,11 +66,11 @@ public class ScheduleDatabaseHandler extends SQLiteOpenHelper {
 	 */
 	
 	//Adds a single row to the table, representing a single timer in the array
-	void addEvent(MEvent event, String scheduleName, int index) {
+	void addEvent(MEvent event, String scheduleName) {
 		SQLiteDatabase db = this.getWritableDatabase();
 		
 		ContentValues values = new ContentValues();
-		values.put(KEY_EVENTINDEX, index);
+		values.put(KEY_EVENTINDEX, event.getIndex());
 		values.put(KEY_LABEL, event.getLabel());
 		values.put(KEY_LOCATION, event.getLocation());
 		values.put(KEY_TIMEBEGIN, event.getTimeBegin());
@@ -86,7 +86,7 @@ public class ScheduleDatabaseHandler extends SQLiteOpenHelper {
 	//Adds a collection of timers to the table
 	public void addSchedule(ArrayList<MEvent> events, String scheduleName) {
 		for(int i = 0; i < events.size(); i++) {
-			addEvent(events.get(i), scheduleName, i);
+			addEvent(events.get(i), scheduleName);
 		}
 	}
 	
@@ -100,7 +100,8 @@ public class ScheduleDatabaseHandler extends SQLiteOpenHelper {
 				+ KEY_DAYS + " FROM " 
 				+ TABLE_SAVEDEVENTS
 				+ " WHERE " + KEY_DAYS + " LIKE '%" + day
-				+ "%'";
+				+ "%'"+ " ORDER BY "
+				+ KEY_EVENTINDEX + " ASC";
 		
 		
 		SQLiteDatabase db = this.getWritableDatabase();
@@ -113,8 +114,8 @@ public class ScheduleDatabaseHandler extends SQLiteOpenHelper {
 				String label = cursor.getString(0);
 				String location = cursor.getString(1);
 				int index = cursor.getInt(2);
-				int timeBegin = cursor.getInt(3);
-				int timeEnd = cursor.getInt(4);
+				String timeBegin = cursor.getString(3);
+				String timeEnd = cursor.getString(4);
 				String days = cursor.getString(5);
 				MEvent event = new MEvent(label, location,index, timeBegin, timeEnd, days);
 				event.restoreLabel(label);

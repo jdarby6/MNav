@@ -1,14 +1,8 @@
 package com.eecs.mnav;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
-
-import org.xmlpull.v1.XmlPullParserException;
 
 import android.app.Activity;
 import android.content.Context;
@@ -17,7 +11,6 @@ import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.graphics.Color;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Editable;
@@ -32,7 +25,6 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class StartActivity extends Activity implements TextWatcher {
 	//start page items;
@@ -50,18 +42,6 @@ public class StartActivity extends Activity implements TextWatcher {
 			"TH", "FR", "SA"};
 	public static final String REGEX_ROOM_NUM = "^[0-9]{1,4} [a-zA-Z]+ *";
 	public static final String REGEX_BLDG_NAME = "^[a-zA-Z][a-zA-Z &]+";
-	private static final int LONG = Toast.LENGTH_LONG;
-	private static final int SHORT = Toast.LENGTH_SHORT;	
-	public static final String WIFI = "Wi-Fi";
-	public static final String ANY = "Any";
-	private static final String URL = "http://mbus.pts.umich.edu/shared/public_feed.xml";
-
-	// Whether there is a Wi-Fi connection.
-	private static boolean wifiConnected = false; 
-	// Whether there is a mobile connection.
-	private static boolean mobileConnected = false;
-	// Whether the display should be refreshed.
-	public static boolean refreshDisplay = true; 
 	public static String sPref = null;
 
 	private DataBaseHelper destination_db;
@@ -170,19 +150,33 @@ public class StartActivity extends Activity implements TextWatcher {
 
 
 				Calendar calendar = Calendar.getInstance();
-				int day = calendar.get(Calendar.DAY_OF_WEEK);
-
-				schedule_db = new ScheduleDatabaseHandler(v.getContext());
-
-				String tempAddress = "";
-				ArrayList<MEvent>tmp_array = new ArrayList<MEvent>();
-				tmp_array = schedule_db.getDay(day_abbrs[day]);
-				tempAddress = tmp_array.get(0).getLocation();
-				//future loop events to see if time correct, right now just first event
-				schedule_db.close();
-
-
-
+		        int day = calendar.get(Calendar.DAY_OF_WEEK);
+		        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+		        int time = calendar.get(Calendar.MINUTE)+(hour*60);
+		        
+		        schedule_db = new ScheduleDatabaseHandler(v.getContext());
+		        
+		        String tempAddress = "NULL";
+		        boolean found = false;
+		        int etime = 0;
+		        ArrayList<MEvent>tmp_array = new ArrayList<MEvent>();
+		    	tmp_array = schedule_db.getDay(day_abbrs[day]);
+		    	for(int i = 0; i < tmp_array.size(); i++){
+		    		etime = tmp_array.get(i).getIndex();
+		    		if(time > etime && etime >= (time - 15)){//if event started within past 15 minutes
+		    			found = true;
+		    			tempAddress=tmp_array.get(i).getLocation();
+		    		}
+		    		else if(time<etime && time +30 >= etime){
+		    			found = true;
+		    			tempAddress=tmp_array.get(i).getLocation();
+		    		}
+		    	}
+		    	
+		    	schedule_db.close();
+		    	
+				
+				if(found){
 				gInputFeedback.setText("");
 				if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME)) {
 					if(tempAddress.matches(REGEX_ROOM_NUM)) {
@@ -203,16 +197,16 @@ public class StartActivity extends Activity implements TextWatcher {
 
 				Intent searchIntent = new Intent(StartActivity.this, MNavMainActivity.class);
 				StartActivity.this.startActivity(searchIntent);
+				}
 				return true;
 			}
 		});
-
+		
 		button_bus_routes.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				Intent intent = new Intent(StartActivity.this, BusRoutesActivity.class);
 				StartActivity.this.startActivity(intent);
 			}
-
 		});
 
 		button_app_info.setOnClickListener(new OnClickListener() {
@@ -231,109 +225,23 @@ public class StartActivity extends Activity implements TextWatcher {
 		return true;
 	}
 
-
-	// Uses AsyncTask to download the XML feed from mbus.pts.umich.edu.
-	public void loadPage() {  
-
-		if((sPref.equals(ANY)) && (wifiConnected || mobileConnected)) {
-			new DownloadXmlTask().execute(URL);
-		}
-		else if ((sPref.equals(WIFI)) && (wifiConnected)) {
-			new DownloadXmlTask().execute(URL);
-		} else {
-			// show error
-		}  
-	}
-
-	// Implementation of AsyncTask used to download XML feed from mbus.pts.umich.edu.
-	private class DownloadXmlTask extends AsyncTask<String, Void, String> {
-		@Override
-		protected String doInBackground(String... urls) {
-			try {
-				return loadXmlFromNetwork(urls[0]);
-			} catch (IOException e) {
-				return "Connection error";
-			} catch (XmlPullParserException e) {
-				return "XML error";
-			}
-		}
-
-		@Override
-		protected void onPostExecute(String result) {  
-			/*
-			setContentView(R.layout.main);
-			// Displays the HTML string in the UI via a WebView
-			WebView myWebView = (WebView) findViewById(R.id.webview);
-			myWebView.loadData(result, "text/html", null);
-			 */
-		}
-	}
-
-	// Uploads XML from mbus.pts.umich.edu and parses it
-	private String loadXmlFromNetwork(String urlString) throws XmlPullParserException, IOException {
-		InputStream stream = null;
-		// Instantiate the parser
-		MbusPublicFeedXmlParser mbusPublicFeedXmlParser = new MbusPublicFeedXmlParser();
-		List<MbusPublicFeedXmlParser.Route> routes = null;
-
-		try {
-			stream = downloadUrl(urlString);        
-			routes = mbusPublicFeedXmlParser.parse(stream);
-			// Makes sure that the InputStream is closed after the app is
-			// finished using it.
-		} finally {
-			if (stream != null) {
-				stream.close();
-			} 
-		}
-
-		// StackOverflowXmlParser returns a List (called "entries") of Entry objects.
-		// Each Entry object represents a single post in the XML feed.
-		// This section processes the entries list to combine each entry with HTML markup.
-		// Each entry is displayed in the UI as a link that optionally includes
-		// a text summary.
-		for (MbusPublicFeedXmlParser.Route route : routes) {
-
-		}
-		return "Something";
-	}
-
-	// Given a string representation of a URL, sets up a connection and gets
-	// an input stream.
-	private InputStream downloadUrl(String urlString) throws IOException {
-		URL url = new URL(urlString);
-		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-		conn.setReadTimeout(10000 /* milliseconds */);
-		conn.setConnectTimeout(15000 /* milliseconds */);
-		conn.setRequestMethod("GET");
-		conn.setDoInput(true);
-		// Starts the query
-		conn.connect();
-		InputStream stream = conn.getInputStream();
-		return stream;
-	}
-
 	public void afterTextChanged(Editable arg0) {
-		// TODO Auto-generated method stub
 
 	}
 
 	public void beforeTextChanged(CharSequence s, int start, int count,
 			int after) {
-		// TODO Auto-generated method stub
 
 	}
 
 	public void onTextChanged(CharSequence s, int start, int before, int count) {
-		// TODO Auto-generated method stub
 
 	}
 
 	/** Helper function for displaying a toast. Takes the string to be displayed and the length: LONG or SHORT **/
-	private void toastThis(String toast, int duration) {
+/*	private void toastThis(String toast, int duration) {
 		Toast t = Toast.makeText(context, toast, duration);
 		t.show();
 	}
-
-
+*/
 }
