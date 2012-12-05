@@ -39,8 +39,11 @@ public class MbusLocationFeedXmlParser {
 
 	private List<Item> readFeed(XmlPullParser parser) throws XmlPullParserException, IOException {
 		List<Item> items = new ArrayList<Item>();
-
-		parser.require(XmlPullParser.START_TAG, ns, "livefeed");
+		while(!parser.getName().equals("livefeed"))
+		{
+			parser.next();
+		}
+		//parser.require(XmlPullParser.START_TAG, ns, "livefeed");
 		while (parser.next() != XmlPullParser.END_TAG) {
 			if (parser.getEventType() != XmlPullParser.START_TAG) {
 				continue;

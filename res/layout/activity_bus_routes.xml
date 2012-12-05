@@ -18,6 +18,65 @@
         android:layout_alignParentTop="true"
         android:background="@drawable/button_border_enabled"
         android:clickable="true" >
+
+        <Button
+            android:id="@+id/button_return"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_alignParentLeft="false"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="false"
+            android:layout_centerVertical="true"
+            android:background="@drawable/ic_target"
+            android:text="@string/_" />
+
+        <Button
+            android:id="@+id/button_satellite"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:background="@drawable/ic_satellite"
+            android:text="@string/_" />
+
+        <View
+            android:id="@+id/divider_1"
+            android:layout_width="1dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/divider_black_vert" />
+
+        <View
+            android:id="@+id/divider_2"
+            android:layout_width="1dp"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@+id/button_satellite"
+            android:background="@drawable/divider_black_vert" />
+
+        <View
+            android:id="@+id/divider_5"
+            android:layout_width="1dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:background="@drawable/divider_black_vert" />
+
+        <View
+            android:id="@+id/divider_4"
+            android:layout_width="1dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_toLeftOf="@+id/button_return"
+            android:background="@drawable/divider_black_vert" />
+
+        <View
+            android:id="@+id/divider_3"
+            android:layout_width="1dp"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/button_plotroute"
+            android:layout_alignParentBottom="true"
+            android:background="@drawable/divider_black_vert" />
     </RelativeLayout>
 
     <LinearLayout

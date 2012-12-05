@@ -1,0 +1,5 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/menu_reset_map"
+        android:title="@string/reset_map"
+        android:orderInCategory="100" />
+</menu>

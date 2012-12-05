@@ -1,27 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout android:layout_width="match_parent"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/button_border_enabled"
-    android:padding="5dp" 
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    android:padding="5dp" >
 
-       <TextView
-           android:id="@+id/textView_building_title"
-           android:layout_width="wrap_content"
-           android:layout_height="wrap_content"
-           android:layout_alignParentTop="true"
-           android:layout_centerHorizontal="true"
-           android:gravity="center"
-           android:text="Electrical Engineering and Computer Science building"
-           android:textAppearance="?android:attr/textAppearanceMedium"
-           android:textColor="@color/umichBlue" />
+    <TextView
+        android:id="@+id/textView_building_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:text="Electrical Engineering and Computer Science building"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="@color/umichBlue" />
+
+    <TextView
+        android:id="@+id/textView_class_num"
+        android:layout_width="wrap_content"
+        android:layout_height="20dp"
+        android:layout_below="@id/textView_building_title"
+        android:layout_centerHorizontal="true"
+        android:text="@string/_"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
 
+    <TextView
+        android:id="@+id/textView_floor_num"
+        android:layout_width="wrap_content"
+        android:layout_height="18dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:text="@string/_"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
     <com.eecs.mnav.TouchImageView
         android:id="@+id/imageView_building_map"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentTop="false"
-        android:layout_below="@id/textView_building_title" />
+        android:layout_below="@id/textView_class_num"
+        android:layout_marginBottom="20dp" />
 
     <LinearLayout
         android:id="@+id/linearLayout1"
@@ -41,7 +60,7 @@
             android:layout_weight="1"
             android:background="@drawable/button_stairs_up_drawable"
             android:text="@string/_" />
-
+
         <View
             android:id="@+id/view1"
             android:layout_width="match_parent"
@@ -59,8 +78,5 @@
             android:background="@drawable/button_stairs_down_drawable"
             android:text="@string/_" />
     </LinearLayout>
-
-
-
 
 </RelativeLayout>

@@ -95,7 +95,7 @@
             android:layout_toLeftOf="@+id/divider_3"
             android:layout_toRightOf="@+id/divider_2"
             android:ems="10"
-            android:hint="@string/lat_long" >
+            android:hint="@string/search_campus" >
         </EditText>
     </RelativeLayout>
 

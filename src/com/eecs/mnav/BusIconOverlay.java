@@ -1,13 +1,7 @@
 package com.eecs.mnav;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.widget.Toast;
 
@@ -21,14 +15,13 @@ public class BusIconOverlay extends ItemizedOverlay<OverlayItem> {
 	private ArrayList<OverlayItem> myOverlays;
 
 	public BusIconOverlay(Drawable defaultMarker) {
-		super(boundCenterBottom(defaultMarker));
+		super(boundCenter(defaultMarker));
 		myOverlays = new ArrayList<OverlayItem>();
-		populate();
+		//populate();
 	}
 
 	public void addOverlay(OverlayItem overlay){
 		myOverlays.add(overlay);
-		populate();
 	}
 
 	@Override
@@ -39,7 +32,7 @@ public class BusIconOverlay extends ItemizedOverlay<OverlayItem> {
 	// Removes overlay item i
 	public void removeItem(int i){
 		if(i >= 0) myOverlays.remove(i);
-		populate();
+		//populate();
 	}
 
 	// Handle tap events on overlay icons
@@ -67,5 +60,14 @@ public class BusIconOverlay extends ItemizedOverlay<OverlayItem> {
 	@Override
 	public int size() {
 		return myOverlays.size();
+	}
+	
+	@Override
+	public void draw(android.graphics.Canvas canvas, MapView mapView, boolean shadow) {
+		super.draw(canvas, mapView, false);
+	}
+	
+	public void populateIt() {
+		this.populate();
 	}
 }

@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.jakewharton.DiskLruCache;
 //import com.jakewharton.DiskLruCache;
 import com.parse.FindCallback;
 import com.parse.GetDataCallback;
@@ -35,20 +36,27 @@ import android.widget.TextView;
 
 public class BuildingMapActivity extends Activity{
 	ArrayList<Bitmap> floors = new ArrayList<Bitmap>();
-	//private DiskLruCache bitmapCache;
+	private DiskLruCache bitmapCache;
+	TouchImageView touchImageViewMap;
+
 	int curFloor = 0;
 	int numFloors = 0;
 	String gDestName_full = "";
 	String gDestName = "";
+	String gDestRoom = "";
 	TextView tvTitle;
+	TextView tvFloorNum;
+	TextView tvRoomNum;
 	boolean mapsNotAvailable = true;
 	ParseObject buildingMapObject;
-	TouchImageView touchImageMap;
 	Button bStairsUp;
 	Button bStairsDown;
 	SharedPreferences gPreferences;
 	ProgressDialog gProgressDialog;
 	String mBuildingName = "default"; //Default to saying we don't have the map
+	
+	boolean curFloorSet = false;
+	boolean hasBasement = false;
 
 
 	private static final int DISK_CACHE_SIZE = 5 * 1024 * 1024; // 5MiB ~ This equates to about 5 sets of 5 building maps of EECS map quality
@@ -62,6 +70,11 @@ public class BuildingMapActivity extends Activity{
 		setContentView(R.layout.activity_building_map);
 
 		tvTitle = (TextView) findViewById(R.id.textView_building_title);
+		tvRoomNum = (TextView) findViewById(R.id.textView_class_num);
+		tvFloorNum = (TextView) findViewById(R.id.textView_floor_num);
+		touchImageViewMap = (TouchImageView) findViewById(R.id.imageView_building_map);
+		touchImageViewMap.setMaxZoom(3f);
+		
 		
 		gProgressDialog = new ProgressDialog(this);
 		gProgressDialog.setMessage("Establishing Connection...");
@@ -81,13 +94,14 @@ public class BuildingMapActivity extends Activity{
 		//Load last known latitude, longitude default is the Diag
 		gDestName_full = gPreferences.getString("DESTNAMEFULL", "");
 		gDestName = gPreferences.getString("DESTNAME", "");
+		gDestRoom = gPreferences.getString("DESTROOM", "");
 		
 		tvTitle.setText(gDestName_full);
-		Log.d("BuildingMapActivity", "gDestName_full:"+gDestName_full+" gDestName:"+gDestName);
-		
-		
-		touchImageMap = (TouchImageView) findViewById(R.id.imageView_building_map);
-		touchImageMap.setMaxZoom(3f);
+		Log.d("BuildingMapActivity", "Name_full:"+gDestName_full+" Name:"+gDestName+" RoomNum:"+gDestRoom);
+		if(!gDestRoom.equals(""))
+			tvRoomNum.setText("Looking for "+gDestRoom+" "+gDestName);
+		else
+			tvRoomNum.setText("");
 		
 		/*XXX/Define the cache
 		   File cacheDir = getDir(DISK_CACHE_SUBDIR, 0);
@@ -167,7 +181,7 @@ public class BuildingMapActivity extends Activity{
 	//Method to take the list of parseObjects and resolve them into the global array of bitmaps: floors
 	private void resolveMaps(final List<ParseObject> parseMapList) {
 		if(mapsNotAvailable) {
-			touchImageMap.setBackgroundDrawable(getResources().getDrawable(R.drawable.defaultmap));
+			touchImageViewMap.setBackgroundDrawable(getResources().getDrawable(R.drawable.defaultmap));
 			gProgressDialog.dismiss();
 			bStairsDown.setEnabled(false);
 			bStairsUp.setEnabled(false);
@@ -188,20 +202,24 @@ public class BuildingMapActivity extends Activity{
 						addFloor(Character.getNumericValue(filename.charAt(filename.length()-5)), BitmapFactory.decodeByteArray(data, 0, data.length), key);
 						curFloor++; //Increment the current floor after adding a floor
 						if(curFloor == numFloors) {
+							//At this point, assumed all maps are in so prepare the UI accordingly and release to user
 							Log.d("Parse Import", "curFloor="+curFloor);
 							setCurFloor();
 							Log.d("Parse Import", "setCurFloor to: "+curFloor);
-							touchImageMap.setImageBitmap(floors.get(curFloor));
+							touchImageViewMap.setImageBitmap(floors.get(curFloor));
 							bStairsUp.setEnabled(true);
 							bStairsDown.setEnabled(true);
 							//Check if the basement map was included by seeing if it was added or not
 							if(floors.get(0) == null){
-								floors.remove(0);
+								hasBasement = false;
 								bStairsDown.setEnabled(false);
-							} else if (floors.get(floors.size()-1)==null)
+							} else if (floors.get(floors.size()-1)==null) {
 								floors.remove(floors.size()-1);
+								hasBasement = true;
+							}
 							return;
 						} else {
+							//At this point, assumed 1 or more maps are still waiting to be grabbed
 							resolveMaps(parseMapList); //Recursive call upon grabbing data and putting it in arrayList
 						}
 					} else {
@@ -212,9 +230,9 @@ public class BuildingMapActivity extends Activity{
 			},  new ProgressCallback() {
 				  public void done(Integer percentDone) {
 					  	gProgressDialog.incrementProgressBy(percentDone - gProgressDialog.getProgress());
-					  	if(gProgressDialog.getProgress() == 100){
+					  	if(gProgressDialog.getProgress() >= 100){
 					  		Log.d("Parse Import", "Loading Progress curFloor="+curFloor+" numFloors="+numFloors);
-					  		if(curFloor == numFloors-1)					  				
+					  		if(curFloor == numFloors-1 || (curFloor == 1 && curFloorSet))					  				
 					  			gProgressDialog.dismiss();
 					  		else {
 					  			gProgressDialog.setProgress(0);
@@ -235,6 +253,8 @@ public class BuildingMapActivity extends Activity{
 	/** Method to figure out what current floor we should display to the user **/
 	private void setCurFloor() {
 		curFloor = 1; //Start off on the first floor. TODO
+		curFloorSet = true;
+		setFloorTextView(curFloor);
 	}
 
 	/** Method to set the building name to look for a set of maps **/
@@ -257,8 +277,9 @@ public class BuildingMapActivity extends Activity{
 				bStairsDown.setEnabled(true);
 			}
 			curFloor++;
-			touchImageMap.setImageBitmap(floors.get(curFloor));
-			touchImageMap.invalidate();
+			touchImageViewMap.setImageBitmap(floors.get(curFloor));
+  			setFloorTextView(curFloor);
+			touchImageViewMap.invalidate();
 			Log.d("BuildingMapActivity", "Went up! curFloor="+curFloor);
 		}
 	}
@@ -266,10 +287,12 @@ public class BuildingMapActivity extends Activity{
 	/** Method to call when down button pressed **/
 	private void goDownstairs() {
 		Log.d("BuildingMapActivity", "Trying to go Downstairs! curFloor="+curFloor+" floors size="+floors.size());
-		if(curFloor == 1) {
+		if(curFloor == 2 && !hasBasement) { //when pressed, curFloor was at 2. disable going further down if no basement
+			bStairsDown.setEnabled(false);
+		} else if (curFloor == 1 && hasBasement) {
 			bStairsDown.setEnabled(false);
 		}
-		if (curFloor == 0){
+		if (curFloor == 0){ //safety check, should never get here
 			Log.d("BuildingMapActivity", "BUMP! Can't go further..");
 			return;
 		}
@@ -278,8 +301,9 @@ public class BuildingMapActivity extends Activity{
 				bStairsUp.setEnabled(true);
 			}
 			curFloor--;
-			touchImageMap.setImageBitmap(floors.get(curFloor));
-			touchImageMap.invalidate();
+			touchImageViewMap.setImageBitmap(floors.get(curFloor));
+  			setFloorTextView(curFloor);
+			touchImageViewMap.invalidate();
 			Log.d("BuildingMapActivity", "Went down! curFloor="+curFloor);
 		}
 	}
@@ -331,4 +355,20 @@ public class BuildingMapActivity extends Activity{
 	        return bitmap;
 	}
 */	
+	
+	private void setFloorTextView(int floor) {
+		String temp = "";
+		if(floor == 0)
+			temp = "Basement";
+		else if(floor%10==1)
+			temp = floor+"st Floor";
+		else if(floor%10==2)
+			temp = floor+"nd Floor";
+		else if(floor%10==3)
+			temp = floor+"rd Floor";
+		else if(floor%10>=4 || floor%10==0)
+			temp = floor+"th Floor";
+		
+		tvFloorNum.setText(temp);
+	}
 }

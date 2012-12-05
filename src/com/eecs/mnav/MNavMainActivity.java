@@ -10,13 +10,11 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.SQLException;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
@@ -27,7 +25,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -48,7 +45,6 @@ import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 import com.parse.Parse;
-import com.parse.ParseObject;
 
 public class MNavMainActivity extends MapActivity {
 	//Layout globals
@@ -66,11 +62,11 @@ public class MNavMainActivity extends MapActivity {
 	private boolean hasSeenAlert4 = false;
 
 	//Our location globals
-	private float gBearing = 0;
-	private float gSpeed = 0;
-	private double gCurrentLong = 0.0;
-	private double gCurrentLat = 0.0;
-	private Location gBestLocation = null;
+	// private float gBearing = 0;
+	// private float gSpeed = 0;
+	//	private double gCurrentLong = 0.0;
+	//	private double gCurrentLat = 0.0;
+	//  private Location gBestLocation = null;
 
 	//Destination globals
 	private EditText editTextDestination;
@@ -79,8 +75,8 @@ public class MNavMainActivity extends MapActivity {
 	private String gDestName_full ="";
 	private String gDistanceToDest;
 	private String gTimeToDest;
-	private double gDestinationLong = 0.0;
-	private double gDestinationLat = 0.0;
+	private double gDestinationLong = -83.738234;
+	private double gDestinationLat = 42.276956;
 
 	//Helper globals
 	private LocalDatabaseHandler local_db;
@@ -133,16 +129,12 @@ public class MNavMainActivity extends MapActivity {
 		destination_db = new DataBaseHelper(this, "destination_db");
 		try {
 			destination_db.createDataBase();
-		} 
-		catch (IOException ioe) {
+		} catch (IOException ioe) {
 			throw new Error("Unable to create database");
-		}
-		try {
+		} try {
 			destination_db.openDataBase();
-		} 
-		catch(SQLException sqle) {	
+		} catch(SQLException sqle) {	
 			throw sqle;
-
 		}
 
 		//Initialize Parse
@@ -152,8 +144,8 @@ public class MNavMainActivity extends MapActivity {
 		gPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
 		//Load last known latitude, longitude default is the Diag
-		gCurrentLat = Double.parseDouble(gPreferences.getString("LASTLAT", "42.276956"));
-		gCurrentLong = Double.parseDouble(gPreferences.getString("LASTLONG", "-83.738234"));
+		//gCurrentLat = Double.parseDouble(gPreferences.getString("LASTLAT", "42.276956"));
+		//	gCurrentLong = Double.parseDouble(gPreferences.getString("LASTLONG", "-83.738234"));
 		//Load destination address, default is the Diag
 		gDestName = gPreferences.getString("DESTNAME", "the diag");
 		//DestName should be free of numbers and excess space now,  but just in case we'll keep the next line
@@ -166,60 +158,64 @@ public class MNavMainActivity extends MapActivity {
 		hasSeenAlert4 = gPreferences.getBoolean("A4", false);
 
 
-
-		/** DATABASE STUFF **/
-
-		//Grab a cursor
-		Cursor cursor = destination_db.getBldgIdByName(gDestName);
-		if(cursor.getCount() > 0 && cursor.moveToFirst()) { //Destination is there, so show dialog and grab info
-			buildAlertDialog(ALERT_INTRO_PROMPT_1);
-			//find column containing bldg num
-			int bldg_num_col = cursor.getColumnIndex("bldg_num");
-			int bldg_num = cursor.getInt(bldg_num_col);
-			//find column containing num_doors
-			int num_doors_col = cursor.getColumnIndex("num_doors");
-			num_doors = cursor.getInt(num_doors_col);
-			//doors is an array of coords with size "number of doors"
-			doors = new Coords[num_doors];
-			//create the Coords within doors to be populated later
-			for(int i = 0; i < num_doors; i++) {
-				doors[i] = new Coords();
-			}
-			//find column containing full names 
-			try {
-				int bldg_name_full_col = cursor.getColumnIndexOrThrow("name_full");
-				gDestName_full = cursor.getString(bldg_name_full_col);
-				toastThis(gDestName_full, LONG);
-			} catch (IllegalArgumentException e) {
-				Log.d("DATABASE SHIT", e.toString());
-			}
-
-			cursor.close();
-			//grab a new cursor to get the lat/long of each door to put in doors[]
-			cursor = destination_db.getDoorsByBldgId(bldg_num);
-			if(cursor.moveToFirst()) {
-				int door_lat_col = cursor.getColumnIndex("door_lat");
-				int door_long_col = cursor.getColumnIndex("door_long");
-				for(int i = 0; i < num_doors; i++) {
-					doors[i].latitude = cursor.getDouble(door_lat_col);
-					doors[i].longitude = cursor.getDouble(door_long_col);
-					cursor.moveToNext();
-				}
-			}
-		} else {
+		//Check to see if user came without typing anything
+		if(gDestName.equals("the diag")){
 			num_doors = -1;
-			buildAlertDialog(ALERT_INVALID_DEST);
+			gDestName_full = "University of Michigan Diag";
+		} else {
+			/** DATABASE STUFF **/
+			//Grab a cursor	
+			Cursor cursor = destination_db.getBldgIdByName(gDestName);
+			if(cursor.getCount() > 0 && cursor.moveToFirst()) { //Destination is there, so show dialog and grab info
+				buildAlertDialog(ALERT_INTRO_PROMPT_1);
+				//find column containing bldg num
+				int bldg_num_col = cursor.getColumnIndex("bldg_num");
+				int bldg_num = cursor.getInt(bldg_num_col);
+				//find column containing num_doors
+				int num_doors_col = cursor.getColumnIndex("num_doors");
+				num_doors = cursor.getInt(num_doors_col);
+				//doors is an array of coords with size "number of doors"
+				doors = new Coords[num_doors];
+				//create the Coords within doors to be populated later
+				for(int i = 0; i < num_doors; i++) {
+					doors[i] = new Coords();
+				}
+				//find column containing full names 
+				try {
+					int bldg_name_full_col = cursor.getColumnIndexOrThrow("name_full");
+					gDestName_full = cursor.getString(bldg_name_full_col);
+					toastThis(gDestName_full, LONG);
+				} catch (IllegalArgumentException e) {
+					Log.d("DATABASE SHIT", e.toString());
+				}
+
+				cursor.close();
+				//grab a new cursor to get the lat/long of each door to put in doors[]
+				cursor = destination_db.getDoorsByBldgId(bldg_num);
+				if(cursor.moveToFirst()) {
+					int door_lat_col = cursor.getColumnIndex("door_lat");
+					int door_long_col = cursor.getColumnIndex("door_long");
+					for(int i = 0; i < num_doors; i++) {
+						doors[i].latitude = cursor.getDouble(door_lat_col);
+						doors[i].longitude = cursor.getDouble(door_long_col);
+						cursor.moveToNext();
+					}
+				}
+			} else {
+				num_doors = -1;
+				buildAlertDialog(ALERT_INVALID_DEST);
+			}
 		}
 
-		Log.d("LOADED DATA", "Coords: "+String.valueOf(gCurrentLat)+","+String.valueOf(gCurrentLong)+
-				" destAddr: "+gDestName+" roomNum: "+gDestNum);
+		//		Log.d("LOADED DATA", "Coords: "+String.valueOf(gCurrentLat)+","+String.valueOf(gCurrentLong)+
+		//				" destAddr: "+gDestName+" roomNum: "+gDestNum);
 
 		//Put last known info as current location
-		Location location = new Location(LocationManager.GPS_PROVIDER);
-		location.setLatitude(gCurrentLat);
-		location.setLongitude(gCurrentLong);
-		location.setTime(Long.parseLong(gPreferences.getString("LASTLOCTIME", "0")));
-		gBestLocation = location;
+		//Location location = new Location(LocationManager.GPS_PROVIDER);
+		//		location.setLatitude(gCurrentLat);
+		//		location.setLongitude(gCurrentLong);
+		//location.setTime(Long.parseLong(gPreferences.getString("LASTLOCTIME", "0")));
+		//gBestLocation = location;
 
 		//Grab the mapView
 		gMapView = (MapView)findViewById(R.id.mapview);
@@ -244,7 +240,8 @@ public class MNavMainActivity extends MapActivity {
 		}
 
 		editTextDestination = (EditText)findViewById(R.id.editText_map_destination);
-		editTextDestination.setText(gDestName);
+		if(!gDestName.equals("the diag"))
+			editTextDestination.setText(gDestName);
 
 		bPlotRoute = (Button) findViewById(R.id.button_plotroute);
 		bPlotRoute.setOnClickListener(new OnClickListener() {
@@ -354,9 +351,9 @@ public class MNavMainActivity extends MapActivity {
 		//Save stored data
 		Editor editor = gPreferences.edit();
 		//Save last known latitude
-		editor.putString("LASTLAT", String.valueOf(gCurrentLat));
-		editor.putString("LASTLONG", String.valueOf(gCurrentLong));
-		editor.putString("LASTLOCTIME", String.valueOf(gBestLocation.getTime()));
+		//		editor.putString("LASTLAT", String.valueOf(gCurrentLat));
+		//		editor.putString("LASTLONG", String.valueOf(gCurrentLong));
+		//editor.putString("LASTLOCTIME", String.valueOf(gBestLocation.getTime()));
 
 
 		editor.putBoolean("A1", hasSeenAlert1);
@@ -365,7 +362,7 @@ public class MNavMainActivity extends MapActivity {
 		editor.putBoolean("A4", hasSeenAlert4);
 
 		editor.commit();
-		Log.d("SAVED DATA", "Coords: "+String.valueOf(gCurrentLat)+","+String.valueOf(gCurrentLong));	
+		//		Log.d("SAVED DATA", "Coords: "+String.valueOf(gCurrentLat)+","+String.valueOf(gCurrentLong));	
 		//Turn off GPS
 		if(gLocationManager != null)
 			gLocationManager.removeUpdates(locationListener);
@@ -409,8 +406,11 @@ public class MNavMainActivity extends MapActivity {
 			final Button button_Save = (Button)dialogTemp.findViewById(R.id.button_Save);
 			final Button button_Cancel = (Button)dialogTemp.findViewById(R.id.button_Cancel);
 
-			textView_CurrentLat.setText("Current lat: " + gCurrentLat);
-			textView_CurrentLong.setText("Current long: " + gCurrentLong);
+			final float curLat = (float)gMyLocationOverlay.getMyLocation().getLatitudeE6() * (float)1E-6;
+			final float curLong = (float)gMyLocationOverlay.getMyLocation().getLongitudeE6() * (float)1E-6;
+
+			textView_CurrentLat.setText("Current lat: " + curLat);
+			textView_CurrentLong.setText("Current long: " + curLong);
 
 			button_Save.setOnClickListener(new Button.OnClickListener() {
 				public void onClick(View v) {
@@ -441,7 +441,7 @@ public class MNavMainActivity extends MapActivity {
 						alertDialog.show();
 					}
 					else {
-						local_db.addRow(bldgAbbr, doorNick, String.valueOf(gCurrentLat), String.valueOf(gCurrentLong));
+						local_db.addRow(bldgAbbr, doorNick, String.valueOf(curLat), String.valueOf(curLong));
 						removeDialog(DIALOG_SAVE_CURRENT_LOC);
 					}
 				}
@@ -513,12 +513,12 @@ public class MNavMainActivity extends MapActivity {
 		public void onLocationChanged(Location location) { // Called when a new location is found by the network location provider.
 			//		Log.d("LocationChanged", "Found You: "+location.getLatitude()+","+location.getLongitude());
 			//Check to see if the new location is better than our best location so far
-			if(isBetterLocation(location, gBestLocation))
-				gBestLocation = location;
-			gBearing = gBestLocation.getBearing();
-			gCurrentLat = gBestLocation.getLatitude();
-			gCurrentLong = gBestLocation.getLongitude();
-			gSpeed = gBestLocation.getSpeed();
+			//if(isBetterLocation(location, gBestLocation))
+			//	gBestLocation = location;
+			//gBearing = gBestLocation.getBearing();
+			//			gCurrentLat = gBestLocation.getLatitude();
+			//			gCurrentLong = gBestLocation.getLongitude();
+			//gSpeed = gBestLocation.getSpeed();
 			/*	String toast = "Speed: " + gSpeed + "m/s \nBearing: " + gBearing + " degrees E of N \nLong: "
 					+ gCurrentLong + " \nLat: " + gCurrentLat;
 			toastThis(toast, SHORT); */
@@ -742,10 +742,10 @@ public class MNavMainActivity extends MapActivity {
 		//Start looking for location information
 
 		//Check the cached location, see if it's better than the best one we are using now
-		Location cachedLoc = getCachedLocation();
-		if(!isBetterLocation(gBestLocation, cachedLoc))
+//		Location cachedLoc = getCachedLocation();
+//		if(!isBetterLocation(gBestLocation, cachedLoc))
 			//Since it's better, use it then start querying gps sources
-			gBestLocation = cachedLoc;
+//			gBestLocation = cachedLoc;
 		gLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
 		gLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
 	}
@@ -846,8 +846,10 @@ public class MNavMainActivity extends MapActivity {
 	}
 
 	private double getDistanceFromCurrentLoc(double latitude, double longitude) {
-		double lat_dist = latitude - gCurrentLat;
-		double long_dist = longitude - gCurrentLong;
+		final float curLat = (float)gMyLocationOverlay.getMyLocation().getLatitudeE6() * (float)1E-6;
+		final float curLong = (float)gMyLocationOverlay.getMyLocation().getLongitudeE6() * (float)1E-6;
+		double lat_dist = latitude - curLat;
+		double long_dist = longitude - curLong;
 
 		return Math.sqrt(lat_dist*lat_dist + long_dist*long_dist);
 	}
@@ -886,7 +888,7 @@ public class MNavMainActivity extends MapActivity {
 
 			gDistanceToDest = route.getDistance();
 			gTimeToDest = route.getDuration();
-			
+
 			toastThis("Distance: "+gDistanceToDest + "\nTravel Duration: "+gTimeToDest, LONG);
 
 			if(gProgressDialog.isShowing())
