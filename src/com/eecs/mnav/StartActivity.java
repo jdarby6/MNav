@@ -79,12 +79,13 @@ public class StartActivity extends Activity implements TextWatcher {
 
 		}
 
-		Cursor cursor = destination_db.getAllBldgAbbrs();
+		Cursor cursor = destination_db.getAllBldgs();
 
 		ArrayList<String> strings = new ArrayList<String>();
 		for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
-			String mTitleRaw = cursor.getString(0);
-			strings.add(mTitleRaw);
+			String full_name = cursor.getString(0);
+			String abbr_name = cursor.getString(1);
+			strings.add(abbr_name+": " + full_name);
 		}
 
 		cursor.close();
