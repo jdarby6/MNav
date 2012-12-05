@@ -410,6 +410,23 @@ public class ScheduleActivity extends Activity {
 			bViewMap.setOnClickListener(new Button.OnClickListener() {
 				public void onClick(View v) {
 					//Call intent to new activity
+					String tempAddress = curEvent.getLocation();
+                	if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME)) {
+    					if(tempAddress.matches(REGEX_ROOM_NUM)) {
+    						destRoomNum = tempAddress.substring(0,tempAddress.indexOf(" "));
+    						destBldgName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
+    						Log.d("Schedule Item Click", "Matches REGEX_ROOM_NUM! RoomNum="+destRoomNum+" BldgName="+destBldgName);
+    					} else {//It should just be the name of the bldg
+    						destBldgName = tempAddress;
+    						destRoomNum = "";
+    						Log.d("Schedule Item Click", "Matches REGEX_BLDG_NAME! RoomNum="+destRoomNum+" BldgName="+destBldgName);
+    					}
+    				}
+    				
+    				Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
+    				editor.putString("DESTNAME", destBldgName);
+    				editor.putString("DESTROOM", destRoomNum);
+    				editor.commit();
 					Intent intent = new Intent(ScheduleActivity.this, BuildingMapActivity.class);
 					startActivity(intent);
 					removeDialog(DIALOG_OPTION);

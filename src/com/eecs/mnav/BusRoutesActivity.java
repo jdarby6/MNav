@@ -403,6 +403,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		protected void onPostExecute(String result) {
 			Log.i("GetXmlDataTask", "Locations and public feed XML data transfer complete");
 			setBusOverlays();
+			routesListViewAdapter.notifyDataSetChanged();
 		}
 
 		protected void onPreExecute() {
