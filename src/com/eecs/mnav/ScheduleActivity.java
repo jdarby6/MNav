@@ -1,6 +1,7 @@
 package com.eecs.mnav;
 
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import android.os.Bundle;
@@ -9,6 +10,9 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences.Editor;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.graphics.Color;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -17,6 +21,8 @@ import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -65,10 +71,12 @@ public class ScheduleActivity extends Activity {
 	private static final int TIME_PICK_BEGIN_DIALOG_ID = 2;
 	private static final int TIME_PICK_END_DIALOG_ID = 3;
 	private static final int DIALOG_OPTION = 4;
+	private static final int DIALOG_SECTION = 5;
 	private static String CURRENTDAY = "NULL";
 
 	public static int CDI = 0; //current days int;
 
+	private DataBaseHelper classes_db;
 	private ScheduleDatabaseHandler db;
 
 	@Override
@@ -438,8 +446,60 @@ public class ScheduleActivity extends Activity {
 					removeDialog(DIALOG_OPTION);
 				}
 			});
+			break;
+		/*case DIALOG_SECTION:
+			dialogEditEvent.requestWindowFeature(Window.FEATURE_NO_TITLE);
+			dialogEditEvent.setContentView(R.layout.dialog_set_section);
+			final AutoCompleteTextView auto_section = (AutoCompleteTextView)dialogEditEvent.findViewById(R.id.auto_section);
+			final Button button_set_section = (Button)dialogEditEvent.findViewById(R.id.button_set_section);
+			//Initialize destination db
 			
-		
+			classes_db = new DataBaseHelper(this, "destination_db");
+			try {
+				classes_db.createDataBase();
+			} 
+			catch (IOException ioe) {
+				throw new Error("Unable to create database");
+			}
+			try {
+				classes_db.openDataBase();
+			} 
+			catch(SQLException sqle) {	
+				throw sqle;
+
+			}
+			String classname = "";
+			
+			Cursor cursor = classes_db.getSections(classname);
+
+			ArrayList<String> strings = new ArrayList<String>();
+			for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+				String mTitleRaw = cursor.getString(0);
+				strings.add(mTitleRaw);
+			}
+
+			cursor.close();
+			classes_db.close();
+			String[] item = (String[]) strings.toArray(new String[strings.size()]);
+			
+
+			auto_section.setTextColor(Color.BLACK);
+			auto_section.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, item));
+			button_set_section.setOnClickListener(new Button.OnClickListener() {
+				public void onClick(View v) {
+					
+					//use the database to do whatever
+					//editText_location.setText();
+					//editText_class.setText();
+					//editText_begin_time.setText();
+					//editText_end_time.setText();
+					//and set check boxes
+					
+					
+					removeDialog(DIALOG_SECTION);
+				}});
+			
+			break;*/
 		default :
 			break;
 
