@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import com.parse.Parse;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -57,6 +59,9 @@ public class StartActivity extends Activity implements TextWatcher {
 
 		context = getApplicationContext();
 
+		//Initialize Parse
+		Parse.initialize(this, "kTygJWFcKh5a9OK7Pv58mTZtfkS7Sp91cpVyIiwc", "j8fsAwMny2P7y4iLRZNY8ABhK5oF2AV3rQe2MTdO");
+		
 		//Initialize destination db
 		destination_db = new DataBaseHelper(this, "destination_db");
 		try {

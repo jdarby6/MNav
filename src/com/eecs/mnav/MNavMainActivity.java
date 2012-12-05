@@ -167,8 +167,6 @@ public class MNavMainActivity extends MapActivity {
 			throw sqle;
 		}
 
-		//Initialize Parse
-		Parse.initialize(this, "kTygJWFcKh5a9OK7Pv58mTZtfkS7Sp91cpVyIiwc", "j8fsAwMny2P7y4iLRZNY8ABhK5oF2AV3rQe2MTdO");
 
 		//Initialize UI handler
 		uiHandler = new Handler();
