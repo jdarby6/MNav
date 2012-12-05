@@ -40,8 +40,9 @@ public class StartActivity extends Activity implements TextWatcher {
 
 	final String[] day_abbrs = new String[] {"NULL", "SU", "MO", "TU", "WE", 
 			"TH", "FR", "SA"};
-	private static final String REGEX_ROOM_NUM = "^[0-9]{1,4} [a-zA-Z]+ *";
-	private static final String REGEX_BLDG_NAME = "^[a-zA-Z][a-zA-Z &]+";
+	public static final String REGEX_ROOM_NUM = "^[0-9]{1,4} [a-zA-Z]+ *";
+	public static final String REGEX_BLDG_NAME = "^[a-zA-Z][a-zA-Z &]+";
+	public static String sPref = null;
 
 	private DataBaseHelper destination_db;
 	private ScheduleDatabaseHandler schedule_db;
@@ -141,6 +142,7 @@ public class StartActivity extends Activity implements TextWatcher {
 
 
 		});
+		
 		schedule.setOnLongClickListener(new OnLongClickListener() {
 			public boolean onLongClick(View v) {
 				//reach into db and get current time day
@@ -195,14 +197,9 @@ public class StartActivity extends Activity implements TextWatcher {
 
 				Intent searchIntent = new Intent(StartActivity.this, MNavMainActivity.class);
 				StartActivity.this.startActivity(searchIntent);
-
 				}
-
 				return true;
-
 			}
-
-
 		});
 		
 		button_bus_routes.setOnClickListener(new OnClickListener() {

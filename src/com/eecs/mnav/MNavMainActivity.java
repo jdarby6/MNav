@@ -3,6 +3,7 @@ package com.eecs.mnav;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 
 import android.app.AlertDialog;
@@ -30,6 +31,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
+import android.view.inputmethod.InputMethodManager;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -49,6 +51,7 @@ import com.parse.Parse;
 public class MNavMainActivity extends MapActivity {
 	//Layout globals
 	private MapView gMapView = null;
+	private TextView tvDestInfo = null;
 	private Button bPlotRoute;
 	private Button bSatellite;
 	private Button bTargetReticle;
@@ -84,9 +87,10 @@ public class MNavMainActivity extends MapActivity {
 	private MapController gMapController = null;
 	private LocationManager gLocationManager;
 	private SharedPreferences gPreferences = null;
+	private GetDirectionsTask gOurGetDirectionsTask = null;
 
 	//Overlay globals
-	//private PinOverlay gPinOverlay = null;
+	private PinOverlay gPinOverlay = null;
 	private RouteOverlay gRouteOverlay = null;
 	private MyLocationOverlay gMyLocationOverlay = null;
 	private ScaleBarOverlay gScaleBarOverlay = null;
@@ -109,7 +113,13 @@ public class MNavMainActivity extends MapActivity {
 	private static final int DIALOG_SAVE_CURRENT_LOC = 0;
 	public final static int DIALOG_DESTINATION_BLDG = 1;
 	private final static int DIALOG_SETTINGS = 2;
-
+	//Overlay IDs
+	private static final int OVERLAY_MYLOC_ID = 0;
+	private static final int OVERLAY_SCALEBAR_ID = 1;
+	private static final int OVERLAY_PIN_ID = 2;
+	private static final int OVERLAY_ROUTE_ID = 3;
+	
+	
 	private class Coords {
 		double latitude;
 		double longitude;
@@ -122,6 +132,10 @@ public class MNavMainActivity extends MapActivity {
 		super.onCreate(savedInstanceState);
 		Log.d("OnCreate()", "OnCreate() called");
 		setContentView(R.layout.activity_main);
+		
+		tvDestInfo = (TextView) findViewById(R.id.textView_destInfo);
+		tvDestInfo.setVisibility(TextView.INVISIBLE);
+		
 		//Initialize local db
 		local_db = new LocalDatabaseHandler(this);
 
@@ -142,10 +156,6 @@ public class MNavMainActivity extends MapActivity {
 
 		//Load stored data
 		gPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-
-		//Load last known latitude, longitude default is the Diag
-		//gCurrentLat = Double.parseDouble(gPreferences.getString("LASTLAT", "42.276956"));
-		//	gCurrentLong = Double.parseDouble(gPreferences.getString("LASTLONG", "-83.738234"));
 		//Load destination address, default is the Diag
 		gDestName = gPreferences.getString("DESTNAME", "the diag");
 		//DestName should be free of numbers and excess space now,  but just in case we'll keep the next line
@@ -156,67 +166,19 @@ public class MNavMainActivity extends MapActivity {
 		hasSeenAlert2 = gPreferences.getBoolean("A2", false);
 		hasSeenAlert3 = gPreferences.getBoolean("A3", false);
 		hasSeenAlert4 = gPreferences.getBoolean("A4", false);
-
-
+		
 		//Check to see if user came without typing anything
 		if(gDestName.equals("the diag")){
 			num_doors = -1;
-			gDestName_full = "University of Michigan Diag";
+			gDestName_full = "The Diag";
 		} else {
-			/** DATABASE STUFF **/
-			//Grab a cursor	
-			Cursor cursor = destination_db.getBldgIdByName(gDestName);
-			if(cursor.getCount() > 0 && cursor.moveToFirst()) { //Destination is there, so show dialog and grab info
-				buildAlertDialog(ALERT_INTRO_PROMPT_1);
-				//find column containing bldg num
-				int bldg_num_col = cursor.getColumnIndex("bldg_num");
-				int bldg_num = cursor.getInt(bldg_num_col);
-				//find column containing num_doors
-				int num_doors_col = cursor.getColumnIndex("num_doors");
-				num_doors = cursor.getInt(num_doors_col);
-				//doors is an array of coords with size "number of doors"
-				doors = new Coords[num_doors];
-				//create the Coords within doors to be populated later
-				for(int i = 0; i < num_doors; i++) {
-					doors[i] = new Coords();
-				}
-				//find column containing full names 
-				try {
-					int bldg_name_full_col = cursor.getColumnIndexOrThrow("name_full");
-					gDestName_full = cursor.getString(bldg_name_full_col);
-					toastThis(gDestName_full, LONG);
-				} catch (IllegalArgumentException e) {
-					Log.d("DATABASE SHIT", e.toString());
-				}
-
-				cursor.close();
-				//grab a new cursor to get the lat/long of each door to put in doors[]
-				cursor = destination_db.getDoorsByBldgId(bldg_num);
-				if(cursor.moveToFirst()) {
-					int door_lat_col = cursor.getColumnIndex("door_lat");
-					int door_long_col = cursor.getColumnIndex("door_long");
-					for(int i = 0; i < num_doors; i++) {
-						doors[i].latitude = cursor.getDouble(door_lat_col);
-						doors[i].longitude = cursor.getDouble(door_long_col);
-						cursor.moveToNext();
-					}
-				}
-			} else {
-				num_doors = -1;
-				buildAlertDialog(ALERT_INVALID_DEST);
-			}
+			digIntoDatabaseForBuildingInformationAndStuff();
 		}
 
-		//		Log.d("LOADED DATA", "Coords: "+String.valueOf(gCurrentLat)+","+String.valueOf(gCurrentLong)+
-		//				" destAddr: "+gDestName+" roomNum: "+gDestNum);
-
-		//Put last known info as current location
-		//Location location = new Location(LocationManager.GPS_PROVIDER);
-		//		location.setLatitude(gCurrentLat);
-		//		location.setLongitude(gCurrentLong);
-		//location.setTime(Long.parseLong(gPreferences.getString("LASTLOCTIME", "0")));
-		//gBestLocation = location;
-
+		editTextDestination = (EditText)findViewById(R.id.editText_map_destination);
+		if(!gDestName.equals("the diag"))
+			editTextDestination.setText(gDestName);
+		
 		//Grab the mapView
 		gMapView = (MapView)findViewById(R.id.mapview);
 		try {
@@ -232,30 +194,53 @@ public class MNavMainActivity extends MapActivity {
 			e.printStackTrace();
 		}
 
-		//THIS IS WHERE WE PUT THE CLOSEST SEARCH RESULT INTO THE SEARCH BAR
-		if(num_doors != -1) {
-			int closestDoorIndex = getClosestDoorIndex();
-			gDestinationLat = doors[closestDoorIndex].latitude;
-			gDestinationLong = doors[closestDoorIndex].longitude;
-		}
-
-		editTextDestination = (EditText)findViewById(R.id.editText_map_destination);
-		if(!gDestName.equals("the diag"))
-			editTextDestination.setText(gDestName);
-
 		bPlotRoute = (Button) findViewById(R.id.button_plotroute);
 		bPlotRoute.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				Log.d("GetRouteClicked", "Calculating Route");
-
+				//hide the soft keyboard
+				InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+				imm.hideSoftInputFromWindow(tvDestInfo.getWindowToken(), 0);
+				
+				tvDestInfo.setVisibility(TextView.INVISIBLE);
 				//Grab the user input lat/long
-				//	String temp = editTextDestination.getText().toString();
-
-				//	if(temp != null && temp.length() > 0) {
+				String tempAddress = editTextDestination.getText().toString();
+				if(tempAddress.matches(StartActivity.REGEX_ROOM_NUM) || tempAddress.matches(StartActivity.REGEX_BLDG_NAME)) {
+					if(tempAddress.matches(StartActivity.REGEX_ROOM_NUM)) {
+						gDestNum = tempAddress.substring(0,tempAddress.indexOf(" "));
+						gDestName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
+						Log.d("Search Button", "Matches REGEX_ROOM_NUM! RoomNum="+gDestNum+" BldgName="+gDestName);
+					} else {//It should just be the name of the bldg
+						gDestName = tempAddress;
+						gDestNum = "";
+						Log.d("Search Button", "Matches REGEX_BLDG_NAME! RoomNum="+gDestNum+" BldgName="+gDestName);
+					}
+				} else if(tempAddress != null && tempAddress.length() > 0){
+					//It doesn't match our regEx so it's an invalid entry.
+					tvDestInfo.setVisibility(TextView.VISIBLE);
+					tvDestInfo.setText("Invalid destination entry.");
+					tvDestInfo.setTextColor(getResources().getColor(R.color.fireBrickRed));
+					return;
+				}
+				
+				GeoPoint oldDest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));//XXX not needed
+				
+				//The gDestName is set, so dig into the databse for building information and stuff
+				digIntoDatabaseForBuildingInformationAndStuff();
+				//now find closest door
+				findClosestDoor();
+				
 				//create a geopoint for dest
+				ArrayList<GeoPoint> tmpGeo = new ArrayList<GeoPoint>();
 				GeoPoint dest = getDirections(); //Query Google for directions to dest and return the dest 
-
-				zoomTo(dest, ZOOM_LEVEL_BUILDING);
+				tmpGeo.add(dest);
+				gMapView.getOverlays().remove(OVERLAY_PIN_ID);
+				ArrayList<String> tmpString= new ArrayList<String>();
+				tmpString.add(gDestName_full);
+				putPinsOnMap(tmpGeo, tmpString);
+				gMapView.invalidate();
+				
+				zoomTo(tmpGeo.get(0), ZOOM_LEVEL_BUILDING);
 			}
 
 			//	}
@@ -367,6 +352,11 @@ public class MNavMainActivity extends MapActivity {
 		if(gLocationManager != null)
 			gLocationManager.removeUpdates(locationListener);
 		destination_db.close();
+		
+		if(gOurGetDirectionsTask != null) {
+			gOurGetDirectionsTask.cancel(true);
+			gOurGetDirectionsTask = null;
+		}
 	}	
 
 
@@ -652,7 +642,7 @@ public class MNavMainActivity extends MapActivity {
 		 **/
 
 		gMyLocationOverlay = new MyLocationOverlay(this, gMapView);
-		mapOverlays.add(gMyLocationOverlay);
+		mapOverlays.add(OVERLAY_MYLOC_ID, gMyLocationOverlay);
 
 		gMyLocationOverlay.enableMyLocation();
 
@@ -660,35 +650,45 @@ public class MNavMainActivity extends MapActivity {
 		//Create the scalebar and add it to mapview
 		gScaleBarOverlay = new ScaleBarOverlay(this.getBaseContext(), gMapView);
 		gScaleBarOverlay.setImperial();
-		mapOverlays.add(gScaleBarOverlay);
-
-		if(hasSeenAlert1){
-			//create a geopoint for dest
-			GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
-
-			OverlayItem overlayitem = new OverlayItem(dest, "gDestName_full", "This is your current destination");
-		//	gPinOverlay.addOverlay(overlayitem);
-		//	gMapView.getOverlays().add(gPinOverlay); 
-
-			zoomTo(dest, ZOOM_LEVEL_BUILDING);
+		mapOverlays.add(OVERLAY_SCALEBAR_ID, gScaleBarOverlay);
+		
+		toastThis(gDestinationLat+","+gDestinationLong,LONG);
+		toastThis("numDoors:"+num_doors, LONG);
+		
+		if(hasSeenAlert1 && !gDestName.equals("the diag")){
+			//Contemplate Life
 		} else {
 			gProgressDialog = new ProgressDialog(this);
 			gProgressDialog.setMessage("Finding you...");
 			gProgressDialog.setCancelable(false);
 			gProgressDialog.setIndeterminate(true);
 			gProgressDialog.show();
-
-			gMyLocationOverlay.runOnFirstFix(new Runnable() {
-				public void run() {
-					gProgressDialog.dismiss();
-					GeoPoint p = gMyLocationOverlay.getMyLocation();
-					if(gMapController == null)
-						gMapController = gMapView.getController();
-					gMapController.animateTo(p);
-					gMapController.setZoom(ZOOM_LEVEL_BUILDING);
-				}
-			});
 		}
+		gMyLocationOverlay.runOnFirstFix(new Runnable() {
+			public void run() {
+				if(!(hasSeenAlert1 && !gDestName.equals("the diag"))){
+				gProgressDialog.dismiss();
+				GeoPoint p = gMyLocationOverlay.getMyLocation();
+				if(gMapController == null)
+					gMapController = gMapView.getController();
+				gMapController.animateTo(p);
+				gMapController.setZoom(ZOOM_LEVEL_SKY);
+				}
+				GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
+				//THIS IS WHERE WE FIND THE CLOSEST SEARCH RESULT
+				if(findClosestDoor()) {
+					Log.d("ClosestDoor", "Found closest door!");
+					
+					//create a geopoint for dest
+					dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
+					OverlayItem overlayitem = new OverlayItem(dest, "gDestName_full", "This is your current destination");
+					gPinOverlay.addOverlay(overlayitem);
+					gMapView.getOverlays().add(OVERLAY_PIN_ID, gPinOverlay);
+				}
+				if(hasSeenAlert1 && !gDestName.equals("the diag"))
+					zoomTo(dest, ZOOM_LEVEL_BUILDING);
+			}
+		});
 	}
 
 	private Route directions(final GeoPoint start, final GeoPoint dest) {
@@ -848,13 +848,14 @@ public class MNavMainActivity extends MapActivity {
 	private double getDistanceFromCurrentLoc(double latitude, double longitude) {
 		final float curLat = (float)gMyLocationOverlay.getMyLocation().getLatitudeE6() * (float)1E-6;
 		final float curLong = (float)gMyLocationOverlay.getMyLocation().getLongitudeE6() * (float)1E-6;
+		
 		double lat_dist = latitude - curLat;
 		double long_dist = longitude - curLong;
 
 		return Math.sqrt(lat_dist*lat_dist + long_dist*long_dist);
 	}
 
-	private int getClosestDoorIndex() {
+	private boolean findClosestDoor() {
 		int currentBestIndex = 0;
 		double currentBestDistance = 0;
 
@@ -864,7 +865,13 @@ public class MNavMainActivity extends MapActivity {
 				currentBestIndex = i;
 		}
 
-		return currentBestIndex;
+		if(num_doors != -1) {
+		gDestinationLat = doors[currentBestIndex].latitude;
+		gDestinationLong = doors[currentBestIndex].longitude;
+		return true;
+		}
+		
+		return false;
 	}
 
 	// Implementation of AsyncTask used to get walking directions from current location to destination
@@ -884,16 +891,21 @@ public class MNavMainActivity extends MapActivity {
 				tmp.remove(gRouteOverlay);
 			}
 			gRouteOverlay = new RouteOverlay(route, gStartGeo, gDestGeo, getResources().getColor(R.color.fireBrickRed));
-			tmp.add(gRouteOverlay);
+			tmp.add(OVERLAY_ROUTE_ID, gRouteOverlay);
 
 			gDistanceToDest = route.getDistance();
 			gTimeToDest = route.getDuration();
 
 			toastThis("Distance: "+gDistanceToDest + "\nTravel Duration: "+gTimeToDest, LONG);
+			tvDestInfo.setVisibility(TextView.VISIBLE);
+			tvDestInfo.setText("Distance: "+gDistanceToDest+" Travel Duration: "+gTimeToDest);
+			tvDestInfo.setTextColor(getResources().getColor(R.color.black));
 
 			if(gProgressDialog.isShowing())
 				gProgressDialog.dismiss();
 			gMapView.invalidate();
+			
+			gOurGetDirectionsTask = null;
 		}
 	}
 
@@ -918,8 +930,83 @@ public class MNavMainActivity extends MapActivity {
 
 		gStartGeo = start;
 		gDestGeo = dest;
-		new GetDirectionsTask().execute(start, dest);
+		gOurGetDirectionsTask = new GetDirectionsTask();
+		gOurGetDirectionsTask.execute(start, dest);
 		return dest;
 	}
+	
+	//Method to grab the information from database pertaining to the building after
+	// gDestName is set.
+	private void digIntoDatabaseForBuildingInformationAndStuff() {
+		/** DATABASE STUFF **/
+		//Grab a cursor	
+		Cursor cursor = destination_db.getBldgIdByName(gDestName);
+		if(cursor.getCount() > 0 && cursor.moveToFirst()) { //Destination is there, so show dialog and grab info
+			buildAlertDialog(ALERT_INTRO_PROMPT_1);
+			//find column containing bldg num
+			int bldg_num_col = cursor.getColumnIndex("bldg_num");
+			int bldg_num = cursor.getInt(bldg_num_col);
+			//find column containing num_doors
+			int num_doors_col = cursor.getColumnIndex("num_doors");
+			num_doors = cursor.getInt(num_doors_col);
+			//doors is an array of coords with size "number of doors"
+			doors = new Coords[num_doors];
+			//create the Coords within doors to be populated later
+			for(int i = 0; i < num_doors; i++) {
+				doors[i] = new Coords();
+			}
+			//find column containing full names 
+			try {
+				int bldg_name_full_col = cursor.getColumnIndexOrThrow("name_full");
+				gDestName_full = cursor.getString(bldg_name_full_col);
+				toastThis(gDestName_full, LONG);
+			} catch (IllegalArgumentException e) {
+				Log.d("DATABASE SHIT", e.toString());
+			}
 
+			cursor.close();
+			//grab a new cursor to get the lat/long of each door to put in doors[]
+			cursor = destination_db.getDoorsByBldgId(bldg_num);
+			if(cursor.moveToFirst()) {
+				int door_lat_col = cursor.getColumnIndex("door_lat");
+				int door_long_col = cursor.getColumnIndex("door_long");
+				for(int i = 0; i < num_doors; i++) {
+					doors[i].latitude = cursor.getDouble(door_lat_col);
+					doors[i].longitude = cursor.getDouble(door_long_col);
+					cursor.moveToNext();
+				}
+			}
+		} else {
+			num_doors = -1;
+			buildAlertDialog(ALERT_INVALID_DEST);
+		}
+	}
+	
+	private void putPinsOnMap(ArrayList<GeoPoint> pinLocation, ArrayList<String> names) {
+		OverlayItem tmpItem;
+		Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
+		//Create our route overlay
+		gPinOverlay = new PinOverlay(drawable, this);
+		gPinOverlay.setTapListener(this);
+		for(int i = 0; i < pinLocation.size(); i++) {
+			tmpItem = new OverlayItem(pinLocation.get(i), names.get(i), "This is your current destination");
+			gPinOverlay.addOverlayNoPopulate(tmpItem);
+		}
+		gPinOverlay.populateOverlay();
+		gMapView.getOverlays().add(OVERLAY_PIN_ID, gPinOverlay);
+	}
+	
+/*	private void removePinFromMap(GeoPoint pinLocation) {
+		if(gMapController == null)
+			gMapController = gMapView.getController();
+	}
+	
+	private void replacePinOnMap(GeoPoint oldPin, GeoPoint newPin) {
+		if(gMapController == null)
+			gMapController = gMapView.getController();
+		OverlayItem oldItem = new OverlayItem(oldPin, "gDestName_full", "This is your current destination");
+		OverlayItem newItem = new OverlayItem(newPin, "gDestName_full", "This is your current destination");
+		gPinOverlay.replaceOverlayWithOverlay(oldItem, newItem);
+	}*/
+	
 }
