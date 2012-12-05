@@ -1,22 +1,8 @@
 package com.eecs.mnav;
 
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.jakewharton.DiskLruCache;
-//import com.jakewharton.DiskLruCache;
-import com.parse.FindCallback;
-import com.parse.GetDataCallback;
-import com.parse.ParseFile;
-import com.parse.ParseException;
-import com.parse.ParseObject;
-import com.parse.ParseQuery;
-import com.parse.ProgressCallback;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -27,12 +13,20 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.util.LruCache;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
+
+import com.jakewharton.DiskLruCache;
+import com.parse.FindCallback;
+import com.parse.GetDataCallback;
+import com.parse.ParseException;
+import com.parse.ParseFile;
+import com.parse.ParseObject;
+import com.parse.ParseQuery;
+import com.parse.ProgressCallback;
 
 public class BuildingMapActivity extends Activity{
 	ArrayList<Bitmap> floors = new ArrayList<Bitmap>();
