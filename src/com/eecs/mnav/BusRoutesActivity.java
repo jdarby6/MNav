@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
-import org.xmlpull.v1.XmlPullParserFactory;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -29,19 +28,21 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.Toast;
 
+import com.eecs.mnav.MbusLocationFeedXmlParser.Item;
+import com.eecs.mnav.MbusPublicFeedXmlParser.Route;
 import com.google.android.maps.GeoPoint;
-import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
+import com.slidingmenu.lib.app.SlidingMapActivity;
 
-public class BusRoutesActivity extends MapActivity {
+public class BusRoutesActivity extends SlidingMapActivity {
 	//Layout globals
 	private MapView gMapView = null;
+	private Button bSlider;
 	private Button bSatellite;
 	private Button bTargetReticle;
 	private Button bZoomIn;
@@ -63,38 +64,32 @@ public class BusRoutesActivity extends MapActivity {
 	private ScaleBarOverlay gScaleBarOverlay = null;
 
 	//Constants
-	private static final int LONG = Toast.LENGTH_LONG;
-	private static final int SHORT = Toast.LENGTH_SHORT;
 	private static final int FOUR_SECONDS = 4000;
 	private static final int LAYER_TYPE_SOFTWARE = 1;
 	private static final int ZOOM_LEVEL_BUILDING = 19;
 
-	// Item == bus
-	public static class Item {
-		public String id = "";
-		public String latitude = "";
-		public String longitude = "";
-		public String heading = "";
-		public String route = "";
-		public String routeid = "";
-		public String busroutecolor = "";
-	}
 	static ArrayList<Item> items;
+	static ArrayList<Route> routes;
+
 	static final String locationFeedURL = "http://mbus.pts.umich.edu/shared/location_feed.xml";
-	private List<Overlay> mapOverlays;
+	static final String publicFeedURL = "http://mbus.pts.umich.edu/shared/public_feed.xml";
+	static final String stopsURL = "http://mbus.pts.umich.edu/shared/stop.xml";
+
 	//Number of points to interpolate a move by (chop up the update of bus icon into this many parts
 	//before fetching the XML again)
-	private int splitMove = 4;
+	private int splitMove = 10;
+	static BusIconOverlay busIconOverlay;
 
 	private int m_interval = FOUR_SECONDS;
 	private Handler m_handler;
-	static BusIconOverlay busIconOverlay;
+
 
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState) { 
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_bus_routes);
-
+		setBehindContentView(R.layout.activity_schedule);
+		
 		//Grab the mapView
 		gMapView = (MapView)findViewById(R.id.mapview);
 		try {
@@ -109,6 +104,13 @@ public class BusRoutesActivity extends MapActivity {
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
 		}
+		
+		bSlider = (Button) findViewById(R.id.button_slider);
+		bSlider.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				BusRoutesActivity.this.getSlidingMenu().toggle();
+			}
+		});
 
 		bSatellite = (Button) findViewById(R.id.button_satellite);
 		if(!gMapView.isSatellite())
@@ -128,7 +130,7 @@ public class BusRoutesActivity extends MapActivity {
 
 			}
 		});
-		
+
 		bTargetReticle = (Button) findViewById(R.id.button_return);
 		bTargetReticle.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
@@ -159,13 +161,7 @@ public class BusRoutesActivity extends MapActivity {
 
 		startGPS();
 		zoomTo(new GeoPoint((int)(gDefaultLat*1E6), (int)(gDefaultLong*1E6)), gDefaultZoom);
-
-		try {
-			new GetLocationsTask().execute(new URL(locationFeedURL));
-		} catch (MalformedURLException e) {
-			Log.i("NETWORK", "Failed to generate valid URL");
-		}
-
+		new GetXmlDataTask().execute(locationFeedURL);
 		m_handler = new Handler();
 		startRepeatingTask();
 
@@ -284,23 +280,12 @@ public class BusRoutesActivity extends MapActivity {
 		}
 	}
 
-	/** Helper function for displaying a toast. Takes the string to be displayed and the length: LONG or SHORT **/
-	private void toastThis(String toast, int duration) {
-		Context context = getApplicationContext();
-		Toast t = Toast.makeText(context, toast, duration);
-		t.show();
-	}
-
 	Runnable m_statusChecker = new Runnable()
 	{ 
 		public void run() {
 			Log.d("Ya", "I'm all runnable");
 
-			try {
-				new GetLocationsTask().execute(new URL(locationFeedURL));
-			} catch (MalformedURLException e) {
-				Log.i("NETWORK", "Failed to generate valid URL");
-			}
+			new GetXmlDataTask().execute(locationFeedURL);
 
 			m_handler.postDelayed(m_statusChecker, m_interval);
 		}
@@ -378,69 +363,27 @@ public class BusRoutesActivity extends MapActivity {
 			return "";
 	}
 
-	private class GetLocationsTask extends AsyncTask<URL, String, String> {
+	//Generalized AsyncTask for any XML parsing that needs to be done. Calls appropriate class based on the
+	//link it's given
+	private class GetXmlDataTask extends AsyncTask<String, String, String> {
 
 		@Override
-		protected String doInBackground(URL... params) {
-			// This pattern takes more than one param but we'll just use the first
+		protected String doInBackground(String... params) {
+			String result = "";
+			URL url;
 			try {
-				URL text = params[0];
+				url = new URL(params[0]);
+			} catch (MalformedURLException e1) {
+				Log.d("GetXmlDataTask", "Error with opening URL");
+				e1.printStackTrace();
 
-				XmlPullParserFactory parserCreator;
-
-				parserCreator = XmlPullParserFactory.newInstance();
-
-				XmlPullParser parser = parserCreator.newPullParser();
-
-				parser.setInput(text.openStream(), null);
-
-				publishProgress("Parsing XML...");
-
-				int parserEvent = parser.getEventType();
-				Item currentItem = new Item();
-				BusRoutesActivity.items = new ArrayList<Item>();
-
-				// Parse the XML returned on the network
-				while (parserEvent != XmlPullParser.END_DOCUMENT) {
-					switch (parserEvent) {
-					case XmlPullParser.START_TAG:
-						String tag = parser.getName();
-						if(tag.compareTo("item") == 0) {
-							parser.require(XmlPullParser.START_TAG, null, "item");
-							while (parser.next() != XmlPullParser.END_TAG) {
-								if (parser.getEventType() != XmlPullParser.START_TAG) {
-									continue;
-								}
-								String name = parser.getName();
-								if (name.equals("id")) {
-									currentItem.id = readText(parser);
-								} else if (name.equals("latitude")) {
-									currentItem.latitude = readText(parser);
-								} else if (name.equals("longitude")) {
-									currentItem.longitude = readText(parser);
-								} else if (name.equals("heading")) {
-									currentItem.heading = readText(parser);
-								} else if (name.equals("route")) {
-									currentItem.route = readText(parser);
-								} else if (name.equals("routeid")) {
-									currentItem.routeid = readText(parser);
-								} else if (name.equals("busroutecolor")) {
-									currentItem.busroutecolor = readText(parser);
-								}
-							}
-							BusRoutesActivity.items.add(currentItem);
-							currentItem = new Item();
-						}
-						break;
-					}
-					parserEvent = parser.next();
-				}
-			} catch (Exception e) {
-				Log.i("RouteLoader", "Failed in parsing XML", e);
-				return "Finished with failure.";
+				return "Error with opening URL";
 			}
 
-			return "Done...";
+			if(params[0].equals(locationFeedURL))
+				result = MbusLocationFeedXmlParser.parse(url);
+
+			return result;
 		}
 
 		protected void onCancelled() {
@@ -463,7 +406,7 @@ public class BusRoutesActivity extends MapActivity {
 
 	}
 
-	private String readText(XmlPullParser parser) throws IOException, XmlPullParserException {
+	static String readText(XmlPullParser parser) throws IOException, XmlPullParserException {
 		String result = "";
 		if (parser.next() == XmlPullParser.TEXT) {
 			result = parser.getText();

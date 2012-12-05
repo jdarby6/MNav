@@ -32,12 +32,12 @@
             android:text="@string/_" />
 
         <Button
-            android:id="@+id/button_satellite"
+            android:id="@+id/button_slider"
             android:layout_width="45dp"
             android:layout_height="45dp"
             android:layout_alignParentBottom="true"
             android:layout_alignParentLeft="true"
-            android:background="@drawable/ic_satellite"
+            android:background="@drawable/ic_slider"
             android:text="@string/_" />
 
         <View
@@ -51,8 +51,18 @@
             android:layout_width="1dp"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:layout_toRightOf="@+id/button_satellite"
+            android:layout_toRightOf="@+id/button_slider"
             android:background="@drawable/divider_black_vert" />
+        
+        
+        <Button
+            android:id="@+id/button_satellite"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_alignParentBottom="true"
+            android:layout_toRightOf="@+id/divider_2"
+            android:background="@drawable/ic_satellite"
+            android:text="@string/_" />
 
         <View
             android:id="@+id/divider_5"
