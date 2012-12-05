@@ -28,6 +28,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ListView;
 
 import com.eecs.mnav.MbusLocationFeedXmlParser.Item;
 import com.eecs.mnav.MbusPublicFeedXmlParser.Route;
@@ -68,8 +69,8 @@ public class BusRoutesActivity extends SlidingMapActivity {
 	private static final int LAYER_TYPE_SOFTWARE = 1;
 	private static final int ZOOM_LEVEL_BUILDING = 19;
 
-	static ArrayList<Item> items;
-	static ArrayList<Route> routes;
+	static ArrayList<Item> items = new ArrayList<Item>();
+	static ArrayList<Route> routes = new ArrayList<Route>();
 
 	static final String locationFeedLink = "http://mbus.pts.umich.edu/shared/location_feed.xml";
 	static final String publicFeedLink = "http://mbus.pts.umich.edu/shared/public_feed.xml";
@@ -82,13 +83,19 @@ public class BusRoutesActivity extends SlidingMapActivity {
 
 	private int m_interval = FOUR_SECONDS;
 	private Handler m_handler;
+	private ListView listView;
+	private ListViewCustomAdapter routesListViewAdapter;
 
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) { 
 		super.onCreate(savedInstanceState);
+		
+		listView = new ListView(StartActivity.context);
+		routesListViewAdapter = new ListViewCustomAdapter(this);
+		listView.setAdapter(routesListViewAdapter);
 		setContentView(R.layout.activity_bus_routes);
-		setBehindContentView(R.layout.activity_schedule);
+		setBehindContentView(listView);
 		
 		//Grab the mapView
 		gMapView = (MapView)findViewById(R.id.mapview);
@@ -371,11 +378,9 @@ public class BusRoutesActivity extends SlidingMapActivity {
 			String result = "";
 			URL locationFeedURL;
 			URL publicFeedURL;
-			URL stopsURL;
 			try {
 				locationFeedURL = new URL(locationFeedLink);
 				publicFeedURL = new URL(publicFeedLink);
-				stopsURL = new URL(stopsLink);
 			} catch (MalformedURLException e1) {
 				Log.d("GetXmlDataTask", "Error with opening URL");
 				e1.printStackTrace();
@@ -390,17 +395,17 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		}
 
 		protected void onCancelled() {
-			Log.i("GetLocationsTask", "GetLocations task Cancelled");
+			Log.i("GetXmlDataTask", "GetXml task Cancelled");
 		}
 
 		// Now that route data are loaded, execute the method to overlay the route on the map
 		protected void onPostExecute(String result) {
-			Log.i("GetLocationsTask", "Locations XML data transfer complete");
+			Log.i("GetXmlDataTask", "Locations and public feed XML data transfer complete");
 			setBusOverlays();
 		}
 
 		protected void onPreExecute() {
-			Log.i("GetLocationsTask","Ready to load URL");
+			Log.i("GetXmlDataTask","Ready to load URL");
 		}
 
 		protected void onProgressUpdate(String... values) {
