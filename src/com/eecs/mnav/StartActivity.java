@@ -72,7 +72,7 @@ public class StartActivity extends Activity implements TextWatcher {
 
 		}
 
-		Cursor cursor = destination_db.getAllBldgs();
+		Cursor cursor = destination_db.getAllBldgAbbrs();
 
 		ArrayList<String> strings = new ArrayList<String>();
 		for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
