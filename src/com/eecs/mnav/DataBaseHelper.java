@@ -157,4 +157,9 @@ public class DataBaseHelper extends SQLiteOpenHelper{
 	public Cursor getAllBldgs() {
 		return myDataBase.rawQuery("SELECT name_full, name_abbr FROM buildings", null);
 	}
+
+	public Cursor getSections(String classname) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
