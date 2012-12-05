@@ -212,6 +212,13 @@ public class StartActivity extends Activity implements TextWatcher {
 
 
 		});
+		
+		button_bus_routes.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				Intent intent = new Intent(StartActivity.this, BusRoutesActivity.class);
+				StartActivity.this.startActivity(intent);
+			}
+		});
 
 		button_app_info.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
