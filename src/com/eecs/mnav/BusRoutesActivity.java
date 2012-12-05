@@ -96,6 +96,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		listView.setAdapter(routesListViewAdapter);
 		setContentView(R.layout.activity_bus_routes);
 		setBehindContentView(listView);
+		getSlidingMenu().setBehindOffset(100);
 		
 		//Grab the mapView
 		gMapView = (MapView)findViewById(R.id.mapview);
