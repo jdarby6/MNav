@@ -127,7 +127,7 @@ public class MNavMainActivity extends MapActivity {
 		double longitude;
 	}
 	private Coords doors[];
-	int num_doors;
+	int num_doors = -1;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -215,12 +215,17 @@ public class MNavMainActivity extends MapActivity {
 						gDestNum = tempAddress.substring(0,tempAddress.indexOf(" "));
 						gDestName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
 						Log.d("Search Button", "Matches REGEX_ROOM_NUM! RoomNum="+gDestNum+" BldgName="+gDestName);
+					} else if(tempAddress.matches(StartActivity.REGEX_ROOM_NUM_AFTER)) {
+						gDestName = tempAddress.substring(0,tempAddress.indexOf(" "));
+						gDestNum = tempAddress.substring(tempAddress.indexOf(" ")).trim();
+						Log.d("Schedule Button", "Matches REGEX_ROOM_NUM_AFTER! RoomNum="+gDestNum+" BldgName="+gDestName);
 					} else {//It should just be the name of the bldg
 						gDestName = tempAddress;
+						gDestName.trim();
 						gDestNum = "";
 						Log.d("Search Button", "Matches REGEX_BLDG_NAME! RoomNum="+gDestNum+" BldgName="+gDestName);
 					}
-				} else{// if(tempAddress != null && tempAddress.length() > 0){
+				} else{
 					//It doesn't match our regEx so it's an invalid entry.
 					tvDestInfo.setVisibility(TextView.VISIBLE);
 					tvDestInfo.setText("Invalid destination entry.");
@@ -768,8 +773,6 @@ public class MNavMainActivity extends MapActivity {
 						public void onClick(DialogInterface dialog,int id) {
 							// if this button is clicked, just close
 							// the dialog box and do nothing
-
-							MNavMainActivity.this.finish();
 							dialog.cancel();
 						}
 					});

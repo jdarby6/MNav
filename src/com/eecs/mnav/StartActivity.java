@@ -42,6 +42,7 @@ public class StartActivity extends Activity implements TextWatcher {
 			"TH", "FR", "SA"};
 	public static final String REGEX_ROOM_NUM = "^[0-9]{1,4} [a-zA-Z]+ *";
 	public static final String REGEX_BLDG_NAME = "^[a-zA-Z][a-zA-Z &]+";
+	public static final String REGEX_ROOM_NUM_AFTER = "^[a-zA-Z][a-zA-Z&]{1,6} [0-9]{1,4}";
 	public static String sPref = null;
 
 	private DataBaseHelper destination_db;
@@ -178,12 +179,16 @@ public class StartActivity extends Activity implements TextWatcher {
 				
 				if(found){
 				gInputFeedback.setText("");
-				if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME)) {
+				if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME) || tempAddress.matches(REGEX_ROOM_NUM_AFTER)) {
 					if(tempAddress.matches(REGEX_ROOM_NUM)) {
 						destRoomNum = tempAddress.substring(0,tempAddress.indexOf(" "));
 						destBldgName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
 						Log.d("Schedule Button", "Matches REGEX_ROOM_NUM! RoomNum="+destRoomNum+" BldgName="+destBldgName);
-					} else {//It should just be the name of the bldg
+					} else if(tempAddress.matches(REGEX_ROOM_NUM_AFTER)) {
+						destBldgName = tempAddress.substring(0,tempAddress.indexOf(" "));
+						destRoomNum = tempAddress.substring(tempAddress.indexOf(" ")).trim();
+						Log.d("Schedule Button", "Matches REGEX_ROOM_NUM_AFTER! RoomNum="+destRoomNum+" BldgName="+destBldgName);
+					}else {//It should just be the name of the bldg
 						destBldgName = tempAddress;
 						destRoomNum = "";
 						Log.d("Schedule Button", "Matches REGEX_BLDG_NAME! RoomNum="+destRoomNum+" BldgName="+destBldgName);
