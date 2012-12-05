@@ -91,9 +91,9 @@
         android:layout_alignRight="@+id/button_info"
         android:layout_alignTop="@+id/layout_mbus_button"
         android:orientation="vertical" >
-
+
         <Button
-            android:id="@+id/button2"
+            android:id="@+id/button_bldg_finder"
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:layout_gravity="center_horizontal"

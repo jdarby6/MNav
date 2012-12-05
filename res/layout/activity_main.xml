@@ -132,4 +132,21 @@
             android:text="@string/_" />
     </LinearLayout>
 
+    <RelativeLayout
+        android:id="@+id/relativeLayout_destInfoBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/layout_actionbar"
+        android:layout_centerHorizontal="true" >
+
+        <TextView
+            android:id="@+id/textView_destInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/border_tab_bottom"
+            android:text="@string/_"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    </RelativeLayout>
+
 </RelativeLayout>

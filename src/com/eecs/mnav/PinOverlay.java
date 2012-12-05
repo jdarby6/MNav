@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 
 import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.OverlayItem;
@@ -15,7 +16,8 @@ public class PinOverlay extends ItemizedOverlay<OverlayItem> {
 	private ArrayList<OverlayItem> mOverlays = new ArrayList<OverlayItem>();
 	Context mContext;
 	MNavMainActivity gMainActivity = null;
-
+	
+	
 
 	public PinOverlay(Drawable defaultMarker) {
 		super(boundCenterBottom(defaultMarker));
@@ -39,12 +41,20 @@ public class PinOverlay extends ItemizedOverlay<OverlayItem> {
 		populate();
 	}
 
+	public void addOverlayNoPopulate(OverlayItem overlay) {
+		mOverlays.add(overlay);
+	}
+	
+	public void populateOverlay(){
+		populate();
+	}
+	
 	@Override
 	protected OverlayItem createItem(int i) {
 		return mOverlays.get(i);
 	}
-
-	public void replaceOverlay(OverlayItem overlay, int i) {
+	
+	public void replaceOverlayByIndex(OverlayItem overlay, int i) {
 		mOverlays.remove(i);
 		mOverlays.add(i, overlay);
 		populate();

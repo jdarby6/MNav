@@ -68,9 +68,9 @@
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="10dp"
         android:orientation="vertical" >
-
+
         <Button
-            android:id="@+id/button1"
+            android:id="@+id/button_bus_routes"
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:layout_gravity="center_horizontal"
@@ -92,9 +92,9 @@
         android:layout_alignRight="@+id/button_info"
         android:layout_alignTop="@+id/layout_mbus_button"
         android:orientation="vertical" >
-
+
         <Button
-            android:id="@+id/button2"
+            android:id="@+id/button_bldg_finder"
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:layout_gravity="center_horizontal"
@@ -119,12 +119,13 @@
         android:layout_alignTop="@+id/layout_mbus_button"
         android:layout_marginLeft="23dp"
         android:orientation="vertical" >
-
+
         <Button
             android:id="@+id/button_schedule"
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:layout_gravity="center_horizontal"
+            android:background="@drawable/button_schedule_drawable"
             android:text="@string/_" />
 
         <TextView
