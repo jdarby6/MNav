@@ -71,9 +71,9 @@ public class BusRoutesActivity extends SlidingMapActivity {
 	static ArrayList<Item> items;
 	static ArrayList<Route> routes;
 
-	static final String locationFeedURL = "http://mbus.pts.umich.edu/shared/location_feed.xml";
-	static final String publicFeedURL = "http://mbus.pts.umich.edu/shared/public_feed.xml";
-	static final String stopsURL = "http://mbus.pts.umich.edu/shared/stop.xml";
+	static final String locationFeedLink = "http://mbus.pts.umich.edu/shared/location_feed.xml";
+	static final String publicFeedLink = "http://mbus.pts.umich.edu/shared/public_feed.xml";
+	static final String stopsLink = "http://mbus.pts.umich.edu/shared/stop.xml";
 
 	//Number of points to interpolate a move by (chop up the update of bus icon into this many parts
 	//before fetching the XML again)
@@ -161,7 +161,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 
 		startGPS();
 		zoomTo(new GeoPoint((int)(gDefaultLat*1E6), (int)(gDefaultLong*1E6)), gDefaultZoom);
-		new GetXmlDataTask().execute(locationFeedURL);
+		new GetXmlDataTask().execute((String[])null);
 		m_handler = new Handler();
 		startRepeatingTask();
 
@@ -285,7 +285,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		public void run() {
 			Log.d("Ya", "I'm all runnable");
 
-			new GetXmlDataTask().execute(locationFeedURL);
+			new GetXmlDataTask().execute((String[]) null);
 
 			m_handler.postDelayed(m_statusChecker, m_interval);
 		}
@@ -363,16 +363,19 @@ public class BusRoutesActivity extends SlidingMapActivity {
 			return "";
 	}
 
-	//Generalized AsyncTask for any XML parsing that needs to be done. Calls appropriate class based on the
-	//link it's given
+	//Generalized AsyncTask for any XML parsing that needs to be done. 
 	private class GetXmlDataTask extends AsyncTask<String, String, String> {
 
 		@Override
 		protected String doInBackground(String... params) {
 			String result = "";
-			URL url;
+			URL locationFeedURL;
+			URL publicFeedURL;
+			URL stopsURL;
 			try {
-				url = new URL(params[0]);
+				locationFeedURL = new URL(locationFeedLink);
+				publicFeedURL = new URL(publicFeedLink);
+				stopsURL = new URL(stopsLink);
 			} catch (MalformedURLException e1) {
 				Log.d("GetXmlDataTask", "Error with opening URL");
 				e1.printStackTrace();
@@ -380,8 +383,8 @@ public class BusRoutesActivity extends SlidingMapActivity {
 				return "Error with opening URL";
 			}
 
-			if(params[0].equals(locationFeedURL))
-				result = MbusLocationFeedXmlParser.parse(url);
+			result = MbusLocationFeedXmlParser.parse(locationFeedURL);
+			result = MbusPublicFeedXmlParser.parse(publicFeedURL);
 
 			return result;
 		}

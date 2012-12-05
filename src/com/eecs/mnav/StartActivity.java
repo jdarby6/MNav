@@ -1,14 +1,8 @@
 package com.eecs.mnav;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
-
-import org.xmlpull.v1.XmlPullParserException;
 
 import android.app.Activity;
 import android.content.Context;
@@ -17,7 +11,6 @@ import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.graphics.Color;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Editable;
@@ -32,7 +25,6 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class StartActivity extends Activity implements TextWatcher {
 	//start page items;
@@ -237,24 +229,22 @@ public class StartActivity extends Activity implements TextWatcher {
 	}
 
 	public void afterTextChanged(Editable arg0) {
-		// TODO Auto-generated method stub
 
 	}
 
 	public void beforeTextChanged(CharSequence s, int start, int count,
 			int after) {
-		// TODO Auto-generated method stub
 
 	}
 
 	public void onTextChanged(CharSequence s, int start, int before, int count) {
-		// TODO Auto-generated method stub
 
 	}
 
 	/** Helper function for displaying a toast. Takes the string to be displayed and the length: LONG or SHORT **/
-	private void toastThis(String toast, int duration) {
+/*	private void toastThis(String toast, int duration) {
 		Toast t = Toast.makeText(context, toast, duration);
 		t.show();
 	}
+*/
 }

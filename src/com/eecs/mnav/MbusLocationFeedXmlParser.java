@@ -21,7 +21,6 @@ public class MbusLocationFeedXmlParser {
 	}
 
 	public static String parse(URL text) {
-		// This pattern takes more than one param but we'll just use the first
 		try {
 			XmlPullParserFactory parserCreator;
 			parserCreator = XmlPullParserFactory.newInstance();

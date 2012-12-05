@@ -1,21 +1,21 @@
 package com.eecs.mnav;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 
 import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
 
 import android.util.Log;
-import android.util.Xml;
+
+import com.eecs.mnav.MbusLocationFeedXmlParser.Item;
 
 public class MbusPublicFeedXmlParser {
 	// We don't use namespaces
 	private static final String ns = null;
 	
 	public static class Route {
-		public String routeName;
+		public String name;
 		public String id;
 		public String topofloop;
 		public String busroutecolor;
@@ -24,9 +24,9 @@ public class MbusPublicFeedXmlParser {
 	}
 
 	public static class Stop {
-		public String stopName;
-		public String stopName2;
-		public String stopName3;
+		public String name;
+		public String name2;
+		public String name3;
 		public String latitude;
 		public String longitude;
 		public ArrayList<String> ids;
@@ -34,137 +34,88 @@ public class MbusPublicFeedXmlParser {
 		public String toacount;
 	}
 
-	public void parse(URL text) throws XmlPullParserException, IOException {
+	public static String parse(URL text) {
 		try {
-			XmlPullParser parser = Xml.newPullParser();
-			parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
+			XmlPullParserFactory parserCreator;
+			parserCreator = XmlPullParserFactory.newInstance();
+			XmlPullParser parser = parserCreator.newPullParser();
 			parser.setInput(text.openStream(), null);
-			parser.nextTag();
-			readFeed(parser);
-		} catch(Exception e) {
-			Log.d("MbusPublicFeedXmlParser", "whups");
+
+			Log.d("MbusPublicFeedXmlParser", "Parsing XML...");
+
+			int parserEvent = parser.getEventType();
+			Route currentRoute;
+			Stop currentStop;
+			BusRoutesActivity.routes = new ArrayList<Route>();
+
+			// Parse the XML returned on the network
+			while (parserEvent != XmlPullParser.END_DOCUMENT) {
+				switch (parserEvent) {
+				case XmlPullParser.START_TAG:
+					String tag = parser.getName();
+					if(tag.compareTo("route") == 0) {
+						parser.require(XmlPullParser.START_TAG, null, "route");
+						currentRoute = new Route();
+						currentRoute.stops = new ArrayList<Stop>();
+						while (parser.next() != XmlPullParser.END_TAG) {
+							if (parser.getEventType() != XmlPullParser.START_TAG) {
+								continue;
+							}
+							String name = parser.getName();
+							if (name.equals("name")) {
+								currentRoute.name = BusRoutesActivity.readText(parser);
+							} else if (name.equals("id")) {
+								currentRoute.id = BusRoutesActivity.readText(parser);
+							} else if (name.equals("topofloop")) {
+								currentRoute.topofloop = BusRoutesActivity.readText(parser);
+							} else if (name.equals("busroutecolor")) {
+								currentRoute.busroutecolor = BusRoutesActivity.readText(parser);
+							} else if (name.equals("stop")) {
+								parser.require(XmlPullParser.START_TAG, null, "stop");
+								currentStop = new Stop();
+								currentStop.toas = new ArrayList<String>();
+								currentStop.ids = new ArrayList<String>();
+								while (parser.next() != XmlPullParser.END_TAG) {
+									if (parser.getEventType() != XmlPullParser.START_TAG) {
+										continue;
+									}
+									name = parser.getName();
+									if (name.equals("name")) {
+										currentStop.name = BusRoutesActivity.readText(parser);
+									} else if (name.equals("name2")) {
+										currentStop.name2 = BusRoutesActivity.readText(parser);
+									} else if (name.equals("name3")) {
+										currentStop.name3 = BusRoutesActivity.readText(parser);
+									} else if (name.equals("latitude")) {
+										currentStop.latitude = BusRoutesActivity.readText(parser);
+									} else if (name.equals("longitude")) {
+										currentStop.longitude = BusRoutesActivity.readText(parser);
+									} else if (name.regionMatches(0, "toa", 0, 3)) {
+										currentStop.toas.add(BusRoutesActivity.readText(parser));
+									} else if (name.regionMatches(0, "id", 0, 2)) {
+										currentStop.ids.add(BusRoutesActivity.readText(parser));
+									} else if (name.equals("toacount")) {
+										currentStop.toacount = BusRoutesActivity.readText(parser);
+									}
+									parserEvent = parser.next();
+								}
+								currentRoute.stops.add(currentStop);
+							} else if (name.equals("stopcount")) {
+								currentRoute.stopcount = BusRoutesActivity.readText(parser);
+							}
+							parserEvent = parser.next();
+						}
+						BusRoutesActivity.routes.add(currentRoute);
+					}
+					break;
+				}
+				parserEvent = parser.next();
+			}
+		} catch (Exception e) {
+			Log.i("RouteLoader", "Failed in parsing XML", e);
+			return "Finished with failure.";
 		}
-	}
 
-	private void readFeed(XmlPullParser parser) throws XmlPullParserException, IOException {
-		BusRoutesActivity.routes = new ArrayList<Route>();
-
-		parser.require(XmlPullParser.START_TAG, ns, "livefeed");
-		while (parser.next() != XmlPullParser.END_TAG) {
-			if (parser.getEventType() != XmlPullParser.START_TAG) {
-				continue;
-			}
-			String name = parser.getName();
-			// Starts by looking for the entry tag
-			if (name.equals("route")) {
-				BusRoutesActivity.routes.add(readRoute(parser));
-			}
-			else if (name.equals("routecount")) {
-				//do something else
-			}
-			else {
-				skip(parser);
-			}
-		}
-	}
-
-	// Parses the contents of a route entry. When it comes across a "stop" tag, grabs its info
-	// recursively before moving on
-	private Route readRoute(XmlPullParser parser) throws XmlPullParserException, IOException {
-		parser.require(XmlPullParser.START_TAG, ns, "route");
-		
-		Route currentRoute = new Route();
-
-		while (parser.next() != XmlPullParser.END_TAG) {
-			if (parser.getEventType() != XmlPullParser.START_TAG) {
-				continue;
-			}
-			String name = parser.getName();
-			if (name.equals("name")) {
-				currentRoute.routeName = readTag(parser, "name");
-			} else if (name.equals("id")) {
-				currentRoute.id = readTag(parser, "id");
-			} else if (name.equals("topofloop")) {
-				currentRoute.topofloop = readTag(parser, "topofloop");
-			} else if (name.equals("busroutecolor")) {
-				currentRoute.busroutecolor = readTag(parser, "busroutecolor");
-			} else if (name.equals("stop")) {
-				currentRoute.stops.add(readStop(parser));
-			} else if (name.equals("stopcount")) {
-				currentRoute.stopcount = readTag(parser, "stopcount");
-			} else {
-				skip(parser);
-			}
-		}
-		return currentRoute;
-	}
-
-	// Parses the contents of a stop entry.
-	private Stop readStop(XmlPullParser parser) throws XmlPullParserException, IOException {
-		parser.require(XmlPullParser.START_TAG, ns, "stop");
-		
-		Stop currentStop = new Stop();
-
-		while (parser.next() != XmlPullParser.END_TAG) {
-			if (parser.getEventType() != XmlPullParser.START_TAG) {
-				continue;
-			}
-			String name = parser.getName();
-			if (name.equals("name")) {
-				currentStop.stopName = readTag(parser, "name");
-			} else if (name.equals("name2")) {
-				currentStop.stopName2 = readTag(parser, "name2");
-			} else if (name.equals("name3")) {
-				currentStop.stopName3 = readTag(parser, "name3");
-			} else if (name.equals("latitude")) {
-				currentStop.latitude = readTag(parser, "latitude");
-			} else if (name.equals("longitude")) {
-				currentStop.longitude = readTag(parser, "longitude");
-			} else if (name.matches("id[0-9]")) {
-				currentStop.ids.add(readTag(parser, name));
-			} else if (name.matches("toa[0-9]")) {
-				currentStop.toas.add(readTag(parser, name));
-			} else if (name.equals("toacount")) {
-				currentStop.toacount = readTag(parser, "toacount");
-			} else {
-				skip(parser);
-			}
-		}
-		return currentStop;
-	}
-
-	// Processes basic tags in the feed.
-	private String readTag(XmlPullParser parser, String tagName) throws IOException, XmlPullParserException {
-		parser.require(XmlPullParser.START_TAG, ns, tagName);
-		String tagText = readText(parser);
-		parser.require(XmlPullParser.END_TAG, ns, tagName);
-		return tagText;
-	}
-
-	// For all tags besides "stop", extracts text values.
-	private String readText(XmlPullParser parser) throws IOException, XmlPullParserException {
-		String result = "";
-		if (parser.next() == XmlPullParser.TEXT) {
-			result = parser.getText();
-			parser.nextTag();
-		}
-		return result;
-	}
-
-	private void skip(XmlPullParser parser) throws XmlPullParserException, IOException {
-		if (parser.getEventType() != XmlPullParser.START_TAG) {
-			throw new IllegalStateException();
-		}
-		int depth = 1;
-		while (depth != 0) {
-			switch (parser.next()) {
-			case XmlPullParser.END_TAG:
-				depth--;
-				break;
-			case XmlPullParser.START_TAG:
-				depth++;
-				break;
-			}
-		}
+		return "Done...";
 	}
 }
