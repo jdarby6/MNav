@@ -23,6 +23,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
@@ -88,7 +89,8 @@ public class MNavMainActivity extends MapActivity {
 	private LocationManager gLocationManager;
 	private SharedPreferences gPreferences = null;
 	private GetDirectionsTask gOurGetDirectionsTask = null;
-
+	private Handler uiHandler;
+	
 	//Overlay globals
 	private PinOverlay gPinOverlay = null;
 	private RouteOverlay gRouteOverlay = null;
@@ -133,12 +135,26 @@ public class MNavMainActivity extends MapActivity {
 		Log.d("OnCreate()", "OnCreate() called");
 		setContentView(R.layout.activity_main);
 		
+		//Grab the mapView
+		gMapView = (MapView)findViewById(R.id.mapview);
+		try {
+			Method setLayerTypeMethod = gMapView.getClass().getMethod("setLayerType", new Class[] {int.class, Paint.class});
+			setLayerTypeMethod.invoke(gMapView, new Object[] {LAYER_TYPE_SOFTWARE, null});
+		} catch (NoSuchMethodException e) {
+			// Older OS, no HW acceleration anyway
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+		}
+		
 		tvDestInfo = (TextView) findViewById(R.id.textView_destInfo);
 		tvDestInfo.setVisibility(TextView.INVISIBLE);
 		
 		//Initialize local db
 		local_db = new LocalDatabaseHandler(this);
-
 		//Initialize destination db
 		destination_db = new DataBaseHelper(this, "destination_db");
 		try {
@@ -154,14 +170,13 @@ public class MNavMainActivity extends MapActivity {
 		//Initialize Parse
 		Parse.initialize(this, "kTygJWFcKh5a9OK7Pv58mTZtfkS7Sp91cpVyIiwc", "j8fsAwMny2P7y4iLRZNY8ABhK5oF2AV3rQe2MTdO");
 
+		//Initialize UI handler
+		uiHandler = new Handler();
+		
 		//Load stored data
 		gPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-		//Load destination address, default is the Diag
 		gDestName = gPreferences.getString("DESTNAME", "the diag");
-		//DestName should be free of numbers and excess space now,  but just in case we'll keep the next line
-		gDestName = gDestName.replaceAll("[0-9]", "").trim();
 		gDestNum = gPreferences.getString("DESTNUM", "");
-
 		hasSeenAlert1 = gPreferences.getBoolean("A1", false);
 		hasSeenAlert2 = gPreferences.getBoolean("A2", false);
 		hasSeenAlert3 = gPreferences.getBoolean("A3", false);
@@ -175,25 +190,15 @@ public class MNavMainActivity extends MapActivity {
 			digIntoDatabaseForBuildingInformationAndStuff();
 		}
 
+		buildAlertDialog(ALERT_INTRO_PROMPT_1);
+		
 		editTextDestination = (EditText)findViewById(R.id.editText_map_destination);
 		if(!gDestName.equals("the diag"))
 			editTextDestination.setText(gDestName);
-		
-		//Grab the mapView
-		gMapView = (MapView)findViewById(R.id.mapview);
-		try {
-			Method setLayerTypeMethod = gMapView.getClass().getMethod("setLayerType", new Class[] {int.class, Paint.class});
-			setLayerTypeMethod.invoke(gMapView, new Object[] {LAYER_TYPE_SOFTWARE, null});
-		} catch (NoSuchMethodException e) {
-			// Older OS, no HW acceleration anyway
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-		}
 
+		//---------------------
+		//PLOT ROUTE BUTTON
+		//---------------------
 		bPlotRoute = (Button) findViewById(R.id.button_plotroute);
 		bPlotRoute.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
@@ -215,7 +220,7 @@ public class MNavMainActivity extends MapActivity {
 						gDestNum = "";
 						Log.d("Search Button", "Matches REGEX_BLDG_NAME! RoomNum="+gDestNum+" BldgName="+gDestName);
 					}
-				} else if(tempAddress != null && tempAddress.length() > 0){
+				} else{// if(tempAddress != null && tempAddress.length() > 0){
 					//It doesn't match our regEx so it's an invalid entry.
 					tvDestInfo.setVisibility(TextView.VISIBLE);
 					tvDestInfo.setText("Invalid destination entry.");
@@ -231,28 +236,24 @@ public class MNavMainActivity extends MapActivity {
 				findClosestDoor();
 				
 				//create a geopoint for dest
-				ArrayList<GeoPoint> tmpGeo = new ArrayList<GeoPoint>();
 				GeoPoint dest = getDirections(); //Query Google for directions to dest and return the dest 
-				tmpGeo.add(dest);
 				gMapView.getOverlays().remove(OVERLAY_PIN_ID);
-				ArrayList<String> tmpString= new ArrayList<String>();
-				tmpString.add(gDestName_full);
-				putPinsOnMap(tmpGeo, tmpString);
+				putPinOnMap(dest, gDestName_full);
 				gMapView.invalidate();
-				
-				zoomTo(tmpGeo.get(0), ZOOM_LEVEL_BUILDING);
+				zoomTo(dest, ZOOM_LEVEL_BUILDING);
 			}
 
 			//	}
 		});
-
-
+		
+		//---------------------
+		//SATELLITE BUTTON
+		//---------------------
 		bSatellite = (Button) findViewById(R.id.button_satellite);
 		if(!gMapView.isSatellite())
 			bSatellite.setBackgroundResource(R.drawable.ic_road);
 		else
 			bSatellite.setBackgroundResource(R.drawable.ic_satellite);
-
 		bSatellite.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				if(gMapView.isSatellite()){
@@ -267,11 +268,14 @@ public class MNavMainActivity extends MapActivity {
 			}
 		});
 
+		//---------------------
+		//Targetting BUTTON
+		//---------------------
 		bTargetReticle = (Button) findViewById(R.id.button_return);
 		bTargetReticle.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				startGPS();
-				//		GeoPoint currentLoc = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
+				//startGPS();
+				//GeoPoint currentLoc = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
 				GeoPoint currentLoc = gMyLocationOverlay.getMyLocation();
 				zoomTo(currentLoc, ZOOM_LEVEL_BUILDING);
 				buildAlertDialog(ALERT_INTRO_PROMPT_3);
@@ -287,6 +291,9 @@ public class MNavMainActivity extends MapActivity {
 			}
 		});
 
+		//---------------------
+		//Zoom IN BUTTON
+		//---------------------
 		bZoomIn = (Button) findViewById(R.id.button_zoomin);
 		bZoomIn.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
@@ -295,7 +302,9 @@ public class MNavMainActivity extends MapActivity {
 				gMapController.zoomIn();
 			}
 		});
-
+		//---------------------
+		//Zoom OUT BUTTON
+		//---------------------
 		bZoomOut = (Button) findViewById(R.id.button_zoomout);
 		bZoomOut.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
@@ -305,7 +314,8 @@ public class MNavMainActivity extends MapActivity {
 			}
 		});
 
-		startGPS();
+		
+		//startGPS();
 	}
 
 	@Override
@@ -454,10 +464,15 @@ public class MNavMainActivity extends MapActivity {
 
 			bViewMap.setOnClickListener(new Button.OnClickListener() {
 				public void onClick(View v) {
+					if(gDestName_full.equals("the diag")){
+						removeDialog(DIALOG_DESTINATION_BLDG);
+					}
+					else{
 					//Call intent to new activity
 					Intent intent = new Intent(MNavMainActivity.this, BuildingMapActivity.class);
 					startActivity(intent);
 					removeDialog(DIALOG_DESTINATION_BLDG);
+					}
 				}
 			});
 
@@ -625,70 +640,52 @@ public class MNavMainActivity extends MapActivity {
 		alertDialog.show();
 	}
 
+	//Adds MyLocationOverlay, ScaleBarOverlay, and PinOverlay with single dest pin
 	public void initOverlays() {
 		//Remove all existing overlays
 		List<Overlay> mapOverlays = gMapView.getOverlays();
 		mapOverlays.clear();
-
-		Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
-		//Create our route overlay
-	//	gPinOverlay = new PinOverlay(drawable, this);
-		//gPinOverlay.setTapListener(this);
-		/**
-		 * OverlayItem overlayitem = new OverlayItem(p, "Current Location", "You are here!");
-		 * gRouteOverlay.addOverlay(overlayitem);
-		 * mapOverlays.add(gRouteOverlay);
-		 *
-		 **/
-
+		
+		//Start with putting our own location on the map
 		gMyLocationOverlay = new MyLocationOverlay(this, gMapView);
 		mapOverlays.add(OVERLAY_MYLOC_ID, gMyLocationOverlay);
-
 		gMyLocationOverlay.enableMyLocation();
-
+		//Run this block of code after finding our first location fix
+		gMyLocationOverlay.runOnFirstFix(new Runnable() {
+			public void run() {
+				//If we haven't seen alert1 or if no location was entered, center on self
+				if(!hasSeenAlert1 || gDestName.equals("the diag")){
+					GeoPoint p = gMyLocationOverlay.getMyLocation();
+					if(gMapController == null)
+						gMapController = gMapView.getController();
+						gMapController.animateTo(p);
+						gMapController.setZoom(ZOOM_LEVEL_SKY);
+				}
+				//Now query last known destination (or default destination)
+				GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
+				//Find the closest door
+				if(findClosestDoor()) {
+					Log.d("ClosestDoor", "Found closest door!");
+					//If we found the closest door,
+					//create a geopoint for that door destination
+					dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
+				}
+				//Now take whatever destination we have now (either default, last known, or new closest door)
+				//Put it in overlay item and add pin to map
+				putPinOnMap(dest, gDestName_full);
+				uiHandler.removeCallbacks(invalidateMapFromHandler);
+				uiHandler.post(invalidateMapFromHandler);
+				
+				//If we have seen alert1 and there is a location, zoom to that location
+				if(hasSeenAlert1 && !gDestName.equals("the diag"))
+					zoomTo(dest, ZOOM_LEVEL_BUILDING);
+			}
+		});
 
 		//Create the scalebar and add it to mapview
 		gScaleBarOverlay = new ScaleBarOverlay(this.getBaseContext(), gMapView);
 		gScaleBarOverlay.setImperial();
 		mapOverlays.add(OVERLAY_SCALEBAR_ID, gScaleBarOverlay);
-		
-		toastThis(gDestinationLat+","+gDestinationLong,LONG);
-		toastThis("numDoors:"+num_doors, LONG);
-		
-		if(hasSeenAlert1 && !gDestName.equals("the diag")){
-			//Contemplate Life
-		} else {
-			gProgressDialog = new ProgressDialog(this);
-			gProgressDialog.setMessage("Finding you...");
-			gProgressDialog.setCancelable(false);
-			gProgressDialog.setIndeterminate(true);
-			gProgressDialog.show();
-		}
-		gMyLocationOverlay.runOnFirstFix(new Runnable() {
-			public void run() {
-				if(!(hasSeenAlert1 && !gDestName.equals("the diag"))){
-				gProgressDialog.dismiss();
-				GeoPoint p = gMyLocationOverlay.getMyLocation();
-				if(gMapController == null)
-					gMapController = gMapView.getController();
-				gMapController.animateTo(p);
-				gMapController.setZoom(ZOOM_LEVEL_SKY);
-				}
-				GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
-				//THIS IS WHERE WE FIND THE CLOSEST SEARCH RESULT
-				if(findClosestDoor()) {
-					Log.d("ClosestDoor", "Found closest door!");
-					
-					//create a geopoint for dest
-					dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
-					OverlayItem overlayitem = new OverlayItem(dest, "gDestName_full", "This is your current destination");
-					gPinOverlay.addOverlay(overlayitem);
-					gMapView.getOverlays().add(OVERLAY_PIN_ID, gPinOverlay);
-				}
-				if(hasSeenAlert1 && !gDestName.equals("the diag"))
-					zoomTo(dest, ZOOM_LEVEL_BUILDING);
-			}
-		});
 	}
 
 	private Route directions(final GeoPoint start, final GeoPoint dest) {
@@ -942,7 +939,6 @@ public class MNavMainActivity extends MapActivity {
 		//Grab a cursor	
 		Cursor cursor = destination_db.getBldgIdByName(gDestName);
 		if(cursor.getCount() > 0 && cursor.moveToFirst()) { //Destination is there, so show dialog and grab info
-			buildAlertDialog(ALERT_INTRO_PROMPT_1);
 			//find column containing bldg num
 			int bldg_num_col = cursor.getColumnIndex("bldg_num");
 			int bldg_num = cursor.getInt(bldg_num_col);
@@ -982,6 +978,7 @@ public class MNavMainActivity extends MapActivity {
 		}
 	}
 	
+	//Creates new PinOverlay and places array of pins on map
 	private void putPinsOnMap(ArrayList<GeoPoint> pinLocation, ArrayList<String> names) {
 		OverlayItem tmpItem;
 		Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
@@ -996,17 +993,27 @@ public class MNavMainActivity extends MapActivity {
 		gMapView.getOverlays().add(OVERLAY_PIN_ID, gPinOverlay);
 	}
 	
-/*	private void removePinFromMap(GeoPoint pinLocation) {
+	//Creates new pin overlay and places single pin on map
+	private void putPinOnMap(GeoPoint pinLocation, String name) {
+		OverlayItem tmpItem;
+		Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
+		//Create our route overlay
+		gPinOverlay = new PinOverlay(drawable, this);
+		gPinOverlay.setTapListener(this);
+		tmpItem = new OverlayItem(pinLocation, name, "This is your current destination");
+		gPinOverlay.addOverlay(tmpItem);
+		gMapView.getOverlays().add(OVERLAY_PIN_ID, gPinOverlay);
+	}
+	
+	private void removePinsFromMap() {
 		if(gMapController == null)
 			gMapController = gMapView.getController();
 	}
 	
-	private void replacePinOnMap(GeoPoint oldPin, GeoPoint newPin) {
-		if(gMapController == null)
-			gMapController = gMapView.getController();
-		OverlayItem oldItem = new OverlayItem(oldPin, "gDestName_full", "This is your current destination");
-		OverlayItem newItem = new OverlayItem(newPin, "gDestName_full", "This is your current destination");
-		gPinOverlay.replaceOverlayWithOverlay(oldItem, newItem);
-	}*/
+	private Runnable invalidateMapFromHandler = new Runnable(){
+		public void run() {
+			gMapView.invalidate();
+		}
+	};
 	
 }
