@@ -8,11 +8,7 @@ import org.xmlpull.v1.XmlPullParserFactory;
 
 import android.util.Log;
 
-import com.eecs.mnav.MbusLocationFeedXmlParser.Item;
-
 public class MbusPublicFeedXmlParser {
-	// We don't use namespaces
-	private static final String ns = null;
 	
 	public static class Route {
 		public String name;
