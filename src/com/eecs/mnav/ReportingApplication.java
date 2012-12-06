@@ -7,7 +7,7 @@ import android.app.Application;
 				mode = ReportingInteractionMode.TOAST,
 				forceCloseDialogAfterToast = false, // optional, default false
 				resToastText = R.string.crash_toast_text,
-				logcatArguments = { "-t", "50", "-v", "time" }) 
+				logcatArguments = { "-t", "100", "-v", "time" }) 
 public class ReportingApplication extends Application{
 	 @Override
 	  public void onCreate() {
