@@ -38,6 +38,7 @@ public class StartActivity extends Activity implements TextWatcher {
 	private AutoCompleteTextView address_box;
 	private Button schedule;
 	private Button button_bus_routes;
+	private Button button_building_finder;
 	private Button button_app_info;
 	private TextView gInputFeedback;
 
@@ -68,7 +69,7 @@ public class StartActivity extends Activity implements TextWatcher {
 		
 		//Initialize Parse
 		Parse.initialize(this, "kTygJWFcKh5a9OK7Pv58mTZtfkS7Sp91cpVyIiwc", "j8fsAwMny2P7y4iLRZNY8ABhK5oF2AV3rQe2MTdO");
-		
+
 		//Initialize destination db
 		destination_db = new DataBaseHelper(this, "destination_db");
 		try {
@@ -85,12 +86,13 @@ public class StartActivity extends Activity implements TextWatcher {
 
 		}
 
-		Cursor cursor = destination_db.getAllBldgAbbrs();
+		Cursor cursor = destination_db.getAllBldgs();
 
 		ArrayList<String> strings = new ArrayList<String>();
 		for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
-			String mTitleRaw = cursor.getString(0);
-			strings.add(mTitleRaw);
+			String full_name = cursor.getString(0);
+			String abbr_name = cursor.getString(1);
+			strings.add(abbr_name+": " + full_name);
 		}
 
 		cursor.close();
@@ -101,6 +103,7 @@ public class StartActivity extends Activity implements TextWatcher {
 		search = (Button)findViewById(R.id.button_search);
 		schedule = (Button)findViewById(R.id.button_schedule);
 		button_bus_routes = (Button)findViewById(R.id.button_bus_routes);
+		button_building_finder = (Button)findViewById(R.id.button_bldg_finder);
 		button_app_info = (Button)findViewById(R.id.button_info);
 		gInputFeedback = (TextView)findViewById(R.id.textView_input_feedback);
 
@@ -115,6 +118,10 @@ public class StartActivity extends Activity implements TextWatcher {
 				imm.hideSoftInputFromWindow(address_box.getWindowToken(), 0);
 
 				String tempAddress = address_box.getText().toString();
+				if(tempAddress.indexOf(':') != -1) {
+					String destAbbr = tempAddress.substring(0, tempAddress.indexOf(':'));
+					tempAddress = destAbbr;
+				}
 				gInputFeedback.setText("");
 				if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME)) {
 					if(tempAddress.matches(REGEX_ROOM_NUM)) {
@@ -155,7 +162,7 @@ public class StartActivity extends Activity implements TextWatcher {
 
 
 		});
-		
+
 		schedule.setOnLongClickListener(new OnLongClickListener() {
 			public boolean onLongClick(View v) {
 				//reach into db and get current time day
@@ -163,65 +170,72 @@ public class StartActivity extends Activity implements TextWatcher {
 
 
 				Calendar calendar = Calendar.getInstance();
-		        int day = calendar.get(Calendar.DAY_OF_WEEK);
-		        int hour = calendar.get(Calendar.HOUR_OF_DAY);
-		        int time = calendar.get(Calendar.MINUTE)+(hour*60);
-		        
-		        schedule_db = new ScheduleDatabaseHandler(v.getContext());
-		        
-		        String tempAddress = "NULL";
-		        boolean found = false;
-		        int etime = 0;
-		        ArrayList<MEvent>tmp_array = new ArrayList<MEvent>();
-		    	tmp_array = schedule_db.getDay(day_abbrs[day]);
-		    	for(int i = 0; i < tmp_array.size(); i++){
-		    		etime = tmp_array.get(i).getIndex();
-		    		if(time > etime && etime >= (time - 15)){//if event started within past 15 minutes
-		    			found = true;
-		    			tempAddress=tmp_array.get(i).getLocation();
-		    		}
-		    		else if(time<etime && time +30 >= etime){
-		    			found = true;
-		    			tempAddress=tmp_array.get(i).getLocation();
-		    		}
-		    	}
-		    	
-		    	schedule_db.close();
-		    	
-				
-				if(found){
-				gInputFeedback.setText("");
-				if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME) || tempAddress.matches(REGEX_ROOM_NUM_AFTER)) {
-					if(tempAddress.matches(REGEX_ROOM_NUM)) {
-						destRoomNum = tempAddress.substring(0,tempAddress.indexOf(" "));
-						destBldgName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
-						Log.d("Schedule Button", "Matches REGEX_ROOM_NUM! RoomNum="+destRoomNum+" BldgName="+destBldgName);
-					} else if(tempAddress.matches(REGEX_ROOM_NUM_AFTER)) {
-						destBldgName = tempAddress.substring(0,tempAddress.indexOf(" "));
-						destRoomNum = tempAddress.substring(tempAddress.indexOf(" ")).trim();
-						Log.d("Schedule Button", "Matches REGEX_ROOM_NUM_AFTER! RoomNum="+destRoomNum+" BldgName="+destBldgName);
-					}else {//It should just be the name of the bldg
-						destBldgName = tempAddress;
-						destRoomNum = "";
-						Log.d("Schedule Button", "Matches REGEX_BLDG_NAME! RoomNum="+destRoomNum+" BldgName="+destBldgName);
+				int day = calendar.get(Calendar.DAY_OF_WEEK);
+				int hour = calendar.get(Calendar.HOUR_OF_DAY);
+				int time = calendar.get(Calendar.MINUTE)+(hour*60);
+
+				schedule_db = new ScheduleDatabaseHandler(v.getContext());
+
+				String tempAddress = "NULL";
+				boolean found = false;
+				int etime = 0;
+				ArrayList<MEvent>tmp_array = new ArrayList<MEvent>();
+				tmp_array = schedule_db.getDay(day_abbrs[day]);
+				for(int i = 0; i < tmp_array.size(); i++){
+					etime = tmp_array.get(i).getIndex();
+					if(time > etime && etime >= (time - 15)){//if event started within past 15 minutes
+						found = true;
+						tempAddress=tmp_array.get(i).getLocation();
+					}
+					else if(time<etime && time +30 >= etime){
+						found = true;
+						tempAddress=tmp_array.get(i).getLocation();
 					}
 				}
 
-				Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
-				editor.putString("DESTNAME", destBldgName.toUpperCase());
-				editor.putString("DESTROOM", destRoomNum);
-				editor.commit();
+				schedule_db.close();
 
-				Intent searchIntent = new Intent(StartActivity.this, MNavMainActivity.class);
-				StartActivity.this.startActivity(searchIntent);
+
+				if(found){
+					gInputFeedback.setText("");
+					if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME) || tempAddress.matches(REGEX_ROOM_NUM_AFTER)) {
+						if(tempAddress.matches(REGEX_ROOM_NUM)) {
+							destRoomNum = tempAddress.substring(0,tempAddress.indexOf(" "));
+							destBldgName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
+							Log.d("Schedule Button", "Matches REGEX_ROOM_NUM! RoomNum="+destRoomNum+" BldgName="+destBldgName);
+						} else if(tempAddress.matches(REGEX_ROOM_NUM_AFTER)) {
+							destBldgName = tempAddress.substring(0,tempAddress.indexOf(" "));
+							destRoomNum = tempAddress.substring(tempAddress.indexOf(" ")).trim();
+							Log.d("Schedule Button", "Matches REGEX_ROOM_NUM_AFTER! RoomNum="+destRoomNum+" BldgName="+destBldgName);
+						}else {//It should just be the name of the bldg
+							destBldgName = tempAddress;
+							destRoomNum = "";
+							Log.d("Schedule Button", "Matches REGEX_BLDG_NAME! RoomNum="+destRoomNum+" BldgName="+destBldgName);
+						}
+					}
+
+					Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
+					editor.putString("DESTNAME", destBldgName.toUpperCase());
+					editor.putString("DESTROOM", destRoomNum);
+					editor.commit();
+
+					Intent searchIntent = new Intent(StartActivity.this, MNavMainActivity.class);
+					StartActivity.this.startActivity(searchIntent);
 				}
 				return true;
 			}
 		});
-		
+
 		button_bus_routes.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				Intent intent = new Intent(StartActivity.this, BusRoutesActivity.class);
+				StartActivity.this.startActivity(intent);
+			}
+		});
+
+		button_building_finder.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				Intent intent = new Intent(StartActivity.this, BuildingFinderActivity.class);
 				StartActivity.this.startActivity(intent);
 			}
 		});
@@ -289,9 +303,9 @@ public class StartActivity extends Activity implements TextWatcher {
 	}
 
 	/** Helper function for displaying a toast. Takes the string to be displayed and the length: LONG or SHORT **/
-/*	private void toastThis(String toast, int duration) {
+	/*	private void toastThis(String toast, int duration) {
 		Toast t = Toast.makeText(context, toast, duration);
 		t.show();
 	}
-*/
+	 */
 }

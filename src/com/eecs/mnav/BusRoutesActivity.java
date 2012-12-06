@@ -77,7 +77,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 	static final String stopsLink = "http://mbus.pts.umich.edu/shared/stop.xml";
 
 	//Number of points to interpolate a move by (chop up the update of bus icon into this many parts
-	//before fetching the XML again)
+	//before fetching the XML again) - not implemented yet
 	private int splitMove = 10;
 	static BusIconOverlay busIconOverlay;
 
@@ -403,6 +403,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		protected void onPostExecute(String result) {
 			Log.i("GetXmlDataTask", "Locations and public feed XML data transfer complete");
 			setBusOverlays();
+			routesListViewAdapter.notifyDataSetChanged();
 		}
 
 		protected void onPreExecute() {
