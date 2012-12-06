@@ -7,14 +7,18 @@ import java.util.Calendar;
 import com.parse.Parse;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.graphics.Color;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -49,6 +53,7 @@ public class StartActivity extends Activity implements TextWatcher {
 
 	private DataBaseHelper destination_db;
 	private ScheduleDatabaseHandler schedule_db;
+	private LocationManager gLocationManager;
 
 	static Context context;
 
@@ -58,7 +63,9 @@ public class StartActivity extends Activity implements TextWatcher {
 		setContentView(R.layout.activity_start);
 
 		context = getApplicationContext();
-
+		
+		checkGPS();
+		
 		//Initialize Parse
 		Parse.initialize(this, "kTygJWFcKh5a9OK7Pv58mTZtfkS7Sp91cpVyIiwc", "j8fsAwMny2P7y4iLRZNY8ABhK5oF2AV3rQe2MTdO");
 		
@@ -230,6 +237,12 @@ public class StartActivity extends Activity implements TextWatcher {
 	}
 
 	@Override
+	protected void onResume() {
+		super.onResume();
+		checkGPS();
+	}
+	
+	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.activity_start, menu);
 		return true;
@@ -246,6 +259,33 @@ public class StartActivity extends Activity implements TextWatcher {
 
 	public void onTextChanged(CharSequence s, int start, int before, int count) {
 
+	}
+	
+	public void checkGPS() {
+		gLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+		//Check to see if GPS is enabled
+		if(!gLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+			//If not enabled, prompt user to enabled it
+			displayEnableGPSAlert();
+		}
+	}
+	
+	private void displayEnableGPSAlert() {
+		AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+		alertDialog.setTitle("Enable GPS?");
+		alertDialog.setMessage("MNav requires GPS to function properly right now. Enable?");
+		alertDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog,int which) {
+				Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+				startActivity(intent);
+			}
+		});
+		alertDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {		
+				finish();
+			}
+		});
+		alertDialog.show();
 	}
 
 	/** Helper function for displaying a toast. Takes the string to be displayed and the length: LONG or SHORT **/

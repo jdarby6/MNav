@@ -56,6 +56,9 @@
     <string name="info_building_finder">Easily find any building on campus by browsing a comprehensive list and pressing the building you would like to find.</string>
     <string name="section">Section Number</string>
     <string name="crash_toast_text">Oops! MNav has crashed, but a crash report has been sent to the MNav development team to help fix the issue!</string>
-    <string name="copyright">Contact: mnav.android@umich.edu\n\nMNav version: alpha-1.0\nDeveloped by Jeremy Darby, Bill Hass, and Evan Molosky at the University of Michigan for EECS 441.\nCopyright © 2012 - Aether Applications</string>
+    <string name="copyright">Developed by Jeremy Darby, Bill Hass, and Evan Molosky at the University of Michigan for EECS 441.\nCopyright © 2012 - Aether Applications</string>
+    <string name="mailing_list_url">mnav.android@umich.edu</string>
+    <string name="facebook_url">www.facebook.com/mnavforandroid</string>
+    <string name="version_num">v0.01-alpha</string>
 
 </resources>

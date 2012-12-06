@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.eecs.mnav"
     android:versionCode="1"
-    android:versionName="alpha-1.0" >
+    android:versionName="v0.01_alpha-hotfix" >
 
     <uses-sdk
         android:minSdkVersion="8"

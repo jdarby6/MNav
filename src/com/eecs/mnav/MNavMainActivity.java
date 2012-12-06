@@ -135,6 +135,8 @@ public class MNavMainActivity extends MapActivity {
 		Log.d("OnCreate()", "OnCreate() called");
 		setContentView(R.layout.activity_main);
 		
+		//checkGPS();
+		
 		//Grab the mapView
 		gMapView = (MapView)findViewById(R.id.mapview);
 		try {
@@ -626,9 +628,9 @@ public class MNavMainActivity extends MapActivity {
 	}
 
 	private void displayEnableGPSAlert() {
-		AlertDialog.Builder alertDialog = new AlertDialog.Builder(getApplicationContext());
+		AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
 		alertDialog.setTitle("Enable GPS?");
-		alertDialog.setMessage("GPS is not enabled. Would you like to enable it in settings?");
+		alertDialog.setMessage("MNav requires GPS to function properly right now. Enable?");
 		alertDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog,int which) {
 				Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
@@ -637,7 +639,7 @@ public class MNavMainActivity extends MapActivity {
 		});
 		alertDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
-				dialog.cancel();
+				finish();
 			}
 		});
 		alertDialog.show();
@@ -731,7 +733,7 @@ public class MNavMainActivity extends MapActivity {
 		}
 	}
 
-	private void startGPS() {
+	public void checkGPS() {
 		gLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 		//Check to see if GPS is enabled
 		if(!gLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
@@ -863,10 +865,10 @@ public class MNavMainActivity extends MapActivity {
 				currentBestIndex = i;
 		}
 
-		if(num_doors != -1) {
-		gDestinationLat = doors[currentBestIndex].latitude;
-		gDestinationLong = doors[currentBestIndex].longitude;
-		return true;
+		if(num_doors != -1 && doors.length > 0) {
+			gDestinationLat = doors[currentBestIndex].latitude;
+			gDestinationLong = doors[currentBestIndex].longitude;
+			return true;
 		}
 		
 		return false;
