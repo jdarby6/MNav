@@ -59,6 +59,6 @@
     <string name="copyright">Developed by Jeremy Darby, Bill Hass, and Evan Molosky at the University of Michigan for EECS 441.\nCopyright © 2012 - Aether Applications</string>
     <string name="mailing_list_url">mnav.android@umich.edu</string>
     <string name="facebook_url">www.facebook.com/mnavforandroid</string>
-    <string name="version_num">v0.01-alpha</string>
+    <string name="version_num">v0.01_alpha-hotfix</string>
 
 </resources>
