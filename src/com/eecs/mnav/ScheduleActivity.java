@@ -2,16 +2,19 @@ package com.eecs.mnav;
 
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Calendar;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Editable;
@@ -79,10 +82,12 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 
 	public static int CDI = 0; //current days int;
 
-	private DataBaseHelper all_classes_db;
-	private ScheduleDatabaseHandler db;
-	Cursor cursor_all_classes;
-	ArrayAdapter<String> adapter;
+	static DataBaseHelper all_classes_db;
+	static ScheduleDatabaseHandler db;
+	static Cursor cursor_all_classes;
+	static ArrayAdapter<String> adapter;
+	static String[] item;
+	ProgressDialog progressDialog;
 
 	private DataBaseHelper destination_db;
 
@@ -133,6 +138,9 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 		button_add_event = (Button) findViewById(R.id.button_add_event);
 		button_add_event.setOnClickListener(new Button.OnClickListener() { 
 			public void onClick(View v) {
+				progressDialog = ProgressDialog.show(ScheduleActivity.this, "", "Loading. Please wait...", true);
+				progressDialog.show();
+				new GetClassDataTask().execute();
 				showDialog(DIALOG_ADD_EVENT);
 			}
 		});
@@ -230,6 +238,7 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 			checkBoxSunday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxSunday);
 			//-------------------		
 
+			/*
 			//Initialize classes db
 			all_classes_db = new DataBaseHelper(this, "all_classes_db");
 			try {
@@ -245,10 +254,12 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 				throw sqle;
 
 			}
+			 */
 
-			cursor_all_classes = all_classes_db.getAllClasses();
+			//cursor_all_classes = all_classes_db.getAllClasses();
+			//new GetClassDataTask().execute();
 
-			ArrayList<String> strings = new ArrayList<String>();
+			/*ArrayList<String> strings = new ArrayList<String>();
 			for(cursor_all_classes.moveToFirst(); !cursor_all_classes.isAfterLast(); cursor_all_classes.moveToNext()) {
 				String subject = cursor_all_classes.getString(2).trim();
 				int startParen = subject.indexOf('(');
@@ -259,18 +270,22 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 				strings.add(department + " " + catalog_num + "." + section);
 			}
 
-			String[] item = (String[]) strings.toArray(new String[strings.size()]);
+			item = (String[]) strings.toArray(new String[strings.size()]);
 
+
+			adapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, item);
+			autoCompleteTextView_class.setAdapter(adapter);*/
 			autoCompleteTextView_class.addTextChangedListener(this);
 			autoCompleteTextView_class.setTextColor(Color.BLACK);
-			adapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, item);
-			autoCompleteTextView_class.setAdapter(adapter);
-			/*autoCompleteTextView_class.setOnItemClickListener(new OnItemClickListener() { 
+			autoCompleteTextView_class.setOnItemClickListener(new OnItemClickListener() { 
 
 				public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
-					int adj_pos = adapter.getPosition(autoCompleteTextView_class.getText().toString());
+					String text = autoCompleteTextView_class.getText().toString();
+					int adj_pos = getArrayIndex(item, text);
 					cursor_all_classes.moveToFirst();
+					int pos = cursor_all_classes.getPosition();
 					cursor_all_classes.move(adj_pos);
+					pos = cursor_all_classes.getPosition();
 
 					if(cursor_all_classes.getString(7).toString() != null && cursor_all_classes.getString(7).toString().length() != 0) {
 						checkBoxMonday.setChecked(true);
@@ -298,7 +313,7 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 					autoCompleteTextView_class.setText(autoCompleteTextView_class.getText().toString().substring(0, period));
 
 				}
-			});*/
+			});
 
 			//Allow click to produce time picker
 			editText_end_time.setOnClickListener(new View.OnClickListener() {
@@ -629,13 +644,14 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 
 	@Override
 	public void onDestroy() {
-		if(cursor_all_classes != null)
+		super.onDestroy();
+
+		if (cursor_all_classes != null)
 			cursor_all_classes.close();
 		if(all_classes_db != null)
 			all_classes_db.close();
 		if(db != null)
 			db.close();
-		super.onDestroy();
 	}
 	public void loadEventsArray(){
 		ArrayList<MEvent>tmp_array = new ArrayList<MEvent>();
@@ -700,6 +716,74 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 	public void onTextChanged(CharSequence s, int start, int before, int count) {
 		// TODO Auto-generated method stub
 
+	}
+
+	public final int getArrayIndex(String[] myArray, String myObject) {
+		int ArraySize = Array.getLength(myArray);// get the size of the array
+		for (int i = 0; i < ArraySize; i++) {
+			if (myArray[i].equals(myObject)) {
+				return (i);
+			}
+		}
+		return (-1);// didn't find what I was looking for
+	}
+
+	private class GetClassDataTask extends AsyncTask<String, String, Cursor> {
+		//private final ProgressDialog dialog = new ProgressDialog(ScheduleActivity.this);
+
+		// can use UI thread here
+		protected void onPreExecute() {
+			super.onPreExecute();
+			//progressDialog = ProgressDialog.show(ScheduleActivity.this, "", "Loading. Please wait...", true);
+			//progressDialog.show();
+		}
+
+		// automatically done on worker thread (separate from UI thread)
+		protected Cursor doInBackground(final String... args) {
+			if(all_classes_db == null) {
+				//Initialize classes db
+				all_classes_db = new DataBaseHelper(ScheduleActivity.this, "all_classes_db");
+				try {
+					all_classes_db.createDataBase();
+				} 
+				catch (IOException ioe) {
+					throw new Error("Unable to create database");
+				}
+				try {
+					all_classes_db.openDataBase();
+				} 
+				catch(SQLException sqle) {	
+					throw sqle;
+
+				}
+			}
+			return all_classes_db.getAllClasses();
+		}
+
+		// can use UI thread here
+		protected void onPostExecute(final Cursor cursor) {
+			ScheduleActivity.cursor_all_classes = cursor;
+
+			ArrayList<String> strings = new ArrayList<String>();
+			for(cursor_all_classes.moveToFirst(); !cursor_all_classes.isAfterLast(); cursor_all_classes.moveToNext()) {
+				String subject = cursor_all_classes.getString(2).trim();
+				int startParen = subject.indexOf('(');
+				int endParen = subject.indexOf(')');
+				String department = subject.substring(startParen+1, endParen);
+				String catalog_num = cursor_all_classes.getString(3).trim();
+				String section = cursor_all_classes.getString(4).trim();
+				strings.add(department + " " + catalog_num + "." + section);
+			}
+
+			item = (String[]) strings.toArray(new String[strings.size()]);
+			adapter = new ArrayAdapter<String>(ScheduleActivity.this, android.R.layout.simple_dropdown_item_1line, item);
+			autoCompleteTextView_class.setAdapter(adapter);
+
+
+			if (progressDialog.isShowing()) {
+				progressDialog.dismiss();
+			}
+		}
 	}
 
 }
