@@ -725,7 +725,7 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 				return (i);
 			}
 		}
-		return (-1);// didn't find what I was looking for
+		return (-1);// These aren't the droids you are looking for
 	}
 
 	private class GetClassDataTask extends AsyncTask<String, String, Cursor> {
