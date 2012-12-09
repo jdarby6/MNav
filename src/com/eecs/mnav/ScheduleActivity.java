@@ -629,9 +629,12 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 
 	@Override
 	public void onDestroy() {
-		cursor_all_classes.close();
-		all_classes_db.close();
-		db.close();
+		if(cursor_all_classes != null)
+			cursor_all_classes.close();
+		if(all_classes_db != null)
+			all_classes_db.close();
+		if(db != null)
+			db.close();
 		super.onDestroy();
 	}
 	public void loadEventsArray(){
