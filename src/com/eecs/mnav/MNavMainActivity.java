@@ -58,19 +58,15 @@ public class MNavMainActivity extends MapActivity {
 	private Button bTargetReticle;
 	private Button bZoomIn;
 	private Button bZoomOut;
-
+	
 	// Intro tips booleans
 	private boolean hasSeenAlert1 = false;
 	private boolean hasSeenAlert2 = false;
 	private boolean hasSeenAlert3 = false;
 	private boolean hasSeenAlert4 = false;
-
-	//Our location globals
-	// private float gBearing = 0;
-	// private float gSpeed = 0;
-	//	private double gCurrentLong = 0.0;
-	//	private double gCurrentLat = 0.0;
-	//  private Location gBestLocation = null;
+	
+	private boolean isTransit = false;
+	
 
 	//Destination globals
 	private EditText editTextDestination;
@@ -101,6 +97,7 @@ public class MNavMainActivity extends MapActivity {
 	private static final int LONG = Toast.LENGTH_LONG;
 	private static final int SHORT = Toast.LENGTH_SHORT;
 	private static final int FIVE_MINUTES = 1000 * 60 * 5;
+	private static final int ONE_MINUTE = 1000*60;
 	private static final int LAYER_TYPE_SOFTWARE = 1;
 	private static final int ZOOM_LEVEL_SKY = 17;
 	private static final int ZOOM_LEVEL_CAMPUS = 18;
@@ -494,6 +491,9 @@ public class MNavMainActivity extends MapActivity {
 			dialogTemp.setTitle("Settings");
 
 			final CheckBox resetTips = (CheckBox) dialogTemp.findViewById(R.id.checkBox_restore_tips);
+			final CheckBox useTransit = (CheckBox) dialogTemp.findViewById(R.id.checkBox_use_transit);
+			useTransit.setChecked(isTransit);
+			
 			final Button bDone = (Button) dialogTemp.findViewById(R.id.button_done);
 			bDone.setOnClickListener(new Button.OnClickListener() {
 				public void onClick(View v) {
@@ -504,6 +504,12 @@ public class MNavMainActivity extends MapActivity {
 						hasSeenAlert4 = false;
 						toastThis("Intro tips reset", LONG);
 					}
+					
+					if(useTransit.isChecked())
+						isTransit = true;
+					else 
+						isTransit = false;
+					
 					removeDialog(DIALOG_SETTINGS);
 				}
 			});
@@ -693,7 +699,7 @@ public class MNavMainActivity extends MapActivity {
 		mapOverlays.add(OVERLAY_SCALEBAR_ID, gScaleBarOverlay);
 	}
 
-	private Route directions(final GeoPoint start, final GeoPoint dest) {
+	private Route directionsWalking(final GeoPoint start, final GeoPoint dest) {
 		GoogleParser googleParser;
 		String jsonURL = "http://maps.google.com/maps/api/directions/json?";
 		final StringBuffer sBuf = new StringBuffer(jsonURL);
@@ -711,6 +717,29 @@ public class MNavMainActivity extends MapActivity {
 		Route r =  googleParser.parse();
 		return r;
 	}
+	
+	private Route directionsTransit(final GeoPoint start, final GeoPoint dest) {
+		GoogleParser googleParser;
+		String jsonURL = "http://maps.google.com/maps/api/directions/json?";
+		final StringBuffer sBuf = new StringBuffer(jsonURL);
+		sBuf.append("origin=");
+		sBuf.append(start.getLatitudeE6()/1E6);
+		sBuf.append(',');
+		sBuf.append(start.getLongitudeE6()/1E6);
+		sBuf.append("&destination=");
+		sBuf.append(dest.getLatitudeE6()/1E6);
+		sBuf.append(',');
+		sBuf.append(dest.getLongitudeE6()/1E6);
+		//sBuf.append("&sensor=true&mode=walking");
+		String currentTime = String.valueOf(System.currentTimeMillis());
+		currentTime = currentTime.substring(0, currentTime.length()-3);
+		sBuf.append("&sensor=true&departure_time="+currentTime+"&mode=transit");
+		googleParser = new GoogleParser(sBuf.toString());
+		Route r =  googleParser.parse();
+		return r;
+	}
+	
+	
 
 	private void zoomTo(GeoPoint p, int level) {
 		if(gMapController == null)
@@ -880,7 +909,9 @@ public class MNavMainActivity extends MapActivity {
 		@Override
 		protected Route doInBackground(GeoPoint... geopoints) {
 			//Creates Url and queries google directions api
-			return directions(geopoints[0], geopoints[1]);
+			if (isTransit)
+				return directionsTransit(geopoints[0], geopoints[1]);
+			return directionsWalking(geopoints[0], geopoints[1]);
 		}
 
 		@Override

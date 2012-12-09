@@ -10,13 +10,19 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:text="@string/restore_intro" />
-
+
+    <CheckBox
+        android:id="@+id/checkBox_use_transit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/checkBox_restore_tips"
+        android:text="Use public transit" />
+
     <Button
         android:id="@+id/button_done"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/checkBox_restore_tips"
+        android:layout_below="@id/checkBox_use_transit"
         android:text="@string/done" />
 
 </RelativeLayout>
