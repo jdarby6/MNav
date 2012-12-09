@@ -87,6 +87,7 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 	static Cursor cursor_all_classes;
 	static ArrayAdapter<String> adapter;
 	static String[] item;
+	ProgressDialog progressDialog;
 
 	private DataBaseHelper destination_db;
 
@@ -137,6 +138,8 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 		button_add_event = (Button) findViewById(R.id.button_add_event);
 		button_add_event.setOnClickListener(new Button.OnClickListener() { 
 			public void onClick(View v) {
+				progressDialog = ProgressDialog.show(ScheduleActivity.this, "", "Loading. Please wait...", true);
+				progressDialog.show();
 				new GetClassDataTask().execute();
 				showDialog(DIALOG_ADD_EVENT);
 			}
@@ -731,9 +734,8 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 		// can use UI thread here
 		protected void onPreExecute() {
 			super.onPreExecute();
-
-			ProgressDialog dialog = ProgressDialog.show(ScheduleActivity.this, "", "Loading. Please wait...", true);
-			dialog.show();
+			//progressDialog = ProgressDialog.show(ScheduleActivity.this, "", "Loading. Please wait...", true);
+			//progressDialog.show();
 		}
 
 		// automatically done on worker thread (separate from UI thread)
@@ -778,9 +780,9 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 			autoCompleteTextView_class.setAdapter(adapter);
 
 
-			/*if (this.dialog.isShowing()) {
-				this.dialog.dismiss();
-			}*/
+			if (progressDialog.isShowing()) {
+				progressDialog.dismiss();
+			}
 		}
 	}
 
