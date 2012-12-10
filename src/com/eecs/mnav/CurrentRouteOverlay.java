@@ -14,7 +14,7 @@ public class CurrentRouteOverlay extends ItemizedOverlay<OverlayItem> {
 	//use m for "member" variables
 	private ArrayList<OverlayItem> mOverlays = new ArrayList<OverlayItem>();
 	Context mContext;
-	MNavMainActivity gMainActivity = null;
+	MapActivity_MNav gMainActivity = null;
 
 
 	public CurrentRouteOverlay(Drawable defaultMarker) {
@@ -26,7 +26,7 @@ public class CurrentRouteOverlay extends ItemizedOverlay<OverlayItem> {
 		mContext = context;
 	}
 
-	public void setTapListener(MNavMainActivity m) {
+	public void setTapListener(MapActivity_MNav m) {
 		gMainActivity = m;
 	}
 
@@ -68,7 +68,7 @@ public class CurrentRouteOverlay extends ItemizedOverlay<OverlayItem> {
 		else {
 			//Display the destination building dialog
 			if(gMainActivity != null) {
-				gMainActivity.showDialog(MNavMainActivity.DIALOG_DESTINATION_BLDG);
+				gMainActivity.showDialog(MapActivity_MNav.DIALOG_DESTINATION_BLDG);
 			}
 			return true;
 		}

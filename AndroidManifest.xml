@@ -28,7 +28,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.eecs.mnav.MNavMainActivity"
+            android:name=".MapActivity_MNav"
             android:label="@string/title_activity_main"
             android:screenOrientation="portrait" >
         </activity>
