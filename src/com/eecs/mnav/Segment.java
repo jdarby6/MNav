@@ -10,10 +10,20 @@ public class Segment {
 	private int length;
 	/** Distance covered. **/
 	private double distance;
+	/** Mode of transit **/
+	private String transitMode;
 
 	public Segment() {
 	}
 
+	public void setTransitMode(final String trans) {
+		this.transitMode = trans;
+	}
+	
+	public String getTransitMode(){
+		return transitMode;
+	}
+	
 	public void setInstruction(final String turn) {
 		this.instruction = turn;
 	}

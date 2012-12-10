@@ -15,6 +15,9 @@ public class Route {
 	private String distance;
 	private String duration;
 	private String polyline;
+	//Transit specific
+	private String arrivalTime;
+	private String departureTime;
 
 	public Route() {
 		points = new ArrayList<GeoPoint>();
@@ -96,5 +99,18 @@ public class Route {
 	public String getPolyline() {
 		return polyline;
 	}
+	
+	public void setArrivalTime(String arrTime) {
+		this.arrivalTime = arrTime;
+	}
+	
+	public String getArrivalTime() {
+		return arrivalTime;
+	}
 
+	public void setDepartureTime(String deptTime){
+		this.departureTime = deptTime;
+	}
+	
+	
 }

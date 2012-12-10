@@ -714,7 +714,7 @@ public class MapActivity_MNav extends MapActivity {
 		sBuf.append("&sensor=true&mode=walking");
 		//sBuf.append("&sensor=true&mode=transit&departure_time="+(System.currentTimeMillis()+FIVE_MINUTES));
 		googleParser = new GoogleParser(sBuf.toString());
-		Route r =  googleParser.parse();
+		Route r =  googleParser.parseWalking();
 		return r;
 	}
 	
@@ -735,7 +735,7 @@ public class MapActivity_MNav extends MapActivity {
 		currentTime = currentTime.substring(0, currentTime.length()-3);
 		sBuf.append("&sensor=true&departure_time="+currentTime+"&mode=transit");
 		googleParser = new GoogleParser(sBuf.toString());
-		Route r =  googleParser.parse();
+		Route r =  googleParser.parseTransit();
 		return r;
 	}
 	
@@ -928,6 +928,9 @@ public class MapActivity_MNav extends MapActivity {
 			gTimeToDest = route.getDuration();
 
 			toastThis("Distance: "+gDistanceToDest + "\nTravel Duration: "+gTimeToDest, LONG);
+			
+			toastThis("TransitType:"+route.getSegments().get(0).getTransitMode(), LONG);
+			
 			tvDestInfo.setVisibility(TextView.VISIBLE);
 			tvDestInfo.setText("Distance: "+gDistanceToDest+" Travel Duration: "+gTimeToDest);
 			tvDestInfo.setTextColor(getResources().getColor(R.color.black));
