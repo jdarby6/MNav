@@ -38,6 +38,7 @@ import com.google.android.maps.MapView;
 import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
+import com.slidingmenu.lib.SlidingMenu;
 import com.slidingmenu.lib.app.SlidingMapActivity;
 
 public class BusRoutesActivity extends SlidingMapActivity {
@@ -85,6 +86,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 	private Handler m_handler;
 	private ListView listView;
 	private ListViewCustomAdapter routesListViewAdapter;
+	private SlidingMenu gSlidingMenu;
 
 
 	@Override
@@ -96,8 +98,9 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		listView.setAdapter(routesListViewAdapter);
 		setContentView(R.layout.activity_bus_routes);
 		setBehindContentView(listView);
-		getSlidingMenu().setBehindOffset(100);
-		
+		gSlidingMenu = getSlidingMenu();
+		gSlidingMenu.setBehindOffset(100);
+				
 		//Grab the mapView
 		gMapView = (MapView)findViewById(R.id.mapview);
 		try {
@@ -116,7 +119,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		bSlider = (Button) findViewById(R.id.button_slider);
 		bSlider.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				BusRoutesActivity.this.getSlidingMenu().toggle();
+				gSlidingMenu.toggle();
 			}
 		});
 
