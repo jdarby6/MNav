@@ -140,9 +140,9 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 		button_add_event.setOnClickListener(new Button.OnClickListener() { 
 			public void onClick(View v) {
 				progressDialog = ProgressDialog.show(ScheduleActivity.this, "", "Loading. Please wait...", true);
-				progressDialog.show();
 				new GetClassDataTask().execute();
 				showDialog(DIALOG_ADD_EVENT);
+				progressDialog.show();
 			}
 		});
 		list_data.setOnItemClickListener(new OnItemClickListener(){
