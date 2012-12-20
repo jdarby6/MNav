@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.text.format.Time;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -311,6 +312,7 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 					editText_location.setText(cursor_all_classes.getString(15));
 					int period = autoCompleteTextView_class.getText().toString().indexOf('.');
 					autoCompleteTextView_class.setText(autoCompleteTextView_class.getText().toString().substring(0, period));
+					timeParse(cursor_all_classes.getString(14).toString());
 
 				}
 			});
@@ -550,7 +552,7 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 					editor.putString("DESTNAME", destBldgName);
 					editor.putString("DESTROOM", destRoomNum);
 					editor.commit();
-					Intent searchIntent = new Intent(ScheduleActivity.this, MapActivity_MNav.class);
+					Intent searchIntent = new Intent(ScheduleActivity.this, MainMapActivity.class);
 					startActivity(searchIntent);
 					removeDialog(DIALOG_OPTION);
 				}
@@ -726,6 +728,58 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 			}
 		}
 		return (-1);// These aren't the droids you are looking for
+	}
+	
+	public void timeParse(String time) {
+		if(time.equalsIgnoreCase("ARR")) return;
+		
+		int length = time.length();
+		int hyphenLoc = time.indexOf('-');
+		String startString = time.substring(0, hyphenLoc);
+		String endString = time.substring(hyphenLoc+1, length-2);
+		String AMorPM = time.substring(length-2);
+		Time startTime = new Time();
+		Time endTime = new Time();
+		String formattedStartTime;
+		String formattedEndTime;
+		
+		if(startString.length() > 2 && startString.substring(startString.length()-2).equals("30")) {
+			startTime.hour = Integer.parseInt(startString.substring(0, startString.length()-2));
+			startTime.minute = 30;
+			formattedStartTime = startString.substring(0, startString.length()-2) + ":30";
+		}
+		else {
+			startTime.hour = Integer.parseInt(startString);
+			startTime.minute = 00;
+			formattedStartTime = startString + ":00";
+		}
+		
+		if(endString.length() > 2 && endString.substring(endString.length()-2).equals("30")) {
+			endTime.hour = Integer.parseInt(endString.substring(0, endString.length()-2));
+			endTime.minute = 00;
+			formattedEndTime = endString.substring(0, endString.length()-2) + ":30";
+		}
+		else {
+			endTime.hour = Integer.parseInt(endString);
+			endTime.minute = 00;
+			formattedEndTime = endString + ":00";
+		}
+		
+		if(AMorPM.equalsIgnoreCase("PM")) {
+			formattedEndTime = formattedEndTime.concat("pm");
+			if(endTime.hour == 12 || ((endTime.hour < startTime.hour) && (startTime.hour != 12))) {
+				formattedStartTime = formattedStartTime.concat("am");
+			}
+			else formattedStartTime = formattedStartTime.concat("pm");
+		}
+		else {
+			formattedEndTime = formattedEndTime.concat("am");
+			formattedStartTime = formattedStartTime.concat("am");
+		}
+		
+		editText_begin_time.setText(formattedStartTime);
+		editText_end_time.setText(formattedEndTime);
+				
 	}
 
 	private class GetClassDataTask extends AsyncTask<String, String, Cursor> {

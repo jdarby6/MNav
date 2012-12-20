@@ -98,7 +98,7 @@ public class BuildingFinderActivity extends ListActivity {
 		Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
 		editor.putString("DESTNAME", destAbbr);
 		editor.commit();
-		Intent intent = new Intent(BuildingFinderActivity.this, MapActivity_MNav.class);
+		Intent intent = new Intent(BuildingFinderActivity.this, MainMapActivity.class);
 		BuildingFinderActivity.this.startActivity(intent);
 	}
 }

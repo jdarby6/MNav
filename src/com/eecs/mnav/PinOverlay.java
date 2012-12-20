@@ -1,12 +1,10 @@
 package com.eecs.mnav;
 
-
 import java.util.ArrayList;
 
 import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 
 import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.OverlayItem;
@@ -15,9 +13,7 @@ public class PinOverlay extends ItemizedOverlay<OverlayItem> {
 	//use m for "member" variables
 	private ArrayList<OverlayItem> mOverlays = new ArrayList<OverlayItem>();
 	Context mContext;
-	MapActivity_MNav gMainActivity = null;
-	
-	
+	MainMapActivity gMainActivity = null;
 
 	public PinOverlay(Drawable defaultMarker) {
 		super(boundCenterBottom(defaultMarker));
@@ -28,7 +24,7 @@ public class PinOverlay extends ItemizedOverlay<OverlayItem> {
 		mContext = context;
 	}
 
-	public void setTapListener(MapActivity_MNav m) {
+	public void setTapListener(MainMapActivity m) {
 		gMainActivity = m;
 	}
 
@@ -44,16 +40,16 @@ public class PinOverlay extends ItemizedOverlay<OverlayItem> {
 	public void addOverlayNoPopulate(OverlayItem overlay) {
 		mOverlays.add(overlay);
 	}
-	
+
 	public void populateOverlay(){
 		populate();
 	}
-	
+
 	@Override
 	protected OverlayItem createItem(int i) {
 		return mOverlays.get(i);
 	}
-	
+
 	public void replaceOverlayByIndex(OverlayItem overlay, int i) {
 		mOverlays.remove(i);
 		mOverlays.add(i, overlay);
@@ -78,12 +74,9 @@ public class PinOverlay extends ItemizedOverlay<OverlayItem> {
 		else {
 			//Display the destination building dialog
 			if(gMainActivity != null) {
-				gMainActivity.showDialog(MapActivity_MNav.DIALOG_DESTINATION_BLDG);
+				gMainActivity.showDialog(MainMapActivity.DIALOG_DESTINATION_BLDG);
 			}
 			return true;
 		}
 	}
-
-
-
 }
