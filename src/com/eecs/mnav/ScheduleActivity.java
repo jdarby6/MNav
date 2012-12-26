@@ -1,6 +1,5 @@
 package com.eecs.mnav;
 
-
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -78,7 +77,7 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 	private static final int TIME_PICK_BEGIN_DIALOG_ID = 2;
 	private static final int TIME_PICK_END_DIALOG_ID = 3;
 	private static final int DIALOG_OPTION = 4;
-	private static final int DIALOG_SECTION = 5;
+	//private static final int DIALOG_SECTION = 5;
 	private static String CURRENTDAY = "NULL";
 
 	public static int CDI = 0; //current days int;
@@ -90,7 +89,7 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 	static String[] item;
 	ProgressDialog progressDialog;
 
-	private DataBaseHelper destination_db;
+	//private DataBaseHelper destination_db;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -139,10 +138,7 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 		button_add_event = (Button) findViewById(R.id.button_add_event);
 		button_add_event.setOnClickListener(new Button.OnClickListener() { 
 			public void onClick(View v) {
-				progressDialog = ProgressDialog.show(ScheduleActivity.this, "", "Loading. Please wait...", true);
 				new GetClassDataTask().execute();
-				showDialog(DIALOG_ADD_EVENT);
-				progressDialog.show();
 			}
 		});
 		list_data.setOnItemClickListener(new OnItemClickListener(){
@@ -239,43 +235,6 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 			checkBoxSunday = (CheckBox) dialogEditEvent.findViewById(R.id.checkBoxSunday);
 			//-------------------		
 
-			/*
-			//Initialize classes db
-			all_classes_db = new DataBaseHelper(this, "all_classes_db");
-			try {
-				all_classes_db.createDataBase();
-			} 
-			catch (IOException ioe) {
-				throw new Error("Unable to create database");
-			}
-			try {
-				all_classes_db.openDataBase();
-			} 
-			catch(SQLException sqle) {	
-				throw sqle;
-
-			}
-			 */
-
-			//cursor_all_classes = all_classes_db.getAllClasses();
-			//new GetClassDataTask().execute();
-
-			/*ArrayList<String> strings = new ArrayList<String>();
-			for(cursor_all_classes.moveToFirst(); !cursor_all_classes.isAfterLast(); cursor_all_classes.moveToNext()) {
-				String subject = cursor_all_classes.getString(2).trim();
-				int startParen = subject.indexOf('(');
-				int endParen = subject.indexOf(')');
-				String department = subject.substring(startParen+1, endParen);
-				String catalog_num = cursor_all_classes.getString(3).trim();
-				String section = cursor_all_classes.getString(4).trim();
-				strings.add(department + " " + catalog_num + "." + section);
-			}
-
-			item = (String[]) strings.toArray(new String[strings.size()]);
-
-
-			adapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, item);
-			autoCompleteTextView_class.setAdapter(adapter);*/
 			autoCompleteTextView_class.addTextChangedListener(this);
 			autoCompleteTextView_class.setTextColor(Color.BLACK);
 			autoCompleteTextView_class.setOnItemClickListener(new OnItemClickListener() { 
@@ -284,9 +243,7 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 					String text = autoCompleteTextView_class.getText().toString();
 					int adj_pos = getArrayIndex(item, text);
 					cursor_all_classes.moveToFirst();
-					int pos = cursor_all_classes.getPosition();
 					cursor_all_classes.move(adj_pos);
-					pos = cursor_all_classes.getPosition();
 
 					if(cursor_all_classes.getString(7).toString() != null && cursor_all_classes.getString(7).toString().length() != 0) {
 						checkBoxMonday.setChecked(true);
@@ -705,18 +662,15 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 	}
 
 	public void afterTextChanged(Editable arg0) {
-		// TODO Auto-generated method stub
 
 	}
 
 	public void beforeTextChanged(CharSequence arg0, int arg1, int arg2,
 			int arg3) {
-		// TODO Auto-generated method stub
 
 	}
 
 	public void onTextChanged(CharSequence s, int start, int before, int count) {
-		// TODO Auto-generated method stub
 
 	}
 
@@ -729,10 +683,10 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 		}
 		return (-1);// These aren't the droids you are looking for
 	}
-	
+
 	public void timeParse(String time) {
 		if(time.equalsIgnoreCase("ARR")) return;
-		
+
 		int length = time.length();
 		int hyphenLoc = time.indexOf('-');
 		String startString = time.substring(0, hyphenLoc);
@@ -742,7 +696,7 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 		Time endTime = new Time();
 		String formattedStartTime;
 		String formattedEndTime;
-		
+
 		if(startString.length() > 2 && startString.substring(startString.length()-2).equals("30")) {
 			startTime.hour = Integer.parseInt(startString.substring(0, startString.length()-2));
 			startTime.minute = 30;
@@ -753,7 +707,7 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 			startTime.minute = 00;
 			formattedStartTime = startString + ":00";
 		}
-		
+
 		if(endString.length() > 2 && endString.substring(endString.length()-2).equals("30")) {
 			endTime.hour = Integer.parseInt(endString.substring(0, endString.length()-2));
 			endTime.minute = 00;
@@ -764,7 +718,7 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 			endTime.minute = 00;
 			formattedEndTime = endString + ":00";
 		}
-		
+
 		if(AMorPM.equalsIgnoreCase("PM")) {
 			formattedEndTime = formattedEndTime.concat("pm");
 			if(endTime.hour == 12 || ((endTime.hour < startTime.hour) && (startTime.hour != 12))) {
@@ -776,34 +730,42 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 			formattedEndTime = formattedEndTime.concat("am");
 			formattedStartTime = formattedStartTime.concat("am");
 		}
-		
+
 		editText_begin_time.setText(formattedStartTime);
 		editText_end_time.setText(formattedEndTime);
-				
+
 	}
 
+	/**
+	 * Fetch all class info from local database in background. Shows progressDialog when loading,
+	 * then launches the add event dialog
+	 *
+	 */
 	private class GetClassDataTask extends AsyncTask<String, String, Cursor> {
-		//private final ProgressDialog dialog = new ProgressDialog(ScheduleActivity.this);
 
 		// can use UI thread here
+		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
-			//progressDialog = ProgressDialog.show(ScheduleActivity.this, "", "Loading. Please wait...", true);
-			//progressDialog.show();
+			progressDialog = ProgressDialog.show(ScheduleActivity.this, "Loading class data. Please wait...", "", true);
+			progressDialog.show();
 		}
 
 		// automatically done on worker thread (separate from UI thread)
+		@Override
 		protected Cursor doInBackground(final String... args) {
 			if(all_classes_db == null) {
 				//Initialize classes db
 				all_classes_db = new DataBaseHelper(ScheduleActivity.this, "all_classes_db");
 				try {
+					publishProgress("Creating database...");
 					all_classes_db.createDataBase();
 				} 
 				catch (IOException ioe) {
 					throw new Error("Unable to create database");
 				}
 				try {
+					publishProgress("Opening database...");
 					all_classes_db.openDataBase();
 				} 
 				catch(SQLException sqle) {	
@@ -811,11 +773,26 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 
 				}
 			}
+			publishProgress("Querying for all classes...");
 			return all_classes_db.getAllClasses();
 		}
-
+		
+		//update progress dialog here
+		@Override
+	    protected void onProgressUpdate(String... progress) {
+		  super.onProgressUpdate( progress[0]);
+	      
+		  Log.d("ScheduleActivity", "Progress Update: " + progress[0]);
+		  
+	      progressDialog.setMessage(progress[0]);
+	    }
+		
 		// can use UI thread here
+		@Override
 		protected void onPostExecute(final Cursor cursor) {
+
+			showDialog(DIALOG_ADD_EVENT);
+
 			ScheduleActivity.cursor_all_classes = cursor;
 
 			ArrayList<String> strings = new ArrayList<String>();
