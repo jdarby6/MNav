@@ -24,8 +24,8 @@ public class PinOverlay extends ItemizedOverlay<OverlayItem> {
 		mContext = context;
 	}
 
-	public void setTapListener(MainMapActivity m) {
-		gMainActivity = m;
+	public void setTapListener(MainMapActivity mainMapActivity) {
+		gMainActivity = mainMapActivity;
 	}
 
 	public void removeTapListener() {
