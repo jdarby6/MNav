@@ -60,8 +60,8 @@ public class BusRoutesActivity extends SlidingMapActivity {
 	private LocationManager gLocationManager;
 
 	//Overlay globals
-	private PinOverlay gPinOverlay = null;
-	private RouteOverlay gRouteOverlay = null;
+	//private PinOverlay gPinOverlay = null;
+	//private RouteOverlay gRouteOverlay = null;
 	private MyLocationOverlay gMyLocationOverlay = null;
 	private ScaleBarOverlay gScaleBarOverlay = null;
 
@@ -79,7 +79,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 
 	//Number of points to interpolate a move by (chop up the update of bus icon into this many parts
 	//before fetching the XML again) - not implemented yet
-	private int splitMove = 10;
+	//private int splitMove = 10;
 	static BusIconOverlay busIconOverlay;
 
 	private int m_interval = FOUR_SECONDS;

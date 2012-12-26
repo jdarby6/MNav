@@ -117,8 +117,8 @@ public class GoogleParser {
 			final JSONObject leg = jsonRoute.getJSONArray("legs").getJSONObject(0);
 			//Get the steps for this leg
 			final JSONArray steps = leg.getJSONArray("steps");
-			final JSONArray arrival_time = leg.getJSONArray("arrival_time");
-			final JSONArray departure_time = leg.getJSONArray("departure_time");
+			//final JSONArray arrival_time = leg.getJSONArray("arrival_time");
+			//final JSONArray departure_time = leg.getJSONArray("departure_time");
 			//Number of steps for use in for loop
 			final int numSteps = steps.length();
 			//Set the name of this route using the start & end addresses

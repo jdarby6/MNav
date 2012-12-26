@@ -3,7 +3,6 @@ package com.eecs.mnav;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 
 import android.app.AlertDialog;
@@ -32,8 +31,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
-import android.view.inputmethod.InputMethodManager;
 import android.view.Window;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -47,7 +46,6 @@ import com.google.android.maps.MapView;
 import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
-import com.parse.Parse;
 
 public class MainMapActivity extends MapActivity {
 	//Layout globals
@@ -58,15 +56,15 @@ public class MainMapActivity extends MapActivity {
 	private Button bTargetReticle;
 	private Button bZoomIn;
 	private Button bZoomOut;
-	
+
 	// Intro tips booleans
 	private boolean hasSeenAlert1 = false;
 	private boolean hasSeenAlert2 = false;
 	private boolean hasSeenAlert3 = false;
 	private boolean hasSeenAlert4 = false;
-	
+
 	private boolean isTransit = false;
-	
+
 
 	//Destination globals
 	private EditText editTextDestination;
@@ -86,21 +84,23 @@ public class MainMapActivity extends MapActivity {
 	private SharedPreferences gPreferences = null;
 	private GetDirectionsTask gOurGetDirectionsTask = null;
 	private Handler uiHandler;
-	
+
 	//Overlay globals
 	private PinOverlay gPinOverlay = null;
 	private RouteOverlay gRouteOverlay = null;
 	private MyLocationOverlay gMyLocationOverlay = null;
 	private ScaleBarOverlay gScaleBarOverlay = null;
+	
+	//Directions globals
+	private ProgressDialog gProgressDialog;
+	private GeoPoint gStartGeo;
+	private GeoPoint gDestGeo;
 
 	//Constants
 	private static final int LONG = Toast.LENGTH_LONG;
-	private static final int SHORT = Toast.LENGTH_SHORT;
 	private static final int FIVE_MINUTES = 1000 * 60 * 5;
-	private static final int ONE_MINUTE = 1000*60;
 	private static final int LAYER_TYPE_SOFTWARE = 1;
 	private static final int ZOOM_LEVEL_SKY = 17;
-	private static final int ZOOM_LEVEL_CAMPUS = 18;
 	private static final int ZOOM_LEVEL_BUILDING = 19;
 	//Alert IDs
 	private static final int ALERT_INVALID_DEST = 0;
@@ -117,8 +117,8 @@ public class MainMapActivity extends MapActivity {
 	private static final int OVERLAY_SCALEBAR_ID = 1;
 	private static final int OVERLAY_PIN_ID = 2;
 	private static final int OVERLAY_ROUTE_ID = 3;
-	
-	
+
+
 	private class Coords {
 		double latitude;
 		double longitude;
@@ -131,11 +131,11 @@ public class MainMapActivity extends MapActivity {
 		super.onCreate(savedInstanceState);
 		Log.d("OnCreate()", "OnCreate() called");
 		setContentView(R.layout.activity_main);
-		
-		//checkGPS();
-		
+
 		//Grab the mapView
 		gMapView = (MapView)findViewById(R.id.mapview);
+
+		//Turn off HW acceleration on new devices (map overlays are a bit buggy with it enabled)
 		try {
 			Method setLayerTypeMethod = gMapView.getClass().getMethod("setLayerType", new Class[] {int.class, Paint.class});
 			setLayerTypeMethod.invoke(gMapView, new Object[] {LAYER_TYPE_SOFTWARE, null});
@@ -148,12 +148,13 @@ public class MainMapActivity extends MapActivity {
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
 		}
-		
+
 		tvDestInfo = (TextView) findViewById(R.id.textView_destInfo);
 		tvDestInfo.setVisibility(TextView.INVISIBLE);
-		
+
 		//Initialize local db
 		local_db = new LocalDatabaseHandler(this);
+
 		//Initialize destination db
 		destination_db = new DataBaseHelper(this, "destination_db");
 		try {
@@ -169,7 +170,7 @@ public class MainMapActivity extends MapActivity {
 
 		//Initialize UI handler
 		uiHandler = new Handler();
-		
+
 		//Load stored data
 		gPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		gDestName = gPreferences.getString("DESTNAME", "the diag");
@@ -178,7 +179,7 @@ public class MainMapActivity extends MapActivity {
 		hasSeenAlert2 = gPreferences.getBoolean("A2", false);
 		hasSeenAlert3 = gPreferences.getBoolean("A3", false);
 		hasSeenAlert4 = gPreferences.getBoolean("A4", false);
-		
+
 		//Check to see if user came without typing anything
 		if(gDestName.equals("the diag")){
 			num_doors = -1;
@@ -188,7 +189,7 @@ public class MainMapActivity extends MapActivity {
 		}
 
 		buildAlertDialog(ALERT_INTRO_PROMPT_1);
-		
+
 		editTextDestination = (EditText)findViewById(R.id.editText_map_destination);
 		if(!gDestName.equals("the diag"))
 			editTextDestination.setText(gDestName);
@@ -203,7 +204,7 @@ public class MainMapActivity extends MapActivity {
 				//hide the soft keyboard
 				InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
 				imm.hideSoftInputFromWindow(tvDestInfo.getWindowToken(), 0);
-				
+
 				tvDestInfo.setVisibility(TextView.INVISIBLE);
 				//Grab the user input lat/long
 				String tempAddress = editTextDestination.getText().toString();
@@ -229,14 +230,12 @@ public class MainMapActivity extends MapActivity {
 					tvDestInfo.setTextColor(getResources().getColor(R.color.fireBrickRed));
 					return;
 				}
-				
-				GeoPoint oldDest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));//XXX not needed
-				
+
 				//The gDestName is set, so dig into the databse for building information and stuff
 				digIntoDatabaseForBuildingInformationAndStuff();
 				//now find closest door
 				findClosestDoor();
-				
+
 				//create a geopoint for dest
 				GeoPoint dest = getDirections(); //Query Google for directions to dest and return the dest 
 				gMapView.getOverlays().remove(OVERLAY_PIN_ID);
@@ -244,10 +243,8 @@ public class MainMapActivity extends MapActivity {
 				gMapView.invalidate();
 				zoomTo(dest, ZOOM_LEVEL_BUILDING);
 			}
-
-			//	}
 		});
-		
+
 		//---------------------
 		//SATELLITE BUTTON
 		//---------------------
@@ -271,13 +268,11 @@ public class MainMapActivity extends MapActivity {
 		});
 
 		//---------------------
-		//Targetting BUTTON
+		//TARGETING BUTTON
 		//---------------------
 		bTargetReticle = (Button) findViewById(R.id.button_return);
 		bTargetReticle.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				//startGPS();
-				//GeoPoint currentLoc = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
 				GeoPoint currentLoc = gMyLocationOverlay.getMyLocation();
 				zoomTo(currentLoc, ZOOM_LEVEL_BUILDING);
 				buildAlertDialog(ALERT_INTRO_PROMPT_3);
@@ -304,6 +299,7 @@ public class MainMapActivity extends MapActivity {
 				gMapController.zoomIn();
 			}
 		});
+		
 		//---------------------
 		//Zoom OUT BUTTON
 		//---------------------
@@ -315,9 +311,6 @@ public class MainMapActivity extends MapActivity {
 				gMapController.zoomOut();
 			}
 		});
-
-		
-		//startGPS();
 	}
 
 	@Override
@@ -345,26 +338,21 @@ public class MainMapActivity extends MapActivity {
 	public void onDestroy() {
 		super.onDestroy();
 		Log.d("OnDestroy()", "OnDestroy() called");
+		
 		//Save stored data
 		Editor editor = gPreferences.edit();
-		//Save last known latitude
-		//		editor.putString("LASTLAT", String.valueOf(gCurrentLat));
-		//		editor.putString("LASTLONG", String.valueOf(gCurrentLong));
-		//editor.putString("LASTLOCTIME", String.valueOf(gBestLocation.getTime()));
-
-
 		editor.putBoolean("A1", hasSeenAlert1);
 		editor.putBoolean("A2", hasSeenAlert2);
 		editor.putBoolean("A3", hasSeenAlert3);
 		editor.putBoolean("A4", hasSeenAlert4);
-
 		editor.commit();
-		//		Log.d("SAVED DATA", "Coords: "+String.valueOf(gCurrentLat)+","+String.valueOf(gCurrentLong));	
+		
 		//Turn off GPS
 		if(gLocationManager != null)
 			gLocationManager.removeUpdates(locationListener);
-		destination_db.close();
 		
+		destination_db.close();
+
 		if(gOurGetDirectionsTask != null) {
 			gOurGetDirectionsTask.cancel(true);
 			gOurGetDirectionsTask = null;
@@ -470,10 +458,10 @@ public class MainMapActivity extends MapActivity {
 						removeDialog(DIALOG_DESTINATION_BLDG);
 					}
 					else{
-					//Call intent to new activity
-					Intent intent = new Intent(MainMapActivity.this, BuildingMapActivity.class);
-					startActivity(intent);
-					removeDialog(DIALOG_DESTINATION_BLDG);
+						//Call intent to new activity
+						Intent intent = new Intent(MainMapActivity.this, BuildingMapActivity.class);
+						startActivity(intent);
+						removeDialog(DIALOG_DESTINATION_BLDG);
 					}
 				}
 			});
@@ -493,7 +481,7 @@ public class MainMapActivity extends MapActivity {
 			final CheckBox resetTips = (CheckBox) dialogTemp.findViewById(R.id.checkBox_restore_tips);
 			final CheckBox useTransit = (CheckBox) dialogTemp.findViewById(R.id.checkBox_use_transit);
 			useTransit.setChecked(isTransit);
-			
+
 			final Button bDone = (Button) dialogTemp.findViewById(R.id.button_done);
 			bDone.setOnClickListener(new Button.OnClickListener() {
 				public void onClick(View v) {
@@ -504,12 +492,12 @@ public class MainMapActivity extends MapActivity {
 						hasSeenAlert4 = false;
 						toastThis("Intro tips reset", LONG);
 					}
-					
+
 					if(useTransit.isChecked())
 						isTransit = true;
 					else 
 						isTransit = false;
-					
+
 					removeDialog(DIALOG_SETTINGS);
 				}
 			});
@@ -526,25 +514,7 @@ public class MainMapActivity extends MapActivity {
 
 
 	LocationListener locationListener = new LocationListener() {
-		public void onLocationChanged(Location location) { // Called when a new location is found by the network location provider.
-			//		Log.d("LocationChanged", "Found You: "+location.getLatitude()+","+location.getLongitude());
-			//Check to see if the new location is better than our best location so far
-			//if(isBetterLocation(location, gBestLocation))
-			//	gBestLocation = location;
-			//gBearing = gBestLocation.getBearing();
-			//			gCurrentLat = gBestLocation.getLatitude();
-			//			gCurrentLong = gBestLocation.getLongitude();
-			//gSpeed = gBestLocation.getSpeed();
-			/*	String toast = "Speed: " + gSpeed + "m/s \nBearing: " + gBearing + " degrees E of N \nLong: "
-					+ gCurrentLong + " \nLat: " + gCurrentLat;
-			toastThis(toast, SHORT); */
-
-			//If it's our first found location, initialize overlays.
-			/*	if(!overlaysInitialized)
-				initOverlays(gBestLocation);
-			else */
-			//		updateUserPosition(gBestLocation);
-		}
+		public void onLocationChanged(Location location) {}
 
 		public void onStatusChanged(String provider, int status, Bundle extras) {}
 
@@ -552,9 +522,6 @@ public class MainMapActivity extends MapActivity {
 
 		public void onProviderDisabled(String provider) {}
 	};
-	private ProgressDialog gProgressDialog;
-	private GeoPoint gStartGeo;
-	private GeoPoint gDestGeo;
 
 	protected boolean isBetterLocation(Location location, Location currentBestLocation) {
 		if (currentBestLocation == null) {
@@ -616,6 +583,7 @@ public class MainMapActivity extends MapActivity {
 	}
 
 	/**Gets best cached location from GPS and NETWORK. Called before searching for location */
+	@SuppressWarnings("unused")
 	private Location getCachedLocation() {
 		//Get cached location from GPS
 		Location cachedGpsLoc = gLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
@@ -656,7 +624,7 @@ public class MainMapActivity extends MapActivity {
 		//Remove all existing overlays
 		List<Overlay> mapOverlays = gMapView.getOverlays();
 		mapOverlays.clear();
-		
+
 		//Start with putting our own location on the map
 		gMyLocationOverlay = new MyLocationOverlay(this, gMapView);
 		mapOverlays.add(OVERLAY_MYLOC_ID, gMyLocationOverlay);
@@ -669,8 +637,8 @@ public class MainMapActivity extends MapActivity {
 					GeoPoint p = gMyLocationOverlay.getMyLocation();
 					if(gMapController == null)
 						gMapController = gMapView.getController();
-						gMapController.animateTo(p);
-						gMapController.setZoom(ZOOM_LEVEL_SKY);
+					gMapController.animateTo(p);
+					gMapController.setZoom(ZOOM_LEVEL_SKY);
 				}
 				//Now query last known destination (or default destination)
 				GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
@@ -686,7 +654,7 @@ public class MainMapActivity extends MapActivity {
 				putPinOnMap(dest, gDestName_full);
 				uiHandler.removeCallbacks(invalidateMapFromHandler);
 				uiHandler.post(invalidateMapFromHandler);
-				
+
 				//If we have seen alert1 and there is a location, zoom to that location
 				if(hasSeenAlert1 && !gDestName.equals("the diag"))
 					zoomTo(dest, ZOOM_LEVEL_BUILDING);
@@ -717,7 +685,7 @@ public class MainMapActivity extends MapActivity {
 		Route r =  googleParser.parseWalking();
 		return r;
 	}
-	
+
 	private Route directionsTransit(final GeoPoint start, final GeoPoint dest) {
 		GoogleParser googleParser;
 		String jsonURL = "http://maps.google.com/maps/api/directions/json?";
@@ -738,8 +706,6 @@ public class MainMapActivity extends MapActivity {
 		Route r =  googleParser.parseTransit();
 		return r;
 	}
-	
-	
 
 	private void zoomTo(GeoPoint p, int level) {
 		if(gMapController == null)
@@ -770,13 +736,6 @@ public class MainMapActivity extends MapActivity {
 			displayEnableGPSAlert();
 		}
 
-		//Start looking for location information
-
-		//Check the cached location, see if it's better than the best one we are using now
-//		Location cachedLoc = getCachedLocation();
-//		if(!isBetterLocation(gBestLocation, cachedLoc))
-			//Since it's better, use it then start querying gps sources
-//			gBestLocation = cachedLoc;
 		gLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
 		gLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
 	}
@@ -877,7 +836,7 @@ public class MainMapActivity extends MapActivity {
 	private double getDistanceFromCurrentLoc(double latitude, double longitude) {
 		final float curLat = (float)gMyLocationOverlay.getMyLocation().getLatitudeE6() * (float)1E-6;
 		final float curLong = (float)gMyLocationOverlay.getMyLocation().getLongitudeE6() * (float)1E-6;
-		
+
 		double lat_dist = latitude - curLat;
 		double long_dist = longitude - curLong;
 
@@ -899,7 +858,7 @@ public class MainMapActivity extends MapActivity {
 			gDestinationLong = doors[currentBestIndex].longitude;
 			return true;
 		}
-		
+
 		return false;
 	}
 
@@ -928,9 +887,9 @@ public class MainMapActivity extends MapActivity {
 			gTimeToDest = route.getDuration();
 
 			toastThis("Distance: "+gDistanceToDest + "\nTravel Duration: "+gTimeToDest, LONG);
-			
+
 			toastThis("TransitType:"+route.getSegments().get(0).getTransitMode(), LONG);
-			
+
 			tvDestInfo.setVisibility(TextView.VISIBLE);
 			tvDestInfo.setText("Distance: "+gDistanceToDest+" Travel Duration: "+gTimeToDest);
 			tvDestInfo.setTextColor(getResources().getColor(R.color.black));
@@ -938,7 +897,7 @@ public class MainMapActivity extends MapActivity {
 			if(gProgressDialog.isShowing())
 				gProgressDialog.dismiss();
 			gMapView.invalidate();
-			
+
 			gOurGetDirectionsTask = null;
 		}
 	}
@@ -968,9 +927,8 @@ public class MainMapActivity extends MapActivity {
 		gOurGetDirectionsTask.execute(start, dest);
 		return dest;
 	}
-	
-	//Method to grab the information from database pertaining to the building after
-	// gDestName is set.
+
+	//Method to grab the information from database pertaining to the building after gDestName is set.
 	private void digIntoDatabaseForBuildingInformationAndStuff() {
 		/** DATABASE STUFF **/
 		//Grab a cursor	
@@ -1014,22 +972,7 @@ public class MainMapActivity extends MapActivity {
 			buildAlertDialog(ALERT_INVALID_DEST);
 		}
 	}
-	
-	//Creates new PinOverlay and places array of pins on map
-	private void putPinsOnMap(ArrayList<GeoPoint> pinLocation, ArrayList<String> names) {
-		OverlayItem tmpItem;
-		Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
-		//Create our route overlay
-		gPinOverlay = new PinOverlay(drawable, this);
-		gPinOverlay.setTapListener(this);
-		for(int i = 0; i < pinLocation.size(); i++) {
-			tmpItem = new OverlayItem(pinLocation.get(i), names.get(i), "This is your current destination");
-			gPinOverlay.addOverlayNoPopulate(tmpItem);
-		}
-		gPinOverlay.populateOverlay();
-		gMapView.getOverlays().add(OVERLAY_PIN_ID, gPinOverlay);
-	}
-	
+
 	//Creates new pin overlay and places single pin on map
 	private void putPinOnMap(GeoPoint pinLocation, String name) {
 		OverlayItem tmpItem;
@@ -1041,16 +984,10 @@ public class MainMapActivity extends MapActivity {
 		gPinOverlay.addOverlay(tmpItem);
 		gMapView.getOverlays().add(OVERLAY_PIN_ID, gPinOverlay);
 	}
-	
-	private void removePinsFromMap() {
-		if(gMapController == null)
-			gMapController = gMapView.getController();
-	}
-	
+
 	private Runnable invalidateMapFromHandler = new Runnable(){
 		public void run() {
 			gMapView.invalidate();
 		}
 	};
-	
 }

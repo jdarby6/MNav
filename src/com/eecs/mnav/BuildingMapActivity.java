@@ -1,8 +1,8 @@
 package com.eecs.mnav;
 
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -19,7 +19,6 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.jakewharton.DiskLruCache;
 import com.parse.FindCallback;
 import com.parse.GetDataCallback;
 import com.parse.ParseException;
@@ -30,7 +29,7 @@ import com.parse.ProgressCallback;
 
 public class BuildingMapActivity extends Activity{
 	ArrayList<Bitmap> floors = new ArrayList<Bitmap>();
-	private DiskLruCache bitmapCache;
+	//private DiskLruCache bitmapCache;
 	TouchImageView touchImageViewMap;
 
 	int curFloor = 0;
@@ -53,8 +52,8 @@ public class BuildingMapActivity extends Activity{
 	boolean hasBasement = false;
 
 
-	private static final int DISK_CACHE_SIZE = 5 * 1024 * 1024; // 5MiB ~ This equates to about 5 sets of 5 building maps of EECS map quality
-	private static final String DISK_CACHE_SUBDIR = "building_maps";
+	//private static final int DISK_CACHE_SIZE = 5 * 1024 * 1024; // 5MiB ~ This equates to about 5 sets of 5 building maps of EECS map quality
+	//private static final String DISK_CACHE_SUBDIR = "building_maps";
 	
 	
 	@Override
@@ -113,7 +112,6 @@ public class BuildingMapActivity extends Activity{
 		   try {
 			bitmapCache = DiskLruCache.open(cacheDir, 100, 1, DISK_CACHE_SIZE);
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}*/
 
@@ -123,7 +121,7 @@ public class BuildingMapActivity extends Activity{
 		ParseQuery query = new ParseQuery("BuildingMap");
 		//Set constraints to look in COL name matching mBuildingName
 		setBuildingName();
-		query.whereEqualTo("name", mBuildingName.toLowerCase());
+		query.whereEqualTo("name", mBuildingName.toLowerCase(Locale.US));
 		query.addAscendingOrder("name");
 		query.setCachePolicy(ParseQuery.CachePolicy.CACHE_ELSE_NETWORK);
 		query.findInBackground(new FindCallback() {

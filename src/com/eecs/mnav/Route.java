@@ -112,5 +112,8 @@ public class Route {
 		this.departureTime = deptTime;
 	}
 	
+	public String getDepartureTime() {
+		return departureTime;
+	}
 	
 }
