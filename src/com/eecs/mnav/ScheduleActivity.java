@@ -509,7 +509,7 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 					editor.putString("DESTNAME", destBldgName);
 					editor.putString("DESTROOM", destRoomNum);
 					editor.commit();
-					Intent searchIntent = new Intent(ScheduleActivity.this, MNavMainActivity.class);
+					Intent searchIntent = new Intent(ScheduleActivity.this, MainMapActivity.class);
 					startActivity(searchIntent);
 					removeDialog(DIALOG_OPTION);
 				}

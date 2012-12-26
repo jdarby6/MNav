@@ -148,7 +148,7 @@ public class StartActivity extends Activity implements TextWatcher {
 					editor.putString("DESTROOM", destRoomNum);
 				}
 				editor.commit();
-				Intent searchIntent = new Intent(StartActivity.this, MNavMainActivity.class);
+				Intent searchIntent = new Intent(StartActivity.this, MainMapActivity.class);
 				StartActivity.this.startActivity(searchIntent);
 			}
 
@@ -219,7 +219,7 @@ public class StartActivity extends Activity implements TextWatcher {
 					editor.putString("DESTROOM", destRoomNum);
 					editor.commit();
 
-					Intent searchIntent = new Intent(StartActivity.this, MNavMainActivity.class);
+					Intent searchIntent = new Intent(StartActivity.this, MainMapActivity.class);
 					StartActivity.this.startActivity(searchIntent);
 				}
 				return true;
