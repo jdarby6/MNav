@@ -9,8 +9,9 @@
         android:id="@+id/search_box"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:hint="type to filter"
+        android:hint="@string/filter_text"
         android:inputType="text"
+        android:singleLine="true"
         android:maxLines="1" />
 
     <!-- Set height to 0, and let the weight param expand it -->

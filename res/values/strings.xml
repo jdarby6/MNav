@@ -60,5 +60,6 @@
     <string name="mailing_list_url">mnav.android@umich.edu</string>
     <string name="facebook_url">www.facebook.com/mnavforandroid</string>
     <string name="version_num">v0.02_alpha</string>
+    <string name="filter_text">type to filter</string>
 
 </resources>
