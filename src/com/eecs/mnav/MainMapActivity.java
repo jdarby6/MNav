@@ -3,6 +3,7 @@ package com.eecs.mnav;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 
 import android.app.AlertDialog;
@@ -15,6 +16,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.SQLException;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
@@ -25,6 +27,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -33,6 +37,8 @@ import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -47,7 +53,7 @@ import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 
-public class MainMapActivity extends MapActivity {
+public class MainMapActivity extends MapActivity implements TextWatcher {
 	//Layout globals
 	private MapView gMapView = null;
 	private TextView tvDestInfo = null;
@@ -67,7 +73,7 @@ public class MainMapActivity extends MapActivity {
 
 
 	//Destination globals
-	private EditText editTextDestination;
+	private AutoCompleteTextView autoCompleteTextViewDestination;
 	private String gDestName = "the diag";
 	private String gDestNum = "";
 	private String gDestName_full ="";
@@ -189,10 +195,27 @@ public class MainMapActivity extends MapActivity {
 		}
 
 		buildAlertDialog(ALERT_INTRO_PROMPT_1);
+		
+		//Retrieve list of all buildings to use with the AutoCompleteTextView
+		Cursor cursor = destination_db.getAllBldgs();
 
-		editTextDestination = (EditText)findViewById(R.id.editText_map_destination);
+		ArrayList<String> strings = new ArrayList<String>();
+		for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+			String full_name = cursor.getString(0);
+			String abbr_name = cursor.getString(1);
+			strings.add(abbr_name + ": " + full_name);
+		}
+
+		cursor.close();
+		String[] item = (String[]) strings.toArray(new String[strings.size()]);
+
+		autoCompleteTextViewDestination = (AutoCompleteTextView)findViewById(R.id.autoCompleteTextView_map_destination);
+		autoCompleteTextViewDestination.addTextChangedListener(this);
+		autoCompleteTextViewDestination.setTextColor(Color.BLACK);
+		autoCompleteTextViewDestination.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, item));
+		
 		if(!gDestName.equals("the diag"))
-			editTextDestination.setText(gDestName);
+			autoCompleteTextViewDestination.setText(gDestName);
 
 		//---------------------
 		//PLOT ROUTE BUTTON
@@ -207,7 +230,11 @@ public class MainMapActivity extends MapActivity {
 
 				tvDestInfo.setVisibility(TextView.INVISIBLE);
 				//Grab the user input lat/long
-				String tempAddress = editTextDestination.getText().toString();
+				String input = autoCompleteTextViewDestination.getText().toString();
+				String tempAddress = input;
+				int colonIndex = input.indexOf(':');
+				if(colonIndex != -1)
+					tempAddress = input.substring(0, colonIndex);
 				if(tempAddress.matches(StartActivity.REGEX_ROOM_NUM) || tempAddress.matches(StartActivity.REGEX_BLDG_NAME)) {
 					if(tempAddress.matches(StartActivity.REGEX_ROOM_NUM)) {
 						gDestNum = tempAddress.substring(0,tempAddress.indexOf(" "));
@@ -990,4 +1017,20 @@ public class MainMapActivity extends MapActivity {
 			gMapView.invalidate();
 		}
 	};
+
+	public void afterTextChanged(Editable s) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void beforeTextChanged(CharSequence s, int start, int count,
+			int after) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void onTextChanged(CharSequence s, int start, int before, int count) {
+		// TODO Auto-generated method stub
+		
+	}
 }

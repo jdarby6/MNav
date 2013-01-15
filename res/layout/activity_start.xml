@@ -27,7 +27,7 @@
         android:layout_below="@id/logoView"
         android:gravity="center_horizontal"
         android:text="@string/start_prompt"
-        android:textSize="20dp" />
+        android:textSize="20sp" />
 
     <AutoCompleteTextView
         android:id="@+id/autoCompleteTextView_address_box"
@@ -91,7 +91,7 @@
         android:layout_alignRight="@+id/button_info"
         android:layout_alignTop="@+id/layout_mbus_button"
         android:orientation="vertical" >
-
+
         <Button
             android:id="@+id/button_bldg_finder"
             android:layout_width="60dp"
@@ -118,7 +118,7 @@
         android:layout_alignTop="@+id/layout_mbus_button"
         android:layout_marginLeft="23dp"
         android:orientation="vertical" >
-
+
         <Button
             android:id="@+id/button_schedule"
             android:layout_width="60dp"
