@@ -30,7 +30,7 @@
             android:layout_centerVertical="true"
             android:background="@drawable/ic_target"
             android:text="@string/_" />
-
+
         <Button
             android:id="@+id/button_slider"
             android:layout_width="45dp"
@@ -40,7 +40,6 @@
             android:background="@drawable/ic_settings_button"
             android:text="@string/_" />
 
-
         <View
             android:id="@+id/divider_2"
             android:layout_width="1dp"
@@ -48,8 +47,7 @@
             android:layout_centerVertical="true"
             android:layout_toRightOf="@+id/button_slider"
             android:background="@drawable/divider_black_vert" />
-        
-        
+
         <Button
             android:id="@+id/button_satellite"
             android:layout_width="45dp"
@@ -74,16 +72,15 @@
             android:layout_alignParentBottom="true"
             android:layout_toLeftOf="@+id/button_return"
             android:background="@drawable/divider_black_vert" />
-
+
         <View
             android:id="@+id/divider_3"
             android:layout_width="1dp"
             android:layout_height="wrap_content"
-            android:layout_alignLeft="@+id/button_plotroute"
             android:layout_alignParentBottom="true"
             android:layout_toRightOf="@id/button_satellite"
             android:background="@drawable/divider_black_vert" />
-
+
         <TextView
             android:id="@+id/textView1"
             android:layout_width="wrap_content"
@@ -93,7 +90,6 @@
             android:layout_toRightOf="@+id/divider_3"
             android:text="Magic Bus Viewer"
             android:textAppearance="?android:attr/textAppearanceMedium" />
-
     </RelativeLayout>
 
     <LinearLayout

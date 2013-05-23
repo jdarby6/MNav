@@ -756,7 +756,7 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 		protected Cursor doInBackground(final String... args) {
 			if(all_classes_db == null) {
 				//Initialize classes db
-				all_classes_db = new DataBaseHelper(ScheduleActivity.this, "all_classes_db");
+				all_classes_db = new DataBaseHelper("all_classes_db");
 				try {
 					publishProgress("Creating database...");
 					all_classes_db.createDataBase();
@@ -776,17 +776,17 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 			publishProgress("Querying for all classes...");
 			return all_classes_db.getAllClasses();
 		}
-		
+
 		//update progress dialog here
 		@Override
-	    protected void onProgressUpdate(String... progress) {
-		  super.onProgressUpdate( progress[0]);
-	      
-		  Log.d("ScheduleActivity", "Progress Update: " + progress[0]);
-		  
-	      progressDialog.setMessage(progress[0]);
-	    }
-		
+		protected void onProgressUpdate(String... progress) {
+			super.onProgressUpdate( progress[0]);
+
+			Log.d("ScheduleActivity", "Progress Update: " + progress[0]);
+
+			progressDialog.setMessage(progress[0]);
+		}
+
 		// can use UI thread here
 		@Override
 		protected void onPostExecute(final Cursor cursor) {

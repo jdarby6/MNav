@@ -8,7 +8,7 @@ public class MEvent {
 	private String timeBegin;
 	private String timeEnd;
 	private String days;//string MOTUWETHFRSASU
-	
+
 	public MEvent(){
 		this.label = "";
 		this.location = "";
@@ -17,7 +17,7 @@ public class MEvent {
 		this.timeEnd = "";
 		this.days = "";
 	}
-	
+
 	public MEvent(String label2, String location2, int index2, String timeBegin2,
 			String timeEnd2, String days2) {
 		this.label = label2;

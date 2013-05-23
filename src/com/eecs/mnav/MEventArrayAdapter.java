@@ -56,6 +56,6 @@ public class MEventArrayAdapter extends ArrayAdapter<MEvent>{
 		return events;
 	}
 
-	
+
 
 }

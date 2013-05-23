@@ -37,10 +37,10 @@
         android:layout_below="@id/textView_destination"
         android:layout_toLeftOf="@+id/button_search"
         android:completionThreshold="2"
-        android:singleLine="true"
-        android:maxLines="1"
         android:hint="@string/address_default"
-        android:selectAllOnFocus="true" />
+        android:maxLines="1"
+        android:selectAllOnFocus="true"
+        android:singleLine="true" />
 
     <Button
         android:id="@+id/button_search"

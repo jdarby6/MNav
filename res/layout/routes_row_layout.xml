@@ -17,6 +17,6 @@
         android:focusableInTouchMode="false"
         android:text="@string/route"
         android:textColor="#ffffff"
-        android:textSize="20dp" />
+        android:textSize="20sp" />
 
 </RelativeLayout>

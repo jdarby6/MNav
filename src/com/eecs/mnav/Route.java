@@ -83,11 +83,11 @@ public class Route {
 	public String getDistance() {
 		return distance;
 	}
-	
+
 	public void setDuration(String time) {
 		this.duration = time;
 	}
-	
+
 	public String getDuration() {
 		return duration;
 	}
@@ -99,11 +99,11 @@ public class Route {
 	public String getPolyline() {
 		return polyline;
 	}
-	
+
 	public void setArrivalTime(String arrTime) {
 		this.arrivalTime = arrTime;
 	}
-	
+
 	public String getArrivalTime() {
 		return arrivalTime;
 	}
@@ -111,9 +111,9 @@ public class Route {
 	public void setDepartureTime(String deptTime){
 		this.departureTime = deptTime;
 	}
-	
+
 	public String getDepartureTime() {
 		return departureTime;
 	}
-	
+
 }

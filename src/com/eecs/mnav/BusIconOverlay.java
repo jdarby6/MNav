@@ -61,12 +61,12 @@ public class BusIconOverlay extends ItemizedOverlay<OverlayItem> {
 	public int size() {
 		return myOverlays.size();
 	}
-	
+
 	@Override
 	public void draw(android.graphics.Canvas canvas, MapView mapView, boolean shadow) {
 		super.draw(canvas, mapView, false);
 	}
-	
+
 	public void populateIt() {
 		this.populate();
 	}

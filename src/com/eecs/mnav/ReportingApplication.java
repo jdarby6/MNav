@@ -1,19 +1,30 @@
 package com.eecs.mnav;
-import org.acra.*;
-import org.acra.annotation.*;
 
+import org.acra.ACRA;
+import org.acra.ReportingInteractionMode;
+import org.acra.annotation.ReportsCrashes;
 import android.app.Application;
-@ReportsCrashes(formKey = "dFlQSEk0V25uMUdQblhLZkRMT2VyMUE6MQ",
-				mode = ReportingInteractionMode.TOAST,
-				forceCloseDialogAfterToast = false, // optional, default false
-				resToastText = R.string.crash_toast_text,
-				logcatArguments = { "-t", "100", "-v", "time" }) 
-public class ReportingApplication extends Application{
-	 @Override
-	  public void onCreate() {
-	      super.onCreate();
+import android.content.Context;
 
-	      // The following line triggers the initialization of ACRA
-	      ACRA.init(this);
-	  }
+@ReportsCrashes(formKey = "dFlQSEk0V25uMUdQblhLZkRMT2VyMUE6MQ",
+mode = ReportingInteractionMode.TOAST,
+forceCloseDialogAfterToast = false, // optional, default false
+resToastText = R.string.crash_toast_text,
+logcatArguments = { "-t", "100", "-v", "time" }) 
+public class ReportingApplication extends Application {
+	private static Context context;
+
+	@Override
+	public void onCreate() {
+		super.onCreate();
+		context = getApplicationContext();
+
+		// The following line triggers the initialization of ACRA
+		ACRA.init(this);
+	}
+	
+	//This allows us to get the application's context anywhere
+    public static Context getAppContext() {
+        return context;
+    }
 }

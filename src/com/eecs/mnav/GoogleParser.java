@@ -94,7 +94,7 @@ public class GoogleParser {
 		return route;
 	}
 
-	
+
 	/**
 	 * Parses a url pointing to a Google JSON object to a Route object.
 	 * @return a Route object based on the JSON object.
@@ -154,10 +154,10 @@ public class GoogleParser {
 				segment.setInstruction(step.getString("html_instructions").replaceAll("<(.*?)*>", ""));
 				//Retrieve & decode this segment's polyline and add it to the route.
 				route.addPoints(decodePolyLine(step.getJSONObject("polyline").getString("points")));
-				
+
 				//Grab the type of transit this describes
 				segment.setTransitMode(step.getString("travel_mode"));
-				
+
 				//Push a copy of the segment to the route
 				route.addSegment(segment.copy());
 			}
@@ -166,8 +166,8 @@ public class GoogleParser {
 		}
 		return route;
 	}
-	
-	
+
+
 	/**
 	 * Convert an inputstream to a string.
 	 * @param input inputstream to convert.

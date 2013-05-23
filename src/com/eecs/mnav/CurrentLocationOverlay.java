@@ -9,7 +9,7 @@ public class CurrentLocationOverlay extends MyLocationOverlay {
 
 	public CurrentLocationOverlay(Context context, MapView mapView) {
 		super(context, mapView);
-		// TODO Auto-generated constructor stub
+
 	}
 
 }

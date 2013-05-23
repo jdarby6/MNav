@@ -27,7 +27,7 @@ public class BuildingFinderActivity extends ListActivity {
 		super.onCreate(savedInstanceState);
 
 		//Initialize destination db
-		destination_db = new DataBaseHelper(this, "destination_db");
+		destination_db = new DataBaseHelper("destination_db");
 		try {
 			destination_db.createDataBase();
 		} 
@@ -87,12 +87,12 @@ public class BuildingFinderActivity extends ListActivity {
 		super.onDestroy();
 		filterText.removeTextChangedListener(filterTextWatcher);
 	}
-	
+
 	@Override
 	protected void onListItemClick (ListView l, View v, int position, long id) {
 		String tempDest = l.getItemAtPosition(position).toString();
 		String destAbbr = tempDest.substring(0, tempDest.indexOf(':'));
-		
+
 		//Save destination address
 		Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
 		editor.putString("DESTNAME", destAbbr);

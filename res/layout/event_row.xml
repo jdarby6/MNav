@@ -3,7 +3,6 @@
     android:id="@+id/RelativeLayout1"
     android:layout_width="fill_parent"
     android:layout_height="match_parent"
-   
     android:orientation="vertical"
     android:padding="5dp"
     android:paddingLeft="25dp" >
@@ -14,61 +13,62 @@
         android:id="@+id/textView_begin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/textView_location"
         android:layout_alignBaseline="@+id/textView_location"
         android:layout_marginLeft="10dp"
-        android:text="@string/zero_time"
-        android:textAppearance="?android:attr/textAppearanceMedium" 
+        android:layout_toRightOf="@+id/textView_location"
+        android:clickable="false"
         android:focusable="false"
         android:focusableInTouchMode="false"
-        android:clickable="false"/>
+        android:text="@string/zero_time"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <TextView
         android:id="@+id/textView_location"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="20dp"
         android:layout_below="@+id/textView_class"
-        android:text="@string/location"
-        android:textAppearance="?android:attr/textAppearanceMedium" 
+        android:layout_marginLeft="20dp"
+        android:clickable="false"
         android:focusable="false"
         android:focusableInTouchMode="false"
-        android:clickable="false"/>
+        android:text="@string/location"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <TextView
         android:id="@+id/textView_end"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/textView_dash"
         android:layout_alignBaseline="@+id/textView_location"
         android:layout_marginLeft="2dp"
-        android:text="@string/zero_time"
-        android:textAppearance="?android:attr/textAppearanceMedium" 
+        android:layout_toRightOf="@+id/textView_dash"
+        android:clickable="false"
         android:focusable="false"
         android:focusableInTouchMode="false"
-        android:clickable="false"/>
-     <TextView
+        android:text="@string/zero_time"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <TextView
         android:id="@+id/textView_dash"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/textView_begin"
         android:layout_alignBaseline="@+id/textView_location"
         android:layout_marginLeft="2dp"
-        android:text="@string/dash"
-        android:textAppearance="?android:attr/textAppearanceMedium" 
+        android:layout_toRightOf="@+id/textView_begin"
+        android:clickable="false"
         android:focusable="false"
         android:focusableInTouchMode="false"
-        android:clickable="false"/>
+        android:text="@string/dash"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <TextView
         android:id="@+id/textView_class"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="10dp"
-        android:text="@string/class_string"
-        android:textSize="35sp" 
+        android:clickable="false"
         android:focusable="false"
         android:focusableInTouchMode="false"
-        android:clickable="false"/>
+        android:text="@string/class_string"
+        android:textSize="35sp" />
 
 </RelativeLayout>

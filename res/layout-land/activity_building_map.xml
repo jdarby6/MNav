@@ -15,7 +15,7 @@
         android:text="Electrical Engineering and Computer Science building"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:textColor="@color/umichBlue" />
-
+
     <TextView
         android:id="@+id/textView_class_num"
         android:layout_width="wrap_content"
@@ -33,7 +33,7 @@
         android:layout_centerHorizontal="true"
         android:text="@string/_"
         android:textAppearance="?android:attr/textAppearanceSmall" />
-
+
     <com.eecs.mnav.TouchImageView
         android:id="@+id/imageView_building_map"
         android:layout_width="match_parent"

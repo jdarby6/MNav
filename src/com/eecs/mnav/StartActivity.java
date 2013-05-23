@@ -3,6 +3,7 @@ package com.eecs.mnav;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Locale;
 
 import com.parse.Parse;
 
@@ -64,14 +65,14 @@ public class StartActivity extends Activity implements TextWatcher {
 		setContentView(R.layout.activity_start);
 
 		context = getApplicationContext();
-		
+
 		checkGPS();
-		
+
 		//Initialize Parse
 		Parse.initialize(this, "kTygJWFcKh5a9OK7Pv58mTZtfkS7Sp91cpVyIiwc", "j8fsAwMny2P7y4iLRZNY8ABhK5oF2AV3rQe2MTdO");
 
 		//Initialize destination db
-		destination_db = new DataBaseHelper(this, "destination_db");
+		destination_db = new DataBaseHelper("destination_db");
 		try {
 			destination_db.createDataBase();
 		} 
@@ -215,7 +216,7 @@ public class StartActivity extends Activity implements TextWatcher {
 					}
 
 					Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
-					editor.putString("DESTNAME", destBldgName.toUpperCase());
+					editor.putString("DESTNAME", destBldgName.toUpperCase(Locale.US));
 					editor.putString("DESTROOM", destRoomNum);
 					editor.commit();
 
@@ -255,7 +256,7 @@ public class StartActivity extends Activity implements TextWatcher {
 		super.onResume();
 		checkGPS();
 	}
-	
+
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.activity_start, menu);
@@ -274,7 +275,7 @@ public class StartActivity extends Activity implements TextWatcher {
 	public void onTextChanged(CharSequence s, int start, int before, int count) {
 
 	}
-	
+
 	public void checkGPS() {
 		gLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 		//Check to see if GPS is enabled
@@ -283,7 +284,7 @@ public class StartActivity extends Activity implements TextWatcher {
 			displayEnableGPSAlert();
 		}
 	}
-	
+
 	private void displayEnableGPSAlert() {
 		AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
 		alertDialog.setTitle("Enable GPS?");

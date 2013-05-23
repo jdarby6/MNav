@@ -48,8 +48,8 @@ public class ScheduleDatabaseHandler extends SQLiteOpenHelper {
 	}
 
 	//schedule name not used
-	
-	
+
+
 	// Upgrading database
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -63,11 +63,11 @@ public class ScheduleDatabaseHandler extends SQLiteOpenHelper {
 	/**
 	 * All CRUD(Create, Read, Update, Delete) Operations
 	 */
-	
+
 	//Adds a single row to the table, representing a single timer in the array
 	void addEvent(MEvent event, String scheduleName) {
 		SQLiteDatabase db = this.getWritableDatabase();
-		
+
 		ContentValues values = new ContentValues();
 		values.put(KEY_EVENTINDEX, event.getIndex());
 		values.put(KEY_LABEL, event.getLabel());
@@ -75,20 +75,20 @@ public class ScheduleDatabaseHandler extends SQLiteOpenHelper {
 		values.put(KEY_TIMEBEGIN, event.getTimeBegin());
 		values.put(KEY_TIMEEND, event.getTimeEnd());
 		values.put(KEY_DAYS, event.getDays());
-		
-		
+
+
 		// Inserting Row
 		db.insert(TABLE_SAVEDEVENTS, null, values);
-		
+
 	}
-	
+
 	//Adds a collection of timers to the table
 	public void addSchedule(ArrayList<MEvent> events, String scheduleName) {
 		for(int i = 0; i < events.size(); i++) {
 			addEvent(events.get(i), scheduleName);
 		}
 	}
-	
+
 	public ArrayList<MEvent> getDay(String day) {//returns list for a day
 		ArrayList<MEvent> events = new ArrayList<MEvent>();
 		// Query //don't really need days, since only looking at certain day, but w/e
@@ -101,11 +101,11 @@ public class ScheduleDatabaseHandler extends SQLiteOpenHelper {
 				+ " WHERE " + KEY_DAYS + " LIKE '%" + day
 				+ "%'"+ " ORDER BY "
 				+ KEY_EVENTINDEX + " ASC";
-		
-		
+
+
 		SQLiteDatabase db = this.getWritableDatabase();
 		Cursor cursor = db.rawQuery(query, null);
-		
+
 		// looping through all rows and adding to list
 		//error check if no days
 		if (cursor.moveToFirst()) {
@@ -120,21 +120,20 @@ public class ScheduleDatabaseHandler extends SQLiteOpenHelper {
 				event.restoreLabel(label);
 				// Adding contact to list
 				events.add(event);
-				
+
 			} while (cursor.moveToNext());
-			
+
 		}
 		cursor.close();
 		return events;
 	}
-	
+
 	public void deleteEvent(String classname){
-		
+
 		SQLiteDatabase db = this.getWritableDatabase();
 		db.delete(TABLE_SAVEDEVENTS, KEY_LABEL + " = ?", new String[] { classname });
-		
+
 	}
-	
-	
+
+
 }
-	

@@ -96,7 +96,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 	private RouteOverlay gRouteOverlay = null;
 	private MyLocationOverlay gMyLocationOverlay = null;
 	private ScaleBarOverlay gScaleBarOverlay = null;
-	
+
 	//Directions globals
 	private ProgressDialog gProgressDialog;
 	private GeoPoint gStartGeo;
@@ -162,7 +162,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		local_db = new LocalDatabaseHandler(this);
 
 		//Initialize destination db
-		destination_db = new DataBaseHelper(this, "destination_db");
+		destination_db = new DataBaseHelper("destination_db");
 		try {
 			destination_db.createDataBase();
 		} catch (IOException ioe) {
@@ -195,7 +195,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		}
 
 		buildAlertDialog(ALERT_INTRO_PROMPT_1);
-		
+
 		//Retrieve list of all buildings to use with the AutoCompleteTextView
 		Cursor cursor = destination_db.getAllBldgs();
 
@@ -213,7 +213,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		autoCompleteTextViewDestination.addTextChangedListener(this);
 		autoCompleteTextViewDestination.setTextColor(Color.BLACK);
 		autoCompleteTextViewDestination.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, item));
-		
+
 		if(!gDestName.equals("the diag"))
 			autoCompleteTextViewDestination.setText(gDestName);
 
@@ -326,7 +326,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 				gMapController.zoomIn();
 			}
 		});
-		
+
 		//---------------------
 		//Zoom OUT BUTTON
 		//---------------------
@@ -365,7 +365,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 	public void onDestroy() {
 		super.onDestroy();
 		Log.d("OnDestroy()", "OnDestroy() called");
-		
+
 		//Save stored data
 		Editor editor = gPreferences.edit();
 		editor.putBoolean("A1", hasSeenAlert1);
@@ -373,11 +373,11 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		editor.putBoolean("A3", hasSeenAlert3);
 		editor.putBoolean("A4", hasSeenAlert4);
 		editor.commit();
-		
+
 		//Turn off GPS
 		if(gLocationManager != null)
 			gLocationManager.removeUpdates(locationListener);
-		
+
 		destination_db.close();
 
 		if(gOurGetDirectionsTask != null) {
@@ -1020,17 +1020,17 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 
 	public void afterTextChanged(Editable s) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	public void beforeTextChanged(CharSequence s, int start, int count,
 			int after) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	public void onTextChanged(CharSequence s, int start, int before, int count) {
 		// TODO Auto-generated method stub
-		
+
 	}
 }

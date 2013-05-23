@@ -11,8 +11,8 @@
         android:layout_height="wrap_content"
         android:hint="@string/filter_text"
         android:inputType="text"
-        android:singleLine="true"
-        android:maxLines="1" />
+        android:maxLines="1"
+        android:singleLine="true" />
 
     <!-- Set height to 0, and let the weight param expand it -->
     <!--

@@ -19,11 +19,11 @@ public class Segment {
 	public void setTransitMode(final String trans) {
 		this.transitMode = trans;
 	}
-	
+
 	public String getTransitMode(){
 		return transitMode;
 	}
-	
+
 	public void setInstruction(final String turn) {
 		this.instruction = turn;
 	}

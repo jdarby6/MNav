@@ -92,7 +92,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) { 
 		super.onCreate(savedInstanceState);
-		
+
 		listView = new ListView(StartActivity.context);
 		routesListViewAdapter = new ListViewCustomAdapter(this);
 		listView.setAdapter(routesListViewAdapter);
@@ -100,7 +100,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		setBehindContentView(listView);
 		gSlidingMenu = getSlidingMenu();
 		gSlidingMenu.setBehindOffset(100);
-				
+
 		//Grab the mapView
 		gMapView = (MapView)findViewById(R.id.mapview);
 		try {
@@ -115,7 +115,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
 		}
-		
+
 		bSlider = (Button) findViewById(R.id.button_slider);
 		bSlider.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {

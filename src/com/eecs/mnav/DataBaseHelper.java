@@ -5,41 +5,37 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Locale;
 
-import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
-public class DataBaseHelper extends SQLiteOpenHelper{
-
+public class DataBaseHelper extends SQLiteOpenHelper {
+	
 	//The Android's default system path of your application database.
-	private static String DB_PATH = "/data/data/com.eecs.mnav/databases/";
-
+	private static final String DB_PATH = ReportingApplication.getAppContext().getFilesDir().getParentFile().getPath() + "/databases/";
 	private static String DB_NAME;
-
 	private SQLiteDatabase myDataBase; 
 
-	private final Context myContext;
-
 	/**
-	 * Constructor
-	 * Takes and keeps a reference of the passed context in order to access to the application assets and resources.
-	 * @param context
+	 * Sets the DB_NAME field to copy the appropriate pre-existing database to the app's database directory to be used 
+	 * @param name The filename of the pre-existing database
 	 */
-	public DataBaseHelper(Context context, String name) {
-
-		super(context, DB_NAME, null, 1);
-		this.myContext = context;
+	public DataBaseHelper(String name) {
+		
+		super(ReportingApplication.getAppContext(), DB_NAME, null, 1);
 		DB_NAME = name;
 	}	
 
 	/**
 	 * Creates a empty database on the system and rewrites it with your own database.
-	 * */
-	public void createDataBase() throws IOException{
+	 * @throws IOException
+	 */
+	public void createDataBase() throws IOException {
 
 		boolean dbExists = checkDataBase();
 
@@ -47,8 +43,8 @@ public class DataBaseHelper extends SQLiteOpenHelper{
 			//do nothing - database already exists
 		} 
 		else {
-			//By calling this method and empty database will be created into the default system path
-			//of your application so we are gonna be able to overwrite that database with our database.
+			//By calling this method, an empty database will be created into the default system path of
+			//our application, and we will be able to overwrite that database with our existing database.
 			this.getWritableDatabase();
 
 			try {
@@ -61,15 +57,13 @@ public class DataBaseHelper extends SQLiteOpenHelper{
 	}
 
 	/**
-	 * Check if the database already exist to avoid re-copying the file each time you open the application.
+	 * Check if the database already exists to avoid re-copying the file each time you open the application.
 	 * @return true if it exists, false if it doesn't
 	 */
-	private boolean checkDataBase()
-	{
+	private boolean checkDataBase() {
 		SQLiteDatabase checkDB = null;
 
-		try
-		{
+		try {
 			String myPath = DB_PATH + DB_NAME;
 
 			File DBFolder = new File(DB_PATH);
@@ -89,16 +83,17 @@ public class DataBaseHelper extends SQLiteOpenHelper{
 	}
 
 	/**
-	 * Copies your database from your local assets-folder to the just created empty database in the
+	 * Copies your database from your local assets folder to the just0created empty database in the
 	 * system folder, from where it can be accessed and handled.
-	 * This is done by transfering bytestream.
+	 * This is done by transferring bytestream.
+	 * @throws IOException
 	 * */
 	private void copyDataBase() throws IOException {
 
 		//Open your local db as the input stream
-		InputStream myInput = myContext.getAssets().open(DB_NAME);
+		InputStream myInput = ReportingApplication.getAppContext().getAssets().open(DB_NAME);
 
-		try{
+		try {
 			// Path to the just created empty db
 			String outFileName = DB_PATH + DB_NAME;
 
@@ -108,7 +103,7 @@ public class DataBaseHelper extends SQLiteOpenHelper{
 			//transfer bytes from the inputfile to the outputfile
 			byte[] buffer = new byte[1024];
 			int length;
-			while ((length = myInput.read(buffer))>0){
+			while ((length = myInput.read(buffer)) > 0) {
 				myOutput.write(buffer, 0, length);
 			}
 
@@ -118,11 +113,15 @@ public class DataBaseHelper extends SQLiteOpenHelper{
 			myInput.close();
 		}
 		catch (IOException e) {
-			
+			Log.e("DataBaseHelper", "Exception thrown in copyDataBase()");
 		}
 
 	}
 
+	/**
+	 * Generic method to open the database referenced by this instance of DatabaseHelper
+	 * @throws SQLException
+	 */
 	public void openDataBase() throws SQLException {
 		//Open the database
 		String myPath = DB_PATH + DB_NAME;
@@ -131,12 +130,10 @@ public class DataBaseHelper extends SQLiteOpenHelper{
 
 	@Override
 	public synchronized void close() {
-
 		if(myDataBase != null)
 			myDataBase.close();
 
 		super.close();
-
 	}
 
 	@Override
@@ -149,29 +146,53 @@ public class DataBaseHelper extends SQLiteOpenHelper{
 
 	}
 
+	/**
+	 * Retrieves relevant information for a building by name
+	 * @param name The full or abbreviated name of the building for which you need info
+	 * @return Cursor containing bldg_num, num_doors, and name_full for building whose
+	 *         full name or abbreviation matches the name parameter
+	 */
 	public Cursor getBldgIdByName(String name) {
-		name = name.toUpperCase();
+		name = name.toUpperCase(Locale.US);
 		return myDataBase.rawQuery("SELECT bldg_num, num_doors, name_full FROM buildings " +
 				"WHERE upper(name_abbr)='" + name + "' OR upper(name_full)='" + name + "'", null);
 	}
 
+	/**
+	 * Retrieves all of the door locations for a building whose number is bldg_num
+	 * @param bldg_num The building id for which we need the door locations 
+	 * @return Cursor containing door_lat and door_long for each door of the building with
+	 *         the id bldg_num 
+	 */
 	public Cursor getDoorsByBldgId(int bldg_num) {
 		return myDataBase.rawQuery("SELECT door_lat, door_long FROM doors WHERE bldg_num=" + bldg_num, null);
 	}
 
+	/**
+	 * Retrieves the full and abbreviated name of each building in the database
+	 * @return Cursor containing name_full and name_abbr for each building
+	 */
 	public Cursor getAllBldgs() {
 		return myDataBase.rawQuery("SELECT name_full, name_abbr FROM buildings", null);
 	}
 
+	/** 
+	 * Retrieves just the abbreviated name of each building in the database
+	 * @return Cursor containing name_abbr for each building
+	 */
 	public Cursor getAllBldgAbbrs() {
 		return myDataBase.rawQuery("SELECT name_abbr FROM buildings", null);
 	}
 
 	public Cursor getSections(String classname) {
-		// TODO Auto-generated method stub
+
 		return null;
 	}
 
+	/**
+	 * Returns everything contained in our database of class info
+	 * @return Cursor containing information for all classes
+	 */
 	public Cursor getAllClasses() {
 		return myDataBase.rawQuery("SELECT * FROM class_info", null);
 	}

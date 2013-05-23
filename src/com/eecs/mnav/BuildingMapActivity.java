@@ -47,15 +47,15 @@ public class BuildingMapActivity extends Activity{
 	SharedPreferences gPreferences;
 	ProgressDialog gProgressDialog;
 	String mBuildingName = "default"; //Default to saying we don't have the map
-	
+
 	boolean curFloorSet = false;
 	boolean hasBasement = false;
 
 
 	//private static final int DISK_CACHE_SIZE = 5 * 1024 * 1024; // 5MiB ~ This equates to about 5 sets of 5 building maps of EECS map quality
 	//private static final String DISK_CACHE_SUBDIR = "building_maps";
-	
-	
+
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -67,8 +67,8 @@ public class BuildingMapActivity extends Activity{
 		tvFloorNum = (TextView) findViewById(R.id.textView_floor_num);
 		touchImageViewMap = (TouchImageView) findViewById(R.id.imageView_building_map);
 		touchImageViewMap.setMaxZoom(3f);
-		
-		
+
+
 		gProgressDialog = new ProgressDialog(this);
 		gProgressDialog.setMessage("Establishing Connection...");
 		gProgressDialog.setCancelable(true);
@@ -80,35 +80,35 @@ public class BuildingMapActivity extends Activity{
 		gProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 		gProgressDialog.setProgress(0); // set percentage completed to 0%
 		gProgressDialog.show();
-		
+
 		//Load stored data
 		gPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-		
+
 		//Load last known latitude, longitude default is the Diag
 		gDestName_full = gPreferences.getString("DESTNAMEFULL", "");
 		gDestName = gPreferences.getString("DESTNAME", "");
 		gDestRoom = gPreferences.getString("DESTROOM", "");
-		
+
 		tvTitle.setText(gDestName_full);
 		Log.d("BuildingMapActivity", "Name_full:"+gDestName_full+" Name:"+gDestName+" RoomNum:"+gDestRoom);
 		if(!gDestRoom.equals(""))
 			tvRoomNum.setText("Looking for "+gDestRoom+" "+gDestName);
 		else
 			tvRoomNum.setText("");
-		
+
 		/*XXX/Define the cache
 		   File cacheDir = getDir(DISK_CACHE_SUBDIR, 0);
 		   //We'll be using the destName abbreviation for the cache key
 		    /**
-		     * Opens the cache in {@code directory}, creating a cache if none exists
-		     * there.
-		     *
-		     * @param directory a writable directory
-		     * @param appVersion
-		     * @param valueCount the number of values per cache entry. Must be positive.
-		     * @param maxSize the maximum number of bytes this cache should use to store
-		     * @throws IOException if reading or writing the cache directory fails
-		     *
+		 * Opens the cache in {@code directory}, creating a cache if none exists
+		 * there.
+		 *
+		 * @param directory a writable directory
+		 * @param appVersion
+		 * @param valueCount the number of values per cache entry. Must be positive.
+		 * @param maxSize the maximum number of bytes this cache should use to store
+		 * @throws IOException if reading or writing the cache directory fails
+		 *
 		   try {
 			bitmapCache = DiskLruCache.open(cacheDir, 100, 1, DISK_CACHE_SIZE);
 		} catch (IOException e1) {
@@ -135,7 +135,7 @@ public class BuildingMapActivity extends Activity{
 					}
 					else 
 						mapsNotAvailable = false;
-					
+
 					//Make the floors array big enough to hold our maps
 					while(floors.size() < numFloors+1) { //numFloors + 1 will allow 0 basement floors
 						floors.add(null);
@@ -186,7 +186,7 @@ public class BuildingMapActivity extends Activity{
 			final String filename = tmpFile.getName();
 			final String key = filename.substring(filename.lastIndexOf('-')+1, filename.length()-4);
 			Log.d("Parse Import", "Name of file: "+filename+"\nKey used: "+key);
-			
+
 			tmpFile.getDataInBackground(new GetDataCallback() {
 				public void done(byte[] data, ParseException e) {
 					if (e == null) {
@@ -220,17 +220,17 @@ public class BuildingMapActivity extends Activity{
 					}
 				}
 			},  new ProgressCallback() {
-				  public void done(Integer percentDone) {
-					  	gProgressDialog.incrementProgressBy(percentDone - gProgressDialog.getProgress());
-					  	if(gProgressDialog.getProgress() >= 100){
-					  		Log.d("Parse Import", "Loading Progress curFloor="+curFloor+" numFloors="+numFloors);
-					  		if(curFloor == numFloors-1 || (curFloor == 1 && curFloorSet))					  				
-					  			gProgressDialog.dismiss();
-					  		else {
-					  			gProgressDialog.setProgress(0);
-					  		}
-					  	}
-					  }
+				public void done(Integer percentDone) {
+					gProgressDialog.incrementProgressBy(percentDone - gProgressDialog.getProgress());
+					if(gProgressDialog.getProgress() >= 100){
+						Log.d("Parse Import", "Loading Progress curFloor="+curFloor+" numFloors="+numFloors);
+						if(curFloor == numFloors-1 || (curFloor == 1 && curFloorSet))					  				
+							gProgressDialog.dismiss();
+						else {
+							gProgressDialog.setProgress(0);
+						}
+					}
+				}
 			});
 		}
 	}
@@ -239,7 +239,7 @@ public class BuildingMapActivity extends Activity{
 	public void addFloor(int pos, Bitmap bmp, String key) {
 		Log.d("addFloor()", "Adding floor to pos="+pos+". This is map number "+curFloor);
 		floors.set(pos, bmp);
-	//XXX	addBitmapToMemoryCache(key, bmp);
+		//XXX	addBitmapToMemoryCache(key, bmp);
 	}
 
 	/** Method to figure out what current floor we should display to the user **/
@@ -270,7 +270,7 @@ public class BuildingMapActivity extends Activity{
 			}
 			curFloor++;
 			touchImageViewMap.setImageBitmap(floors.get(curFloor));
-  			setFloorTextView(curFloor);
+			setFloorTextView(curFloor);
 			touchImageViewMap.invalidate();
 			Log.d("BuildingMapActivity", "Went up! curFloor="+curFloor);
 		}
@@ -294,12 +294,12 @@ public class BuildingMapActivity extends Activity{
 			}
 			curFloor--;
 			touchImageViewMap.setImageBitmap(floors.get(curFloor));
-  			setFloorTextView(curFloor);
+			setFloorTextView(curFloor);
 			touchImageViewMap.invalidate();
 			Log.d("BuildingMapActivity", "Went down! curFloor="+curFloor);
 		}
 	}
-	
+
 	/*public void addBitmapToMemoryCache(String key, Bitmap bitmap) {
 	    if (getBitmapFromMemCache(key) == null) {
 	    	Log.d("LRUCache","Added "+key+" to cache.");
@@ -346,8 +346,8 @@ public class BuildingMapActivity extends Activity{
 
 	        return bitmap;
 	}
-*/	
-	
+	 */	
+
 	private void setFloorTextView(int floor) {
 		String temp = "";
 		if(floor == 0)
@@ -360,7 +360,7 @@ public class BuildingMapActivity extends Activity{
 			temp = floor+"rd Floor";
 		else if(floor%10>=4 || floor%10==0)
 			temp = floor+"th Floor";
-		
+
 		tvFloorNum.setText(temp);
 	}
 }

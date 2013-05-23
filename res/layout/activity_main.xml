@@ -96,9 +96,9 @@
             android:layout_toRightOf="@+id/divider_2"
             android:ems="10"
             android:hint="@string/search_campus"
-            android:singleLine="true"
             android:maxLines="1"
-            android:selectAllOnFocus="true" >
+            android:selectAllOnFocus="true"
+            android:singleLine="true" >
         </AutoCompleteTextView>
     </RelativeLayout>
 

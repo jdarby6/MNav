@@ -9,7 +9,7 @@ import org.xmlpull.v1.XmlPullParserFactory;
 import android.util.Log;
 
 public class MbusPublicFeedXmlParser {
-	
+
 	public static class Route {
 		public String name;
 		public String id;
