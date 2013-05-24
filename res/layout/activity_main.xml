@@ -94,12 +94,13 @@
             android:layout_alignParentBottom="true"
             android:layout_toLeftOf="@+id/divider_3"
             android:layout_toRightOf="@+id/divider_2"
+            android:completionThreshold="2"
             android:ems="10"
             android:hint="@string/search_campus"
+            android:imeOptions="actionSearch"
             android:maxLines="1"
             android:selectAllOnFocus="true"
-            android:singleLine="true" >
-        </AutoCompleteTextView>
+            android:singleLine="true" />
     </RelativeLayout>
 
     <LinearLayout

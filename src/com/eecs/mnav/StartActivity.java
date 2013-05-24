@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
 
-import com.parse.Parse;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -23,15 +21,21 @@ import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.TextView;
+
+import com.parse.Parse;
 
 public class StartActivity extends Activity implements TextWatcher {
 	//start page items;
@@ -107,6 +111,25 @@ public class StartActivity extends Activity implements TextWatcher {
 		address_box.addTextChangedListener(this);
 		address_box.setTextColor(Color.BLACK);
 		address_box.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, item));
+		//Hide soft keyboard when an option is clicked
+		address_box.setOnItemClickListener(new OnItemClickListener() {
+			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
+				InputMethodManager in = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+				in.hideSoftInputFromWindow(address_box.getWindowToken(), 0);
+
+			}
+
+		});
+		//Programmatically press the search button when the search key is pressed on the soft keyboard
+		address_box.setOnEditorActionListener(new AutoCompleteTextView.OnEditorActionListener() {
+			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+				if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+					search.performClick();
+					return true;
+				}
+				return false;
+			}
+		});
 
 		search.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {

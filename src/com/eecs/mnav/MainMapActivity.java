@@ -30,12 +30,14 @@ import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.Window;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -187,10 +189,11 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		hasSeenAlert4 = gPreferences.getBoolean("A4", false);
 
 		//Check to see if user came without typing anything
-		if(gDestName.equals("the diag")){
+		if(gDestName.equals("the diag")) {
 			num_doors = -1;
 			gDestName_full = "The Diag";
-		} else {
+		} 
+		else {
 			digIntoDatabaseForBuildingInformationAndStuff();
 		}
 
@@ -213,6 +216,54 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		autoCompleteTextViewDestination.addTextChangedListener(this);
 		autoCompleteTextViewDestination.setTextColor(Color.BLACK);
 		autoCompleteTextViewDestination.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, item));
+		/*
+		//Hide soft keyboard when an option is clicked
+		autoCompleteTextViewDestination.setOnItemClickListener(new OnItemClickListener() {
+			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
+				InputMethodManager in = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+				in.hideSoftInputFromWindow(autoCompleteTextViewDestination.getWindowToken(), 0);
+
+			}
+
+		});
+		*/
+		//Programmatically press the search button when the search key is pressed on the soft keyboard
+		autoCompleteTextViewDestination.setOnEditorActionListener(new AutoCompleteTextView.OnEditorActionListener() {
+			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+				if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+					String tempAddress = autoCompleteTextViewDestination.getText().toString();
+					if(tempAddress.indexOf(':') != -1) {
+						String destAbbr = tempAddress.substring(0, tempAddress.indexOf(':'));
+						tempAddress = destAbbr;
+					}
+					if(tempAddress.matches(StartActivity.REGEX_ROOM_NUM) || tempAddress.matches(StartActivity.REGEX_BLDG_NAME)) {
+						if(tempAddress.matches(StartActivity.REGEX_ROOM_NUM)) {
+							gDestNum = tempAddress.substring(0,tempAddress.indexOf(" "));
+							gDestName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
+							Log.d("Search Button", "Matches REGEX_ROOM_NUM! RoomNum=" + gDestNum + " BldgName=" + gDestName);
+						} else {//It should just be the name of the bldg
+							gDestName = tempAddress;
+							gDestNum = "";
+							Log.d("Search Button", "Matches REGEX_BLDG_NAME! RoomNum=" + gDestNum + " BldgName=" + gDestName);
+						}
+					} else if(tempAddress != null && tempAddress.length() > 0){
+						//It doesn't match our regEx so it's an invalid entry.
+						return false;
+					}
+					digIntoDatabaseForBuildingInformationAndStuff();
+					findClosestDoor();
+					GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
+					gMapView.getOverlays().remove(OVERLAY_PIN_ID);
+					putPinOnMap(dest, gDestName_full);
+					gMapView.invalidate();
+					zoomTo(dest, ZOOM_LEVEL_BUILDING);
+					InputMethodManager in = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+					in.hideSoftInputFromWindow(autoCompleteTextViewDestination.getWindowToken(), 0);
+					return true;
+				}
+				return false;
+			}
+		});
 
 		if(!gDestName.equals("the diag"))
 			autoCompleteTextViewDestination.setText(gDestName);
@@ -258,7 +309,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 					return;
 				}
 
-				//The gDestName is set, so dig into the databse for building information and stuff
+				//The gDestName is set, so dig into the database for building information and stuff
 				digIntoDatabaseForBuildingInformationAndStuff();
 				//now find closest door
 				findClosestDoor();
@@ -282,15 +333,16 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 			bSatellite.setBackgroundResource(R.drawable.ic_satellite);
 		bSatellite.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				if(gMapView.isSatellite()){
+				if(gMapView.isSatellite()) {
 					bSatellite.setBackgroundResource(R.drawable.ic_road);
 					gMapView.setSatellite(false);
-				}else{
+				}
+				else {
 					gMapView.setSatellite(true);
 					bSatellite.setBackgroundResource(R.drawable.ic_satellite);
 				}
 
-				Log.d("MAPSTUFF", "ZoomLevel="+gMapView.getZoomLevel());
+				Log.d("MAPSTUFF", "ZoomLevel=" + gMapView.getZoomLevel());
 			}
 		});
 

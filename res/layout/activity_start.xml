@@ -38,6 +38,7 @@
         android:layout_toLeftOf="@+id/button_search"
         android:completionThreshold="2"
         android:hint="@string/address_default"
+        android:imeOptions="actionSearch"
         android:maxLines="1"
         android:selectAllOnFocus="true"
         android:singleLine="true" />
