@@ -74,7 +74,7 @@ public class GoogleParser {
 				final JSONObject start = step.getJSONObject("start_location");
 				final GeoPoint position = new GeoPoint((int) (start.getDouble("lat")*1E6), 
 						(int) (start.getDouble("lng")*1E6));
-				segment.setPoint(position);
+				segment.setStartPoint(position);
 				//Set the length of this segment in metres
 				final int length = step.getJSONObject("distance").getInt("value");
 				distance += length;
@@ -144,7 +144,7 @@ public class GoogleParser {
 				final JSONObject start = step.getJSONObject("start_location");
 				final GeoPoint position = new GeoPoint((int) (start.getDouble("lat")*1E6), 
 						(int) (start.getDouble("lng")*1E6));
-				segment.setPoint(position);
+				segment.setStartPoint(position);
 				//Set the length of this segment in metres
 				final int length = step.getJSONObject("distance").getInt("value");
 				distance += length;

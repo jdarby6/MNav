@@ -3,7 +3,6 @@ package com.eecs.mnav;
 import java.util.ArrayList;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -29,8 +28,8 @@ public class ScheduleDatabaseHandler extends SQLiteOpenHelper {
 	public static final String KEY_TIMEEND = "end";
 	public static final String KEY_DAYS = "days";
 
-	public ScheduleDatabaseHandler(Context context) {
-		super(context, DATABASE_NAME, null, DATABASE_VERSION);
+	public ScheduleDatabaseHandler() {
+		super(ReportingApplication.getAppContext(), DATABASE_NAME, null, DATABASE_VERSION);
 	}
 
 	// Creating Tables
@@ -43,7 +42,7 @@ public class ScheduleDatabaseHandler extends SQLiteOpenHelper {
 				+ KEY_LOCATION + " TEXT NOT NULL," 
 				+ KEY_TIMEBEGIN + " TEXT," 
 				+ KEY_TIMEEND + " TEXT," 
-				+ KEY_DAYS + " TEXT NOT NULL" + ")";
+				+ KEY_DAYS + " TEXT NOT NULL)";
 		db.execSQL(CREATE_SAVEDEVENTS_TABLE);
 	}
 

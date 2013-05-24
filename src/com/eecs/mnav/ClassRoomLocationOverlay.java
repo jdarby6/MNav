@@ -13,7 +13,6 @@ import com.google.android.maps.OverlayItem;
 public class ClassRoomLocationOverlay extends ItemizedOverlay<OverlayItem> {
 	//use m for "member" variables
 	private ArrayList<OverlayItem> mOverlays = new ArrayList<OverlayItem>();
-	Context mContext;
 
 	public ClassRoomLocationOverlay(Drawable defaultMarker) {
 		super(boundCenterBottom(defaultMarker));
@@ -21,7 +20,6 @@ public class ClassRoomLocationOverlay extends ItemizedOverlay<OverlayItem> {
 
 	public ClassRoomLocationOverlay(Drawable defaultMarker, Context context) {
 		super(boundCenterBottom(defaultMarker));
-		mContext = context;
 	}
 
 	public void addOverlay(OverlayItem overlay) {
@@ -42,7 +40,7 @@ public class ClassRoomLocationOverlay extends ItemizedOverlay<OverlayItem> {
 	@Override
 	protected boolean onTap(int index) {
 		OverlayItem item = mOverlays.get(index);
-		AlertDialog.Builder dialog = new AlertDialog.Builder(mContext);
+		AlertDialog.Builder dialog = new AlertDialog.Builder(ReportingApplication.getAppContext());
 		dialog.setTitle(item.getTitle());
 		dialog.setMessage(item.getSnippet());
 		dialog.show();

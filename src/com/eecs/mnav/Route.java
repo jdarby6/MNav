@@ -24,96 +24,38 @@ public class Route {
 		segments = new ArrayList<Segment>();
 	}
 
-	public void addPoint(final GeoPoint p) {
-		points.add(p);
-	}
+	public List<GeoPoint> getPoints() {return points;}
+	public void addPoint(final GeoPoint p) {points.add(p);}
+	public void addPoints(final List<GeoPoint> points) {this.points.addAll(points);}
 
-	public void addPoints(final List<GeoPoint> points) {
-		this.points.addAll(points);
-	}
+	public void addSegment(final Segment s) {segments.add(s);}
 
-	public List<GeoPoint> getPoints() {
-		return points;
-	}
+	public List<Segment> getSegments() {return segments;}
 
-	public void addSegment(final Segment s) {
-		segments.add(s);
-	}
+	public String getName() {return name;}
+	public void setName(final String name) {this.name = name;}
 
-	public List<Segment> getSegments() {
-		return segments;
-	}
+	public String getCopyright() {return copyright;}
+	public void setCopyright(String copyright) {this.copyright = copyright;}
 
-	public void setName(final String name) {
-		this.name = name;
-	}
+	public String getWarning() {return warning;}
+	public void setWarning(String warning) {this.warning = warning;}
 
-	public String getName() {
-		return name;
-	}
+	public String getCountry() {return country;}
+	public void setCountry(String country) {this.country = country;}
 
-	public void setCopyright(String copyright) {
-		this.copyright = copyright;
-	}
+	public String getDistance() {return distance;}
+	public void setDistance(String distance) {this.distance = distance;}
 
-	public String getCopyright() {
-		return copyright;
-	}
+	public String getDuration() {return duration;}
+	public void setDuration(String time) {this.duration = time;}
 
-	public void setWarning(String warning) {
-		this.warning = warning;
-	}
+	public String getPolyline() {return polyline;}
+	public void setPolyline(String polyline) {this.polyline = polyline;}
 
-	public String getWarning() {
-		return warning;
-	}
+	public String getArrivalTime() {return arrivalTime;}
+	public void setArrivalTime(String arrTime) {this.arrivalTime = arrTime;}
 
-	public void setCountry(String country) {
-		this.country = country;
-	}
-
-	public String getCountry() {
-		return country;
-	}
-
-	public void setDistance(String distance) {
-		this.distance = distance;
-	}
-
-	public String getDistance() {
-		return distance;
-	}
-
-	public void setDuration(String time) {
-		this.duration = time;
-	}
-
-	public String getDuration() {
-		return duration;
-	}
-
-	public void setPolyline(String polyline) {
-		this.polyline = polyline;
-	}
-
-	public String getPolyline() {
-		return polyline;
-	}
-
-	public void setArrivalTime(String arrTime) {
-		this.arrivalTime = arrTime;
-	}
-
-	public String getArrivalTime() {
-		return arrivalTime;
-	}
-
-	public void setDepartureTime(String deptTime){
-		this.departureTime = deptTime;
-	}
-
-	public String getDepartureTime() {
-		return departureTime;
-	}
-
+	public String getDepartureTime() {return departureTime;}
+	public void setDepartureTime(String deptTime) {this.departureTime = deptTime;}
 }

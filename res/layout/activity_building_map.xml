@@ -12,7 +12,7 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:gravity="center"
-        android:text="Electrical Engineering and Computer Science building"
+        android:text="@string/sample_building_name"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:textColor="@color/umichBlue" />
 

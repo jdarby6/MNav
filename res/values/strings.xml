@@ -15,6 +15,7 @@
     <string name="current_lat">Current lat:</string>
     <string name="current_long">Current long:</string>
     <string name="dash">-</string>
+    <string name="desc">Content description for images</string>
     <string name="dest_bldg_instructions">What would you like to do?</string>
     <string name="done">Done</string>
     <string name="door_nick">Door Nickname (e.g. \'North Entrance\')</string>
@@ -22,11 +23,13 @@
     <string name="facebook_url">www.facebook.com/mnavforandroid</string>
     <string name="filter_text">type to filter</string>
     <string name="friday">Fr</string>
+    <string name="get_directions">Get Directions</string>
     <string name="info_building_finder">Easily find any building on campus by browsing a comprehensive list and pressing the building you would like to find.</string>
     <string name="info_bus_routes">Quickly view a live map of all the buses on campus as broadcasted by the Magic Bus XML feed.</string>
     <string name="info_dest">You can enter a building name or abbreviation with or without a room number. Alternatively, you can leave it blank and hit search to view the map from your current location.</string>
     <string name="info_schedule">Here you can enter in your class schedule and MNav will route to your classes automatically throughout the day.</string>
     <string name="location">Location</string>
+    <string name="magic_bus_viewer">Magic Bus Viewer</string>
     <string name="mailing_list_url">mnav.android@umich.edu</string>
     <string name="menu_settings">Settings</string>
     <string name="monday">Mo</string>
@@ -34,6 +37,7 @@
     <string name="reset_map">Reset Map</string>
     <string name="restore_intro">Restore \'Tip:\' prompts</string>
     <string name="route">Route</string>
+    <string name="sample_building_name">Electrical Engineering and Computer Science building</string>
     <string name="saturday">Sa</string>
     <string name="save">Save</string>
     <string name="schedule">Schedule</string>
@@ -46,7 +50,9 @@
     <string name="title_activity_main">MNav</string>
     <string name="today_string">Today\'s Schedule</string>
     <string name="tuesday">Tu</string>
+    <string name="use_public_transit">Use public transit</string>
     <string name="version_num">v0.02_alpha</string>
+    <string name="view_map">View Map</string>
     <string name="wednesday">We</string>
     <string name="zero_time">00:00</string>
     <string name="_"></string>

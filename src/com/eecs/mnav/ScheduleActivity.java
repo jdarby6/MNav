@@ -46,6 +46,7 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 	final String[] day_abbrs = new String[] {"NULL", "SU", "MO", "TU", "WE", 
 			"TH", "FR", "SA"};
 	private String destBldgName = "";
+	private String destBldgFullName = "";
 	private String destRoomNum = "";
 	private static final String REGEX_ROOM_NUM = "^[0-9]{1,4} [a-zA-Z]+ *";
 	private static final String REGEX_BLDG_NAME = "^[a-zA-Z][a-zA-Z &]+";
@@ -82,14 +83,14 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 
 	public static int CDI = 0; //current days int;
 
-	static DataBaseHelper all_classes_db;
-	static ScheduleDatabaseHandler db;
-	static Cursor cursor_all_classes;
-	static ArrayAdapter<String> adapter;
-	static String[] item;
-	ProgressDialog progressDialog;
+	private DataBaseHelper all_classes_db;
+	private ScheduleDatabaseHandler db;
+	private Cursor cursor_all_classes;
+	private ArrayAdapter<String> adapter;
+	private String[] item;
+	private ProgressDialog progressDialog;
 
-	//private DataBaseHelper destination_db;
+	private DataBaseHelper destination_db;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -123,7 +124,7 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 
 		curEvent = new MEvent();
 
-		db = new ScheduleDatabaseHandler(this);
+		db = new ScheduleDatabaseHandler();
 
 		eventArrayAdapter = new MEventArrayAdapter(this, events_array);
 		list_data = (ListView) findViewById(R.id.list_data);
@@ -311,7 +312,7 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 
 					tempindex = makeIndex(tempbegin_time);
 
-					if (!tempdays.equals("NULL")) addEvent(templabel,templocation, tempindex, tempbegin_time,tempend_time,tempdays);
+					if (!tempdays.equals("NULL")) addEvent(templabel, templocation, tempindex, tempbegin_time, tempend_time, tempdays);
 
 					removeDialog(DIALOG_ADD_EVENT);
 				}
@@ -396,20 +397,14 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 					//remove old entry then add if different
 					//if only thing changed was taking away all days, dont add
 
-					if(tempdays.equals( "NULL")
-							//&& templabel.equals(curEvent.getLabel())
-							//&& templocation.equals(curEvent.getLocation())
-							//&& tempbegin_time == curEvent.getTimeBegin()
-							//&& tempend_time == curEvent.getTimeEnd()){
-							){
+					if(tempdays.equals("NULL")) {
 						removeEvent(templabel);
 					}
-
-					else{
+					else {
 						removeEvent(curEvent.getLabel());
 						Log.d("schedule", tempbegin_time);
 						tempindex = makeIndex(tempbegin_time);
-						addEvent(templabel,templocation,tempindex, tempbegin_time,tempend_time,tempdays);
+						addEvent(templabel, templocation, tempindex, tempbegin_time, tempend_time, tempdays);
 
 					}
 					removeDialog(DIALOG_CHANGE_EVENT);
@@ -427,7 +422,7 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 		case TIME_PICK_END_DIALOG_ID:
 		case TIME_PICK_BEGIN_DIALOG_ID:
 			dialogEditEvent.setContentView(R.layout.dialog_pick_time);
-			//Recylcing the dialog code by using explicit if check on ID
+			//Recycling the dialog code by using explicit if check on ID
 			if(id == TIME_PICK_END_DIALOG_ID)
 				dialogEditEvent.setTitle("End Time");
 			else
@@ -472,14 +467,38 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 							destRoomNum = tempAddress.substring(0,tempAddress.indexOf(" "));
 							destBldgName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
 							Log.d("Schedule Item Click", "Matches REGEX_ROOM_NUM! RoomNum="+destRoomNum+" BldgName="+destBldgName);
-						} else {//It should just be the name of the bldg
+						} 
+						else { //It should just be the name of the bldg
 							destBldgName = tempAddress;
 							destRoomNum = "";
 							Log.d("Schedule Item Click", "Matches REGEX_BLDG_NAME! RoomNum="+destRoomNum+" BldgName="+destBldgName);
 						}
+
+						//Initialize destination db
+						destination_db = new DataBaseHelper("destination_db");
+						try {
+							destination_db.createDataBase();
+						} 
+						catch (IOException ioe) {
+							throw new Error("Unable to create database");
+						}
+						try {
+							destination_db.openDataBase();
+						} 
+						catch(SQLException sqle) {	
+							throw sqle;
+
+						}
+						Cursor bldgs_cursor = destination_db.getBldgIdByName(destBldgName);
+						if(bldgs_cursor.getCount() > 0) {
+							bldgs_cursor.moveToFirst();
+							destBldgFullName = bldgs_cursor.getString(2);
+						}
+						destination_db.close();
 					}
 
-					Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
+					Editor editor = PreferenceManager.getDefaultSharedPreferences(ReportingApplication.getAppContext()).edit();
+					editor.putString("DESTNAMEFULL", destBldgFullName);
 					editor.putString("DESTNAME", destBldgName);
 					editor.putString("DESTROOM", destRoomNum);
 					editor.commit();
@@ -498,14 +517,37 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 							destRoomNum = tempAddress.substring(0,tempAddress.indexOf(" "));
 							destBldgName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
 							Log.d("Schedule Item Click", "Matches REGEX_ROOM_NUM! RoomNum="+destRoomNum+" BldgName="+destBldgName);
-						} else {//It should just be the name of the bldg
+						} 
+						else { //It should just be the name of the bldg
 							destBldgName = tempAddress;
 							destRoomNum = "";
 							Log.d("Schedule Item Click", "Matches REGEX_BLDG_NAME! RoomNum="+destRoomNum+" BldgName="+destBldgName);
 						}
+						//Initialize destination db
+						destination_db = new DataBaseHelper("destination_db");
+						try {
+							destination_db.createDataBase();
+						} 
+						catch (IOException ioe) {
+							throw new Error("Unable to create database");
+						}
+						try {
+							destination_db.openDataBase();
+						} 
+						catch(SQLException sqle) {	
+							throw sqle;
+
+						}
+						Cursor bldgs_cursor = destination_db.getBldgIdByName(destBldgName);
+						if(bldgs_cursor.getCount() > 0) {
+							bldgs_cursor.moveToFirst();
+							destBldgFullName = bldgs_cursor.getString(2);
+						}
+						destination_db.close();
 					}
 
-					Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
+					Editor editor = PreferenceManager.getDefaultSharedPreferences(ReportingApplication.getAppContext()).edit();
+					editor.putString("DESTNAMEFULL", destBldgFullName);
 					editor.putString("DESTNAME", destBldgName);
 					editor.putString("DESTROOM", destRoomNum);
 					editor.commit();
@@ -515,59 +557,6 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 				}
 			});
 			break;
-			/*case DIALOG_SECTION:
-			dialogEditEvent.requestWindowFeature(Window.FEATURE_NO_TITLE);
-			dialogEditEvent.setContentView(R.layout.dialog_set_section);
-			final AutoCompleteTextView auto_section = (AutoCompleteTextView)dialogEditEvent.findViewById(R.id.auto_section);
-			final Button button_set_section = (Button)dialogEditEvent.findViewById(R.id.button_set_section);
-			//Initialize destination db
-
-			classes_db = new DataBaseHelper(this, "destination_db");
-			try {
-				classes_db.createDataBase();
-			} 
-			catch (IOException ioe) {
-				throw new Error("Unable to create database");
-			}
-			try {
-				classes_db.openDataBase();
-			} 
-			catch(SQLException sqle) {	
-				throw sqle;
-
-			}
-			String classname = "";
-
-			Cursor cursor = classes_db.getSections(classname);
-
-			ArrayList<String> strings = new ArrayList<String>();
-			for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
-				String mTitleRaw = cursor.getString(0);
-				strings.add(mTitleRaw);
-			}
-
-			cursor.close();
-			classes_db.close();
-			String[] item = (String[]) strings.toArray(new String[strings.size()]);
-
-
-			auto_section.setTextColor(Color.BLACK);
-			auto_section.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, item));
-			button_set_section.setOnClickListener(new Button.OnClickListener() {
-				public void onClick(View v) {
-
-					//use the database to do whatever
-					//editText_location.setText();
-					//editText_class.setText();
-					//editText_begin_time.setText();
-					//editText_end_time.setText();
-					//and set check boxes
-
-
-					removeDialog(DIALOG_SECTION);
-				}});
-
-			break;*/
 		default :
 			break;
 
@@ -793,7 +782,7 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 
 			showDialog(DIALOG_ADD_EVENT);
 
-			ScheduleActivity.cursor_all_classes = cursor;
+			cursor_all_classes = cursor;
 
 			ArrayList<String> strings = new ArrayList<String>();
 			for(cursor_all_classes.moveToFirst(); !cursor_all_classes.isAfterLast(); cursor_all_classes.moveToNext()) {
@@ -816,5 +805,4 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 			}
 		}
 	}
-
 }

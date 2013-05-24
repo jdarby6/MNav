@@ -4,10 +4,10 @@ package com.eecs.mnav;
 public class MEvent {
 	private String label;
 	private String location;
-	private int index;//int representation of timebegin
+	private int index; //int representation of timebegin
 	private String timeBegin;
 	private String timeEnd;
-	private String days;//string MOTUWETHFRSASU
+	private String days; //string MOTUWETHFRSASU
 
 	public MEvent(){
 		this.label = "";
@@ -27,17 +27,24 @@ public class MEvent {
 		this.timeEnd = timeEnd2;
 		this.days = days2;
 	}
+	
 	public String getLabel() {return label;}
 	public void setLabel(String label) {this.label = label;}
+	
 	public String getLocation() {return location;}
 	public void setLocation(String location) {this.location = location;}
+	
 	public int getIndex() {return index;}
 	public void setIndex(int index) {this.index = index;}
+	
 	public String getTimeBegin() {return timeBegin;}
 	public void setTimeBegin(String timeBegin) {this.timeBegin = timeBegin;}
+	
 	public String getTimeEnd() {return timeEnd;}
 	public void setTimeEnd(String timeEnd) {this.timeEnd = timeEnd;}
+	
 	public void restoreLabel(String label){this.label = label;}
+	
 	public String getDays() {return days;}
 	public void setDays(String days) {this.days = days;}
 }

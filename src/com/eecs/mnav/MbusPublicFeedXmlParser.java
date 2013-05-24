@@ -60,55 +60,65 @@ public class MbusPublicFeedXmlParser {
 							String name = parser.getName();
 							if (name.equals("name")) {
 								currentRoute.name = BusRoutesActivity.readText(parser);
-							} else if (name.equals("id")) {
+							} 
+							else if (name.equals("id")) {
 								currentRoute.id = BusRoutesActivity.readText(parser);
-							} else if (name.equals("topofloop")) {
+							} 
+							else if (name.equals("topofloop")) {
 								currentRoute.topofloop = BusRoutesActivity.readText(parser);
-							} else if (name.equals("busroutecolor")) {
+							} 
+							else if (name.equals("busroutecolor")) {
 								currentRoute.busroutecolor = BusRoutesActivity.readText(parser);
-							} else if (name.equals("stop")) {
+							} 
+							else if (name.equals("stop")) {
 								parser.require(XmlPullParser.START_TAG, null, "stop");
 								currentStop = new Stop();
 								currentStop.toas = new ArrayList<String>();
 								currentStop.ids = new ArrayList<String>();
 								while (parser.next() != XmlPullParser.END_TAG) {
-									if (parser.getEventType() != XmlPullParser.START_TAG) {
+									if (parser.getEventType() != XmlPullParser.START_TAG)
 										continue;
-									}
+									
 									name = parser.getName();
-									if (name.equals("name")) {
+									if (name.equals("name")) 
 										currentStop.name = BusRoutesActivity.readText(parser);
-									} else if (name.equals("name2")) {
+									else if (name.equals("name2")) 
 										currentStop.name2 = BusRoutesActivity.readText(parser);
-									} else if (name.equals("name3")) {
+									else if (name.equals("name3"))
 										currentStop.name3 = BusRoutesActivity.readText(parser);
-									} else if (name.equals("latitude")) {
+									else if (name.equals("latitude"))
 										currentStop.latitude = BusRoutesActivity.readText(parser);
-									} else if (name.equals("longitude")) {
+									else if (name.equals("longitude"))
 										currentStop.longitude = BusRoutesActivity.readText(parser);
-									} else if (name.regionMatches(0, "toa", 0, 3)) {
+									else if (name.regionMatches(0, "toa", 0, 3))
 										currentStop.toas.add(BusRoutesActivity.readText(parser));
-									} else if (name.regionMatches(0, "id", 0, 2)) {
+									else if (name.regionMatches(0, "id", 0, 2))
 										currentStop.ids.add(BusRoutesActivity.readText(parser));
-									} else if (name.equals("toacount")) {
+									else if (name.equals("toacount"))
 										currentStop.toacount = BusRoutesActivity.readText(parser);
-									}
+									
 									parserEvent = parser.next();
 								}
+								
 								currentRoute.stops.add(currentStop);
-							} else if (name.equals("stopcount")) {
+							} 
+							else if (name.equals("stopcount")) {
 								currentRoute.stopcount = BusRoutesActivity.readText(parser);
 							}
+							
 							parserEvent = parser.next();
 						}
+						
 						BusRoutesActivity.routes.add(currentRoute);
 					}
+					
 					break;
 				}
 				parserEvent = parser.next();
 			}
-		} catch (Exception e) {
-			Log.i("RouteLoader", "Failed in parsing XML", e);
+		} 
+		catch (Exception e) {
+			Log.i("MbusPublicFeedXmlParser", "Failed in parsing XML", e);
 			return "Finished with failure.";
 		}
 

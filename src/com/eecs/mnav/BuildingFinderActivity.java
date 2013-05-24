@@ -94,7 +94,7 @@ public class BuildingFinderActivity extends ListActivity {
 		String destAbbr = tempDest.substring(0, tempDest.indexOf(':'));
 
 		//Save destination address
-		Editor editor = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit();
+		Editor editor = PreferenceManager.getDefaultSharedPreferences(ReportingApplication.getAppContext()).edit();
 		editor.putString("DESTNAME", destAbbr);
 		editor.commit();
 		Intent intent = new Intent(BuildingFinderActivity.this, MainMapActivity.class);

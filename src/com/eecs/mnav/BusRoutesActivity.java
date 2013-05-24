@@ -68,19 +68,18 @@ public class BusRoutesActivity extends SlidingMapActivity {
 	//Constants
 	private static final int FOUR_SECONDS = 4000;
 	private static final int LAYER_TYPE_SOFTWARE = 1;
-	private static final int ZOOM_LEVEL_BUILDING = 19;
+	private static final int ZOOM_LEVEL_BUILDING = 19;	
+	private static final String locationFeedLink = "http://mbus.pts.umich.edu/shared/location_feed.xml";
+	private static final String publicFeedLink = "http://mbus.pts.umich.edu/shared/public_feed.xml";
+	//private static final String stopsLink = "http://mbus.pts.umich.edu/shared/stop.xml";
 
 	static ArrayList<Item> items = new ArrayList<Item>();
 	static ArrayList<Route> routes = new ArrayList<Route>();
 
-	static final String locationFeedLink = "http://mbus.pts.umich.edu/shared/location_feed.xml";
-	static final String publicFeedLink = "http://mbus.pts.umich.edu/shared/public_feed.xml";
-	static final String stopsLink = "http://mbus.pts.umich.edu/shared/stop.xml";
-
 	//Number of points to interpolate a move by (chop up the update of bus icon into this many parts
 	//before fetching the XML again) - not implemented yet
 	//private int splitMove = 10;
-	static BusIconOverlay busIconOverlay;
+	private BusIconOverlay busIconOverlay;
 
 	private int m_interval = FOUR_SECONDS;
 	private Handler m_handler;
@@ -93,7 +92,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 	public void onCreate(Bundle savedInstanceState) { 
 		super.onCreate(savedInstanceState);
 
-		listView = new ListView(StartActivity.context);
+		listView = new ListView(this);
 		routesListViewAdapter = new ListViewCustomAdapter(this);
 		listView.setAdapter(routesListViewAdapter);
 		setContentView(R.layout.activity_bus_routes);
@@ -227,7 +226,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 	}
 
 	private void displayEnableGPSAlert() {
-		AlertDialog.Builder alertDialog = new AlertDialog.Builder(getApplicationContext());
+		AlertDialog.Builder alertDialog = new AlertDialog.Builder(ReportingApplication.getAppContext());
 		alertDialog.setTitle("Enable GPS?");
 		alertDialog.setMessage("GPS is not enabled. Would you like to enable it in settings?");
 		alertDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
@@ -256,7 +255,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 
 
 		//Create the scalebar and add it to mapview
-		gScaleBarOverlay = new ScaleBarOverlay(this.getBaseContext(), gMapView);
+		gScaleBarOverlay = new ScaleBarOverlay(gMapView);
 		gScaleBarOverlay.setImperial();
 		mapOverlays.add(gScaleBarOverlay);
 	}

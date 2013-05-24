@@ -11,7 +11,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="false"
         android:layout_alignParentTop="true"
-        android:text="Electrical Engineering and Computer Science"
+        android:text="@string/sample_building_name"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <TextView
@@ -31,7 +31,7 @@
         android:drawableTop="@drawable/ic_walking"
         android:padding="0dp"
         android:paddingBottom="5dp"
-        android:text="Get Directions" />
+        android:text="@string/get_directions" />
 
     <Button
         android:id="@+id/button_viewmap"
@@ -42,6 +42,6 @@
         android:layout_toRightOf="@id/button_getdirections"
         android:drawableTop="@drawable/ic_view_map"
         android:padding="0dp"
-        android:text="View Map" />
+        android:text="@string/view_map" />
 
 </RelativeLayout>

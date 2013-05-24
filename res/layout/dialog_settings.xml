@@ -16,7 +16,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/checkBox_restore_tips"
-        android:text="Use public transit" />
+        android:text="@string/use_public_transit" />
 
     <Button
         android:id="@+id/button_done"

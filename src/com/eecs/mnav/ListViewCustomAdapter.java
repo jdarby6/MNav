@@ -35,8 +35,7 @@ public class ListViewCustomAdapter extends BaseAdapter{
 		return Integer.parseInt(BusRoutesActivity.routes.get(position).id);
 	}
 
-	public static class ViewHolder
-	{
+	public static class ViewHolder {
 		ImageView imgViewLogo;
 		TextView textView_route;
 	}
@@ -57,8 +56,6 @@ public class ListViewCustomAdapter extends BaseAdapter{
 		Log.d("Trying to set this as background color", BusRoutesActivity.routes.get(position).busroutecolor);
 		convertView.setBackgroundColor(Color.parseColor('#'+BusRoutesActivity.routes.get(position).busroutecolor));
 
-
 		return convertView;
 	}
-
 }

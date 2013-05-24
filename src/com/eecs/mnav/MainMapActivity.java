@@ -135,7 +135,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Log.d("OnCreate()", "OnCreate() called");
+		Log.d("MainMapActivity", "OnCreate() called");
 		setContentView(R.layout.activity_main);
 
 		//Grab the mapView
@@ -689,7 +689,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		});
 
 		//Create the scalebar and add it to mapview
-		gScaleBarOverlay = new ScaleBarOverlay(this.getBaseContext(), gMapView);
+		gScaleBarOverlay = new ScaleBarOverlay(gMapView);
 		gScaleBarOverlay.setImperial();
 		mapOverlays.add(OVERLAY_SCALEBAR_ID, gScaleBarOverlay);
 	}
@@ -769,8 +769,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 
 	/** Helper function for displaying a toast. Takes the string to be displayed and the length: LONG or SHORT **/
 	private void toastThis(String toast, int duration) {
-		Context context = getApplicationContext();
-		Toast t = Toast.makeText(context, toast, duration);
+		Toast t = Toast.makeText(ReportingApplication.getAppContext(), toast, duration);
 		t.show();
 	}
 
@@ -1005,7 +1004,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		OverlayItem tmpItem;
 		Drawable drawable = this.getResources().getDrawable(R.drawable.ic_pin);
 		//Create our route overlay
-		gPinOverlay = new PinOverlay(drawable, this);
+		gPinOverlay = new PinOverlay(drawable);
 		gPinOverlay.setTapListener(this);
 		tmpItem = new OverlayItem(pinLocation, name, "This is your current destination");
 		gPinOverlay.addOverlay(tmpItem);
@@ -1019,18 +1018,18 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 	};
 
 	public void afterTextChanged(Editable s) {
-		// TODO Auto-generated method stub
+
 
 	}
 
 	public void beforeTextChanged(CharSequence s, int start, int count,
 			int after) {
-		// TODO Auto-generated method stub
+
 
 	}
 
 	public void onTextChanged(CharSequence s, int start, int before, int count) {
-		// TODO Auto-generated method stub
+
 
 	}
 }

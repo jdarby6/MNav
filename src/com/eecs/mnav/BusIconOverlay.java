@@ -49,10 +49,10 @@ public class BusIconOverlay extends ItemizedOverlay<OverlayItem> {
 		GeoPoint  gpoint = myOverlays.get(i).getPoint();
 		double lat = gpoint.getLatitudeE6()/1e6;
 		double lon = gpoint.getLongitudeE6()/1e6;
-		String toast = "Title: "+myOverlays.get(i).getTitle();
-		toast += "\nText: "+myOverlays.get(i).getSnippet();
-		toast += 	"\nSymbol coordinates: Lat = "+lat+" Lon = "+lon+" (microdegrees)";
-		Toast.makeText(StartActivity.context, toast, Toast.LENGTH_LONG).show();
+		String toast = "Title: " + myOverlays.get(i).getTitle();
+		toast += "\nText: " + myOverlays.get(i).getSnippet();
+		toast += "\nSymbol coordinates: Lat = " + lat + " Lon = " + lon + " (microdegrees)";
+		Toast.makeText(ReportingApplication.getAppContext(), toast, Toast.LENGTH_LONG).show();
 		return(true);
 	}
 

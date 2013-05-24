@@ -45,21 +45,20 @@ public class MbusLocationFeedXmlParser {
 								continue;
 							}
 							String name = parser.getName();
-							if (name.equals("id")) {
+							if (name.equals("id")) 
 								currentItem.id = BusRoutesActivity.readText(parser);
-							} else if (name.equals("latitude")) {
+							else if (name.equals("latitude")) 
 								currentItem.latitude = BusRoutesActivity.readText(parser);
-							} else if (name.equals("longitude")) {
+							else if (name.equals("longitude")) 
 								currentItem.longitude = BusRoutesActivity.readText(parser);
-							} else if (name.equals("heading")) {
+							else if (name.equals("heading")) 
 								currentItem.heading = BusRoutesActivity.readText(parser);
-							} else if (name.equals("route")) {
+							else if (name.equals("route")) 
 								currentItem.route = BusRoutesActivity.readText(parser);
-							} else if (name.equals("routeid")) {
+							else if (name.equals("routeid")) 
 								currentItem.routeid = BusRoutesActivity.readText(parser);
-							} else if (name.equals("busroutecolor")) {
+							else if (name.equals("busroutecolor")) 
 								currentItem.busroutecolor = BusRoutesActivity.readText(parser);
-							}
 						}
 						BusRoutesActivity.items.add(currentItem);
 						currentItem = new Item();
@@ -68,8 +67,9 @@ public class MbusLocationFeedXmlParser {
 				}
 				parserEvent = parser.next();
 			}
-		} catch (Exception e) {
-			Log.i("RouteLoader", "Failed in parsing XML", e);
+		} 
+		catch (Exception e) {
+			Log.i("MbusLocationFeedXmlParser", "Failed in parsing XML", e);
 			return "Finished with failure.";
 		}
 

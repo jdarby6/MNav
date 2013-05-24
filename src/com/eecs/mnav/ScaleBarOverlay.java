@@ -1,6 +1,5 @@
 package com.eecs.mnav;
 
-import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -41,8 +40,6 @@ public class ScaleBarOverlay extends Overlay{
 
 	protected final MapView mapView;
 
-	private Context context;
-
 	protected final Picture scaleBarPicture = new Picture();
 	private final Matrix scaleBarMatrix = new Matrix();
 
@@ -57,17 +54,16 @@ public class ScaleBarOverlay extends Overlay{
 	// Constructors
 	// ===========================================================
 
-	public ScaleBarOverlay(Context _context, MapView mapView) {
+	public ScaleBarOverlay(MapView mapView) {
 		super();
 
-		this.context = _context;
 		this.mapView = mapView;
 
-		xdpi = this.context.getResources().getDisplayMetrics().xdpi;
-		ydpi = this.context.getResources().getDisplayMetrics().ydpi;
+		xdpi = ReportingApplication.getAppContext().getResources().getDisplayMetrics().xdpi;
+		ydpi = ReportingApplication.getAppContext().getResources().getDisplayMetrics().ydpi;
 
-		screenWidth = this.context.getResources().getDisplayMetrics().widthPixels;
-		screenHeight = this.context.getResources().getDisplayMetrics().heightPixels;
+		screenWidth = ReportingApplication.getAppContext().getResources().getDisplayMetrics().widthPixels;
+		screenHeight = ReportingApplication.getAppContext().getResources().getDisplayMetrics().heightPixels;
 
 	}
 

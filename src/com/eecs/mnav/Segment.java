@@ -13,48 +13,23 @@ public class Segment {
 	/** Mode of transit **/
 	private String transitMode;
 
-	public Segment() {
-	}
+	public Segment() {}
 
-	public void setTransitMode(final String trans) {
-		this.transitMode = trans;
-	}
+	public String getTransitMode() {return transitMode;}
+	public void setTransitMode(final String trans) {this.transitMode = trans;}
 
-	public String getTransitMode(){
-		return transitMode;
-	}
+	public String getInstruction() {return instruction;}
+	public void setInstruction(final String turn) {this.instruction = turn;}
 
-	public void setInstruction(final String turn) {
-		this.instruction = turn;
-	}
+	public void setDistance(double distance) {this.distance = distance;}
 
-	public void setDistance(double distance) {
-		this.distance = distance;
-	}
+	public GeoPoint getStartPoint() {return start;}
+	public void setStartPoint(final GeoPoint point) {start = point;}
 
-	public void setPoint(final GeoPoint point) {
-		start = point;
-	}
+	public int getLength() {return length;}
+	public void setLength(final int length) {this.length = length;}
 
-	public void setLength(final int length) {
-		this.length = length;
-	}
-
-	public String getInstruction() {
-		return instruction;
-	}
-
-	public int getLength() {
-		return length;
-	}
-
-	public double getDistance() {
-		return distance;
-	}
-
-	public GeoPoint startPoint() {
-		return start;
-	}
+	public double getDistance() {return distance;}
 
 	public Segment copy() {
 		final Segment copy = new Segment();
@@ -64,5 +39,4 @@ public class Segment {
 		copy.distance = distance;
 		return copy;
 	}
-
 }

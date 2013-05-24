@@ -47,22 +47,19 @@ public class TouchImageView extends ImageView {
 
 	ScaleGestureDetector mScaleDetector;
 
-	Context context;
-
-	public TouchImageView(Context context) {
-		super(context);
-		sharedConstructing(context);
+	public TouchImageView() {
+		super(ReportingApplication.getAppContext());
+		sharedConstructing();
 	}
 
 	public TouchImageView(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		sharedConstructing(context);
+		sharedConstructing();
 	}
 
-	private void sharedConstructing(Context context) {
+	private void sharedConstructing() {
 		super.setClickable(true);
-		this.context = context;
-		mScaleDetector = new ScaleGestureDetector(context, new ScaleListener());
+		mScaleDetector = new ScaleGestureDetector(ReportingApplication.getAppContext(), new ScaleListener());
 		matrix = new Matrix();
 		m = new float[9];
 		setImageMatrix(matrix);

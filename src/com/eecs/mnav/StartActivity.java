@@ -57,14 +57,10 @@ public class StartActivity extends Activity implements TextWatcher {
 	private ScheduleDatabaseHandler schedule_db;
 	private LocationManager gLocationManager;
 
-	static Context context;
-
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_start);
-
-		context = getApplicationContext();
 
 		checkGPS();
 
@@ -175,7 +171,7 @@ public class StartActivity extends Activity implements TextWatcher {
 				int hour = calendar.get(Calendar.HOUR_OF_DAY);
 				int time = calendar.get(Calendar.MINUTE)+(hour*60);
 
-				schedule_db = new ScheduleDatabaseHandler(v.getContext());
+				schedule_db = new ScheduleDatabaseHandler();
 
 				String tempAddress = "NULL";
 				boolean found = false;

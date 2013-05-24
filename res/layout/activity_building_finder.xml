@@ -14,12 +14,6 @@
         android:maxLines="1"
         android:singleLine="true" />
 
-    <!-- Set height to 0, and let the weight param expand it -->
-    <!--
-         Note the use of the default ID! This lets us use a 
-         ListActivity still!
-    -->
-
     <ListView
         android:id="@android:id/list"
         android:layout_width="fill_parent"
