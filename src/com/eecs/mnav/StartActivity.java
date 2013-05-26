@@ -6,18 +6,14 @@ import java.util.Calendar;
 import java.util.Locale;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.graphics.Color;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -50,26 +46,19 @@ public class StartActivity extends Activity implements TextWatcher {
 	private String destBldgName = "";
 	private String destRoomNum = "";
 
-	final String[] day_abbrs = new String[] {"NULL", "SU", "MO", "TU", "WE", 
-			"TH", "FR", "SA"};
-	public static final String REGEX_ROOM_NUM = "^[0-9]{1,4} [a-zA-Z]+ *";
-	public static final String REGEX_BLDG_NAME = "^[a-zA-Z][a-zA-Z &]+";
-	public static final String REGEX_ROOM_NUM_AFTER = "^[a-zA-Z][a-zA-Z&]{1,6} [0-9]{1,4}";
+	final String[] day_abbrs = new String[] {"NULL", "SU", "MO", "TU", "WE", "TH", "FR", "SA"};
 	public static String sPref = null;
 
 	private DataBaseHelper destination_db;
 	private ScheduleDatabaseHandler schedule_db;
-	private LocationManager gLocationManager;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_start);
 
-		checkGPS();
-
 		//Initialize Parse
-		Parse.initialize(this, "kTygJWFcKh5a9OK7Pv58mTZtfkS7Sp91cpVyIiwc", "j8fsAwMny2P7y4iLRZNY8ABhK5oF2AV3rQe2MTdO");
+		Parse.initialize(this, Constants.parse_applicationId, Constants.parse_clientKey);
 
 		//Initialize destination db
 		destination_db = new DataBaseHelper("destination_db");
@@ -143,8 +132,8 @@ public class StartActivity extends Activity implements TextWatcher {
 					tempAddress = destAbbr;
 				}
 				gInputFeedback.setText("");
-				if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME)) {
-					if(tempAddress.matches(REGEX_ROOM_NUM)) {
+				if(tempAddress.matches(Constants.REGEX_ROOM_NUM) || tempAddress.matches(Constants.REGEX_BLDG_NAME)) {
+					if(tempAddress.matches(Constants.REGEX_ROOM_NUM)) {
 						destRoomNum = tempAddress.substring(0,tempAddress.indexOf(" "));
 						destBldgName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
 						Log.d("Search Button", "Matches REGEX_ROOM_NUM! RoomNum="+destRoomNum+" BldgName="+destBldgName);
@@ -218,12 +207,12 @@ public class StartActivity extends Activity implements TextWatcher {
 
 				if(found){
 					gInputFeedback.setText("");
-					if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME) || tempAddress.matches(REGEX_ROOM_NUM_AFTER)) {
-						if(tempAddress.matches(REGEX_ROOM_NUM)) {
+					if(tempAddress.matches(Constants.REGEX_ROOM_NUM) || tempAddress.matches(Constants.REGEX_BLDG_NAME) || tempAddress.matches(Constants.REGEX_ROOM_NUM_AFTER)) {
+						if(tempAddress.matches(Constants.REGEX_ROOM_NUM)) {
 							destRoomNum = tempAddress.substring(0,tempAddress.indexOf(" "));
 							destBldgName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
 							Log.d("Schedule Button", "Matches REGEX_ROOM_NUM! RoomNum="+destRoomNum+" BldgName="+destBldgName);
-						} else if(tempAddress.matches(REGEX_ROOM_NUM_AFTER)) {
+						} else if(tempAddress.matches(Constants.REGEX_ROOM_NUM_AFTER)) {
 							destBldgName = tempAddress.substring(0,tempAddress.indexOf(" "));
 							destRoomNum = tempAddress.substring(tempAddress.indexOf(" ")).trim();
 							Log.d("Schedule Button", "Matches REGEX_ROOM_NUM_AFTER! RoomNum="+destRoomNum+" BldgName="+destBldgName);
@@ -273,7 +262,7 @@ public class StartActivity extends Activity implements TextWatcher {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		checkGPS();
+		HelperFunctions.checkGPS(this);
 	}
 
 	@Override
@@ -294,38 +283,4 @@ public class StartActivity extends Activity implements TextWatcher {
 	public void onTextChanged(CharSequence s, int start, int before, int count) {
 
 	}
-
-	public void checkGPS() {
-		gLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-		//Check to see if GPS is enabled
-		if(!gLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
-			//If not enabled, prompt user to enabled it
-			displayEnableGPSAlert();
-		}
-	}
-
-	private void displayEnableGPSAlert() {
-		AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
-		alertDialog.setTitle("Enable GPS?");
-		alertDialog.setMessage("MNav requires GPS to function properly right now. Enable?");
-		alertDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog,int which) {
-				Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-				startActivity(intent);
-			}
-		});
-		alertDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int which) {		
-				finish();
-			}
-		});
-		alertDialog.show();
-	}
-
-	/** Helper function for displaying a toast. Takes the string to be displayed and the length: LONG or SHORT **/
-	/*	private void toastThis(String toast, int duration) {
-		Toast t = Toast.makeText(context, toast, duration);
-		t.show();
-	}
-	 */
 }

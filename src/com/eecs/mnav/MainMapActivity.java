@@ -26,7 +26,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -45,7 +44,6 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
@@ -104,12 +102,6 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 	private GeoPoint gStartGeo;
 	private GeoPoint gDestGeo;
 
-	//Constants
-	private static final int LONG = Toast.LENGTH_LONG;
-	private static final int FIVE_MINUTES = 1000 * 60 * 5;
-	private static final int LAYER_TYPE_SOFTWARE = 1;
-	private static final int ZOOM_LEVEL_SKY = 17;
-	private static final int ZOOM_LEVEL_BUILDING = 19;
 	//Alert IDs
 	private static final int ALERT_INVALID_DEST = 0;
 	private static final int ALERT_INTRO_PROMPT_1 = 1;
@@ -146,7 +138,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		//Turn off HW acceleration on new devices (map overlays are a bit buggy with it enabled)
 		try {
 			Method setLayerTypeMethod = gMapView.getClass().getMethod("setLayerType", new Class[] {int.class, Paint.class});
-			setLayerTypeMethod.invoke(gMapView, new Object[] {LAYER_TYPE_SOFTWARE, null});
+			setLayerTypeMethod.invoke(gMapView, new Object[] {Constants.LAYER_TYPE_SOFTWARE, null});
 		} catch (NoSuchMethodException e) {
 			// Older OS, no HW acceleration anyway
 		} catch (IllegalArgumentException e) {
@@ -236,8 +228,8 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 						String destAbbr = tempAddress.substring(0, tempAddress.indexOf(':'));
 						tempAddress = destAbbr;
 					}
-					if(tempAddress.matches(StartActivity.REGEX_ROOM_NUM) || tempAddress.matches(StartActivity.REGEX_BLDG_NAME)) {
-						if(tempAddress.matches(StartActivity.REGEX_ROOM_NUM)) {
+					if(tempAddress.matches(Constants.REGEX_ROOM_NUM) || tempAddress.matches(Constants.REGEX_BLDG_NAME)) {
+						if(tempAddress.matches(Constants.REGEX_ROOM_NUM)) {
 							gDestNum = tempAddress.substring(0,tempAddress.indexOf(" "));
 							gDestName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
 							Log.d("Search Button", "Matches REGEX_ROOM_NUM! RoomNum=" + gDestNum + " BldgName=" + gDestName);
@@ -256,7 +248,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 					gMapView.getOverlays().remove(OVERLAY_PIN_ID);
 					putPinOnMap(dest, gDestName_full);
 					gMapView.invalidate();
-					zoomTo(dest, ZOOM_LEVEL_BUILDING);
+					zoomTo(dest, Constants.ZOOM_LEVEL_BUILDING);
 					InputMethodManager in = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 					in.hideSoftInputFromWindow(autoCompleteTextViewDestination.getWindowToken(), 0);
 					return true;
@@ -286,12 +278,12 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 				int colonIndex = input.indexOf(':');
 				if(colonIndex != -1)
 					tempAddress = input.substring(0, colonIndex);
-				if(tempAddress.matches(StartActivity.REGEX_ROOM_NUM) || tempAddress.matches(StartActivity.REGEX_BLDG_NAME)) {
-					if(tempAddress.matches(StartActivity.REGEX_ROOM_NUM)) {
+				if(tempAddress.matches(Constants.REGEX_ROOM_NUM) || tempAddress.matches(Constants.REGEX_BLDG_NAME)) {
+					if(tempAddress.matches(Constants.REGEX_ROOM_NUM)) {
 						gDestNum = tempAddress.substring(0,tempAddress.indexOf(" "));
 						gDestName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
 						Log.d("Search Button", "Matches REGEX_ROOM_NUM! RoomNum="+gDestNum+" BldgName="+gDestName);
-					} else if(tempAddress.matches(StartActivity.REGEX_ROOM_NUM_AFTER)) {
+					} else if(tempAddress.matches(Constants.REGEX_ROOM_NUM_AFTER)) {
 						gDestName = tempAddress.substring(0,tempAddress.indexOf(" "));
 						gDestNum = tempAddress.substring(tempAddress.indexOf(" ")).trim();
 						Log.d("Schedule Button", "Matches REGEX_ROOM_NUM_AFTER! RoomNum="+gDestNum+" BldgName="+gDestName);
@@ -319,7 +311,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 				gMapView.getOverlays().remove(OVERLAY_PIN_ID);
 				putPinOnMap(dest, gDestName_full);
 				gMapView.invalidate();
-				zoomTo(dest, ZOOM_LEVEL_BUILDING);
+				zoomTo(dest, Constants.ZOOM_LEVEL_BUILDING);
 			}
 		});
 
@@ -353,7 +345,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		bTargetReticle.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				GeoPoint currentLoc = gMyLocationOverlay.getMyLocation();
-				zoomTo(currentLoc, ZOOM_LEVEL_BUILDING);
+				zoomTo(currentLoc, Constants.ZOOM_LEVEL_BUILDING);
 				buildAlertDialog(ALERT_INTRO_PROMPT_3);
 			}
 		});
@@ -361,7 +353,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 			public boolean onLongClick(View v) {
 				//create a geopoint for dest
 				GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
-				zoomTo(dest, ZOOM_LEVEL_BUILDING);
+				zoomTo(dest, Constants.ZOOM_LEVEL_BUILDING);
 				buildAlertDialog(ALERT_INTRO_PROMPT_4);
 				return true;
 			}
@@ -395,6 +387,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		HelperFunctions.checkGPS(this);
 		//Initialize the map overlays (scale, currentLocation indicator, and destination bldg if applicable)
 		//Also zooms to destination building pin or current location depending on if intro has been seen
 		initOverlays();
@@ -569,7 +562,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 						hasSeenAlert2 = false;
 						hasSeenAlert3 = false;
 						hasSeenAlert4 = false;
-						toastThis("Intro tips reset", LONG);
+						HelperFunctions.toastThis("Intro tips reset", Constants.LONG);
 					}
 
 					if(useTransit.isChecked())
@@ -609,8 +602,8 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		}
 		// Check whether the new location fix is newer or older
 		long timeDelta = location.getTime() - currentBestLocation.getTime();
-		boolean isSignificantlyNewer = timeDelta > FIVE_MINUTES;
-		boolean isSignificantlyOlder = timeDelta < -FIVE_MINUTES;
+		boolean isSignificantlyNewer = timeDelta > Constants.FIVE_MINUTES;
+		boolean isSignificantlyOlder = timeDelta < -Constants.FIVE_MINUTES;
 		boolean isNewer = timeDelta > 0;
 
 		// If it's been more than two minutes since the current location, use the new location
@@ -679,25 +672,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 			return cachedGpsLoc;
 		else return cachedNetworkLoc;
 	}
-
-	private void displayEnableGPSAlert() {
-		AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
-		alertDialog.setTitle("Enable GPS?");
-		alertDialog.setMessage("MNav requires GPS to function properly right now. Enable?");
-		alertDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog,int which) {
-				Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-				startActivity(intent);
-			}
-		});
-		alertDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int which) {
-				finish();
-			}
-		});
-		alertDialog.show();
-	}
-
+	
 	//Adds MyLocationOverlay, ScaleBarOverlay, and PinOverlay with single dest pin
 	public void initOverlays() {
 		//Remove all existing overlays
@@ -717,7 +692,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 					if(gMapController == null)
 						gMapController = gMapView.getController();
 					gMapController.animateTo(p);
-					gMapController.setZoom(ZOOM_LEVEL_SKY);
+					gMapController.setZoom(Constants.ZOOM_LEVEL_SKY);
 				}
 				//Now query last known destination (or default destination)
 				GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
@@ -736,7 +711,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 
 				//If we have seen alert1 and there is a location, zoom to that location
 				if(hasSeenAlert1 && !gDestName.equals("the diag"))
-					zoomTo(dest, ZOOM_LEVEL_BUILDING);
+					zoomTo(dest, Constants.ZOOM_LEVEL_BUILDING);
 			}
 		});
 
@@ -805,24 +780,6 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 			Log.d("zoomTo()", e.toString());
 			gMapController.setZoom(level);
 		}
-	}
-
-	public void checkGPS() {
-		gLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-		//Check to see if GPS is enabled
-		if(!gLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
-			//If not enabled, prompt user to enabled it
-			displayEnableGPSAlert();
-		}
-
-		gLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-		gLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
-	}
-
-	/** Helper function for displaying a toast. Takes the string to be displayed and the length: LONG or SHORT **/
-	private void toastThis(String toast, int duration) {
-		Toast t = Toast.makeText(ReportingApplication.getAppContext(), toast, duration);
-		t.show();
 	}
 
 	private void buildAlertDialog(int ID) {
@@ -964,9 +921,9 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 			gDistanceToDest = route.getDistance();
 			gTimeToDest = route.getDuration();
 
-			toastThis("Distance: "+gDistanceToDest + "\nTravel Duration: "+gTimeToDest, LONG);
+			HelperFunctions.toastThis("Distance: "+gDistanceToDest + "\nTravel Duration: "+gTimeToDest, Constants.LONG);
 
-			toastThis("TransitType:"+route.getSegments().get(0).getTransitMode(), LONG);
+			HelperFunctions.toastThis("TransitType:"+route.getSegments().get(0).getTransitMode(), Constants.LONG);
 
 			tvDestInfo.setVisibility(TextView.VISIBLE);
 			tvDestInfo.setText("Distance: "+gDistanceToDest+" Travel Duration: "+gTimeToDest);
@@ -1028,7 +985,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 			try {
 				int bldg_name_full_col = cursor.getColumnIndexOrThrow("name_full");
 				gDestName_full = cursor.getString(bldg_name_full_col);
-				toastThis(gDestName_full, LONG);
+				HelperFunctions.toastThis(gDestName_full, Constants.LONG);
 			} catch (IllegalArgumentException e) {
 				Log.d("DATABASE SHIT", e.toString());
 			}

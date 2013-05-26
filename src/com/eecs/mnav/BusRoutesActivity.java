@@ -11,17 +11,11 @@ import java.util.List;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import android.app.AlertDialog;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
-import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -50,14 +44,8 @@ public class BusRoutesActivity extends SlidingMapActivity {
 	private Button bZoomIn;
 	private Button bZoomOut;
 
-	//Our location globals
-	private double gDefaultLong = -83.72328;
-	private double gDefaultLat = 42.27880;
-	private int gDefaultZoom = 14;
-
 	//Helper globals
 	private MapController gMapController = null;
-	private LocationManager gLocationManager;
 
 	//Overlay globals
 	//private PinOverlay gPinOverlay = null;
@@ -66,9 +54,6 @@ public class BusRoutesActivity extends SlidingMapActivity {
 	private ScaleBarOverlay gScaleBarOverlay = null;
 
 	//Constants
-	private static final int FOUR_SECONDS = 4000;
-	private static final int LAYER_TYPE_SOFTWARE = 1;
-	private static final int ZOOM_LEVEL_BUILDING = 19;	
 	private static final String locationFeedLink = "http://mbus.pts.umich.edu/shared/location_feed.xml";
 	private static final String publicFeedLink = "http://mbus.pts.umich.edu/shared/public_feed.xml";
 	//private static final String stopsLink = "http://mbus.pts.umich.edu/shared/stop.xml";
@@ -81,7 +66,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 	//private int splitMove = 10;
 	private BusIconOverlay busIconOverlay;
 
-	private int m_interval = FOUR_SECONDS;
+	private int m_interval = Constants.FOUR_SECONDS;
 	private Handler m_handler;
 	private ListView listView;
 	private ListViewCustomAdapter routesListViewAdapter;
@@ -104,7 +89,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		gMapView = (MapView)findViewById(R.id.mapview);
 		try {
 			Method setLayerTypeMethod = gMapView.getClass().getMethod("setLayerType", new Class[] {int.class, Paint.class});
-			setLayerTypeMethod.invoke(gMapView, new Object[] {LAYER_TYPE_SOFTWARE, null});
+			setLayerTypeMethod.invoke(gMapView, new Object[] {Constants.LAYER_TYPE_SOFTWARE, null});
 		} catch (NoSuchMethodException e) {
 			// Older OS, no HW acceleration anyway
 		} catch (IllegalArgumentException e) {
@@ -144,9 +129,8 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		bTargetReticle = (Button) findViewById(R.id.button_return);
 		bTargetReticle.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				startGPS();
 				GeoPoint currentLoc = gMyLocationOverlay.getMyLocation();
-				zoomTo(currentLoc, ZOOM_LEVEL_BUILDING);
+				zoomTo(currentLoc, Constants.ZOOM_LEVEL_BUILDING);
 			}
 		});
 
@@ -167,9 +151,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 				gMapController.zoomOut();
 			}
 		});
-
-		startGPS();
-		zoomTo(new GeoPoint((int)(gDefaultLat*1E6), (int)(gDefaultLong*1E6)), gDefaultZoom);
+		zoomTo(new GeoPoint((int)(Constants.DEFAULT_LAT * 1E6), (int)(Constants.DEFAULT_LONG * 1E6)), Constants.ZOOM_LEVEL_DEFAULT);
 		new GetXmlDataTask().execute((String[])null);
 		m_handler = new Handler();
 		startRepeatingTask();
@@ -179,11 +161,11 @@ public class BusRoutesActivity extends SlidingMapActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		HelperFunctions.checkGPS(this);
 		//Initialize the map overlays (scale, currentLocation indicator)
 		initOverlays();
 		gMyLocationOverlay.enableMyLocation();
 		startRepeatingTask();
-		//start gps;
 	}
 
 	@Override
@@ -211,7 +193,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 	public boolean onOptionsItemSelected (MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.menu_reset_map:
-			zoomTo(new GeoPoint((int)(gDefaultLat*1E6), (int)(gDefaultLong*1E6)), gDefaultZoom);
+			zoomTo(new GeoPoint((int)(Constants.DEFAULT_LAT * 1E6), (int)(Constants.DEFAULT_LONG * 1E6)), Constants.ZOOM_LEVEL_DEFAULT);
 			break;
 		default:
 			return false;
@@ -222,24 +204,6 @@ public class BusRoutesActivity extends SlidingMapActivity {
 	@Override
 	protected boolean isRouteDisplayed() {
 		return true;
-	}
-
-	private void displayEnableGPSAlert() {
-		AlertDialog.Builder alertDialog = new AlertDialog.Builder(ReportingApplication.getAppContext());
-		alertDialog.setTitle("Enable GPS?");
-		alertDialog.setMessage("GPS is not enabled. Would you like to enable it in settings?");
-		alertDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog,int which) {
-				Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-				startActivity(intent);
-			}
-		});
-		alertDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int which) {
-				dialog.cancel();
-			}
-		});
-		alertDialog.show();
 	}
 
 	public void initOverlays() {
@@ -277,15 +241,6 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		} catch (IllegalArgumentException e) {
 			Log.d("zoomTo()", e.toString());
 			gMapController.setZoom(level);
-		}
-	}
-
-	private void startGPS() {
-		gLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-		//Check to see if GPS is enabled
-		if(!gLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
-			//If not enabled, prompt user to enabled it
-			displayEnableGPSAlert();
 		}
 	}
 

@@ -48,8 +48,6 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 	private String destBldgName = "";
 	private String destBldgFullName = "";
 	private String destRoomNum = "";
-	private static final String REGEX_ROOM_NUM = "^[0-9]{1,4} [a-zA-Z]+ *";
-	private static final String REGEX_BLDG_NAME = "^[a-zA-Z][a-zA-Z &]+";
 	private ListView list_data;
 
 	private MEvent curEvent;
@@ -462,8 +460,8 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 				public void onClick(View v) {
 					//Call intent to new activity
 					String tempAddress = curEvent.getLocation();
-					if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME)) {
-						if(tempAddress.matches(REGEX_ROOM_NUM)) {
+					if(tempAddress.matches(Constants.REGEX_ROOM_NUM) || tempAddress.matches(Constants.REGEX_BLDG_NAME)) {
+						if(tempAddress.matches(Constants.REGEX_ROOM_NUM)) {
 							destRoomNum = tempAddress.substring(0,tempAddress.indexOf(" "));
 							destBldgName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
 							Log.d("Schedule Item Click", "Matches REGEX_ROOM_NUM! RoomNum="+destRoomNum+" BldgName="+destBldgName);
@@ -512,8 +510,8 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 				public void onClick(View v) {
 					Log.d("Schedule", "got to inside click");
 					String tempAddress = curEvent.getLocation();
-					if(tempAddress.matches(REGEX_ROOM_NUM) || tempAddress.matches(REGEX_BLDG_NAME)) {
-						if(tempAddress.matches(REGEX_ROOM_NUM)) {
+					if(tempAddress.matches(Constants.REGEX_ROOM_NUM) || tempAddress.matches(Constants.REGEX_BLDG_NAME)) {
+						if(tempAddress.matches(Constants.REGEX_ROOM_NUM)) {
 							destRoomNum = tempAddress.substring(0,tempAddress.indexOf(" "));
 							destBldgName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
 							Log.d("Schedule Item Click", "Matches REGEX_ROOM_NUM! RoomNum="+destRoomNum+" BldgName="+destBldgName);

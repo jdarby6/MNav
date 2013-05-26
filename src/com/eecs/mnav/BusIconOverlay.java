@@ -3,7 +3,6 @@ package com.eecs.mnav;
 import java.util.ArrayList;
 
 import android.graphics.drawable.Drawable;
-import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
@@ -52,7 +51,7 @@ public class BusIconOverlay extends ItemizedOverlay<OverlayItem> {
 		String toast = "Title: " + myOverlays.get(i).getTitle();
 		toast += "\nText: " + myOverlays.get(i).getSnippet();
 		toast += "\nSymbol coordinates: Lat = " + lat + " Lon = " + lon + " (microdegrees)";
-		Toast.makeText(ReportingApplication.getAppContext(), toast, Toast.LENGTH_LONG).show();
+		HelperFunctions.toastThis(toast, Constants.LONG);
 		return(true);
 	}
 
