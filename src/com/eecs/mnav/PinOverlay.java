@@ -9,7 +9,6 @@ import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.OverlayItem;
 
 public class PinOverlay extends ItemizedOverlay<OverlayItem> {
-	//use m for "member" variables
 	private ArrayList<OverlayItem> mOverlays = new ArrayList<OverlayItem>();
 	MainMapActivity gMainActivity = null;
 
@@ -21,6 +20,10 @@ public class PinOverlay extends ItemizedOverlay<OverlayItem> {
 		gMainActivity = mainMapActivity;
 	}
 
+	public void clearPins(){
+		mOverlays.clear();
+	}
+	
 	public void removeTapListener() {
 		gMainActivity = null;
 	}

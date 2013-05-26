@@ -58,7 +58,6 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 	private MapView gMapView = null;
 	private TextView tvDestInfo = null;
 	private Button bPlotRoute;
-	private Button bSatellite;
 	private Button bTargetReticle;
 	private Button bZoomIn;
 	private Button bZoomOut;
@@ -318,7 +317,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		//---------------------
 		//SATELLITE BUTTON
 		//---------------------
-		bSatellite = (Button) findViewById(R.id.button_satellite);
+/*		bSatellite = (Button) findViewById(R.id.button_satellite);
 		if(!gMapView.isSatellite())
 			bSatellite.setBackgroundResource(R.drawable.ic_road);
 		else
@@ -336,7 +335,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 
 				Log.d("MAPSTUFF", "ZoomLevel=" + gMapView.getZoomLevel());
 			}
-		});
+		});*/
 
 		//---------------------
 		//TARGETING BUTTON
@@ -441,11 +440,26 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 	public boolean onOptionsItemSelected (MenuItem item) {
 		switch (item.getItemId()){
 		case R.id.menu_satellite:
-			showDialog(DIALOG_SAVE_CURRENT_LOC);
+			if(gMapView.isSatellite()) {
+				gMapView.setSatellite(false);
+			}
+			else {
+				gMapView.setSatellite(true);
+			}
+
+			Log.d("MAPSTUFF", "ZoomLevel=" + gMapView.getZoomLevel());
 			break;
 		case R.id.menu_settings:
 			showDialog(DIALOG_SETTINGS);
 			break;
+		case R.id.menu_show_all:
+			putPinsOnMap(digIntoDatabaseForEverything());
+			break;
+		case R.id.menu_save_loc:
+			showDialog(DIALOG_SAVE_CURRENT_LOC);
+			break;
+		case R.id.menu_clear_all:
+			gPinOverlay.clearPins();
 		default:
 			return false;
 		}
@@ -1007,7 +1021,66 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 			buildAlertDialog(ALERT_INVALID_DEST);
 		}
 	}
+		
+	//Creates new pin overlay and places single pin on map
+		private void putPinsOnMap(ArrayList<Coords> pinLocations) {
+			OverlayItem tmpItem;
+			GeoPoint doorPin;
+			Coords curCoord = new Coords();
+			int size = pinLocations.size();
+			for(int idx = 1; idx < size; idx++) {
+				curCoord = pinLocations.get(idx);
+			//	Log.d("AllBldgs", "Pin#:"+idx+" at lat:"+curCoord.latitude+" long:"+curCoord.longitude);
+				doorPin = new GeoPoint((int)(curCoord.latitude * 1e6), (int)(curCoord.longitude * 1e6));
+				tmpItem = new OverlayItem(doorPin, "test", "This is one of our pins");
+				gPinOverlay.addOverlayNoPopulate(tmpItem);
+			}
+			gPinOverlay.populateOverlay();
+		}
 
+		//Method to grab all building doors in the database
+		private ArrayList<Coords> digIntoDatabaseForEverything() {
+			Cursor bldgCursor = destination_db.getAllBldgIds();
+			Cursor doorCursor;
+			ArrayList<Coords> allDoors = new ArrayList<Coords>();
+			int numBldgs = bldgCursor.getCount();
+			if(numBldgs > 0 && bldgCursor.moveToFirst()) { //Destination is there, so show dialog and grab info
+				while(numBldgs > 0){
+				//	Log.d("AllBldgs", "numBldgs="+numBldgs);
+					//find column containing bldg num
+					int bldg_num_col = bldgCursor.getColumnIndex("bldg_num");
+					if(bldg_num_col < 0) { numBldgs--; continue; } //The column doesn't exist
+					int bldg_num = bldgCursor.getInt(bldg_num_col);
+					//find column containing num_doors
+					int num_doors_col = bldgCursor.getColumnIndex("num_doors");
+					int num_doors = bldgCursor.getInt(num_doors_col);
+					
+					//get the lat/long of each door to put in doors[]
+					doorCursor = destination_db.getDoorsByBldgId(bldg_num);
+					if(doorCursor.moveToFirst()) {
+						int door_lat_col = doorCursor.getColumnIndex("door_lat");
+						int door_long_col = doorCursor.getColumnIndex("door_long");
+						for(int i = 0; i < num_doors; i++) {
+							Coords tmpDoorCoord = new Coords();
+							tmpDoorCoord.latitude = doorCursor.getDouble(door_lat_col);
+							tmpDoorCoord.longitude = doorCursor.getDouble(door_long_col);
+							//Log.d("AllBldgs","Added door# "+i+" at lat:"+tmpDoorCoord.latitude+" long:"+tmpDoorCoord.longitude);
+							allDoors.add(tmpDoorCoord);
+							doorCursor.moveToNext();
+						}
+						doorCursor.close();
+					}
+					bldgCursor.moveToNext();
+					numBldgs--;
+				}
+			} else {
+				Log.d("AllBldgs", "This building doesn't exist");
+				num_doors = -1;
+			}
+			bldgCursor.close();
+			return allDoors;
+		}
+	
 	//Creates new pin overlay and places single pin on map
 	private void putPinOnMap(GeoPoint pinLocation, String name) {
 		OverlayItem tmpItem;

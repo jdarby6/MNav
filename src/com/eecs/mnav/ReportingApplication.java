@@ -3,6 +3,7 @@ package com.eecs.mnav;
 import org.acra.ACRA;
 import org.acra.ReportingInteractionMode;
 import org.acra.annotation.ReportsCrashes;
+
 import android.app.Application;
 import android.content.Context;
 
