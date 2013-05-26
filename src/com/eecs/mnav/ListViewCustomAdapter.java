@@ -11,15 +11,13 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public class ListViewCustomAdapter extends BaseAdapter{
+public class ListViewCustomAdapter extends BaseAdapter {
 	public Activity context;
 	public LayoutInflater inflater;
 
 	public ListViewCustomAdapter(Activity context) {
 		super();
-
 		this.context = context;
-
 		this.inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 	}
 

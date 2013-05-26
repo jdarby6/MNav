@@ -145,7 +145,6 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		bTargetReticle.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				startGPS();
-				//		GeoPoint currentLoc = new GeoPoint((int)(gCurrentLat * 1e6), (int)(gCurrentLong * 1e6));
 				GeoPoint currentLoc = gMyLocationOverlay.getMyLocation();
 				zoomTo(currentLoc, ZOOM_LEVEL_BUILDING);
 			}
@@ -210,7 +209,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 	}
 
 	public boolean onOptionsItemSelected (MenuItem item) {
-		switch (item.getItemId()){
+		switch (item.getItemId()) {
 		case R.id.menu_reset_map:
 			zoomTo(new GeoPoint((int)(gDefaultLat*1E6), (int)(gDefaultLong*1E6)), gDefaultZoom);
 			break;
@@ -290,24 +289,18 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		}
 	}
 
-	Runnable m_statusChecker = new Runnable()
-	{ 
+	Runnable m_statusChecker = new Runnable() { 
 		public void run() {
-			Log.d("Ya", "I'm all runnable");
-
 			new GetXmlDataTask().execute((String[]) null);
-
 			m_handler.postDelayed(m_statusChecker, m_interval);
 		}
 	};
 
-	void startRepeatingTask()
-	{
+	void startRepeatingTask() {
 		m_statusChecker.run(); 
 	}
 
-	void stopRepeatingTask()
-	{
+	void stopRepeatingTask() {
 		m_handler.removeCallbacks(m_statusChecker);
 	}
 
@@ -337,7 +330,8 @@ public class BusRoutesActivity extends SlidingMapActivity {
 				overlayItem.setMarker(busIcon);
 				busIconOverlay.addOverlay(overlayItem);
 			}
-		} catch (Exception e) {
+		} 
+		catch (Exception e) {
 			Log.d("setBusOverlays", e.getMessage());
 		}
 
@@ -375,7 +369,6 @@ public class BusRoutesActivity extends SlidingMapActivity {
 
 	//Generalized AsyncTask for any XML parsing that needs to be done. 
 	private class GetXmlDataTask extends AsyncTask<String, String, String> {
-
 		@Override
 		protected String doInBackground(String... params) {
 			String result = "";
@@ -384,7 +377,8 @@ public class BusRoutesActivity extends SlidingMapActivity {
 			try {
 				locationFeedURL = new URL(locationFeedLink);
 				publicFeedURL = new URL(publicFeedLink);
-			} catch (MalformedURLException e1) {
+			} 
+			catch (MalformedURLException e1) {
 				Log.d("GetXmlDataTask", "Error with opening URL");
 				e1.printStackTrace();
 

@@ -2,6 +2,8 @@ package com.eecs.mnav;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
@@ -17,6 +19,18 @@ public class MbusPublicFeedXmlParser {
 		public String busroutecolor;
 		public ArrayList<Stop> stops;
 		public String stopcount;
+
+		//Override the equals() method for Route to compare the route name
+		@Override
+		public boolean equals(Object o) {
+			return (o instanceof Route) && ((Route)o).name.equals(this.name);
+		}
+
+		//Override the hashCode() method so that Route objects are hashed by their route name
+		@Override
+		public int hashCode() {
+			return name.hashCode();
+		}
 	}
 
 	public static class Stop {
@@ -29,6 +43,8 @@ public class MbusPublicFeedXmlParser {
 		public ArrayList<String> toas;
 		public String toacount;
 	}
+	
+	private static Set<Route> currentRoutesFromFeed;
 
 	public static String parse(URL text) {
 		try {
@@ -42,7 +58,7 @@ public class MbusPublicFeedXmlParser {
 			int parserEvent = parser.getEventType();
 			Route currentRoute;
 			Stop currentStop;
-			BusRoutesActivity.routes = new ArrayList<Route>();
+			currentRoutesFromFeed = new HashSet<Route>();
 
 			// Parse the XML returned on the network
 			while (parserEvent != XmlPullParser.END_DOCUMENT) {
@@ -78,7 +94,7 @@ public class MbusPublicFeedXmlParser {
 								while (parser.next() != XmlPullParser.END_TAG) {
 									if (parser.getEventType() != XmlPullParser.START_TAG)
 										continue;
-									
+
 									name = parser.getName();
 									if (name.equals("name")) 
 										currentStop.name = BusRoutesActivity.readText(parser);
@@ -96,22 +112,21 @@ public class MbusPublicFeedXmlParser {
 										currentStop.ids.add(BusRoutesActivity.readText(parser));
 									else if (name.equals("toacount"))
 										currentStop.toacount = BusRoutesActivity.readText(parser);
-									
+
 									parserEvent = parser.next();
 								}
-								
+
 								currentRoute.stops.add(currentStop);
 							} 
 							else if (name.equals("stopcount")) {
 								currentRoute.stopcount = BusRoutesActivity.readText(parser);
 							}
-							
+
 							parserEvent = parser.next();
 						}
-						
-						BusRoutesActivity.routes.add(currentRoute);
+						currentRoutesFromFeed.add(currentRoute);
 					}
-					
+
 					break;
 				}
 				parserEvent = parser.next();
@@ -121,7 +136,26 @@ public class MbusPublicFeedXmlParser {
 			Log.i("MbusPublicFeedXmlParser", "Failed in parsing XML", e);
 			return "Finished with failure.";
 		}
+		
+		updateRoutesList();
 
 		return "Done...";
+	}
+	
+	/**
+	 * Go through each element in the currentRoutesFromFeed set and see if BusRoutesActivity.routes
+	 * contains it, and add it to that set if it doesn't. Then go through BusRoutesActivity.routes
+	 * and see if it contains something that isn't in currentRoutesFromFeed, and remove it from 
+	 * BusRoutesActivity.routes if it does. 
+	 */
+	private static void updateRoutesList() {
+		for(Route r : currentRoutesFromFeed) {
+			if(!BusRoutesActivity.routes.contains(r))
+				BusRoutesActivity.routes.add(r);
+		}
+		for(Route r : BusRoutesActivity.routes) {
+			if(!currentRoutesFromFeed.contains(r))
+				BusRoutesActivity.routes.remove(r);
+		}		
 	}
 }
