@@ -11,6 +11,8 @@ import java.util.List;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
+import android.app.ProgressDialog;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -21,11 +23,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 
 import com.eecs.mnav.MbusLocationFeedXmlParser.Item;
-import com.eecs.mnav.MbusPublicFeedXmlParser.Route;
+import com.eecs.mnav.MbusPublicFeedXmlParser.Stop;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
@@ -59,7 +62,12 @@ public class BusRoutesActivity extends SlidingMapActivity {
 	//private static final String stopsLink = "http://mbus.pts.umich.edu/shared/stop.xml";
 
 	static ArrayList<Item> items = new ArrayList<Item>();
-	static ArrayList<Route> routes = new ArrayList<Route>();
+	static ArrayList<MbusPublicFeedXmlParser.Route> routes = new ArrayList<MbusPublicFeedXmlParser.Route>();
+	static ArrayList<GeoPoint> stopGeoPoints = new ArrayList<GeoPoint>();
+	RouteOverlay gRouteOverlay;
+	int gCurrentRouteColor;
+	private GetDirectionsTask gOurGetDirectionsTask = null;
+	private ProgressDialog gProgressDialog;
 
 	//Number of points to interpolate a move by (chop up the update of bus icon into this many parts
 	//before fetching the XML again) - not implemented yet
@@ -80,6 +88,33 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		listView = new ListView(this);
 		routesListViewAdapter = new ListViewCustomAdapter(this);
 		listView.setAdapter(routesListViewAdapter);
+		listView.setClickable(true);
+		listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+			public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
+				Object o = listView.getItemAtPosition(position);
+				int stopcount = Integer.valueOf(((MbusPublicFeedXmlParser.Route)o).stopcount);
+				ArrayList<Stop> stops = ((MbusPublicFeedXmlParser.Route)o).stops;
+				for(int i = 0; i < stopcount; i++) {
+					stopGeoPoints.add(new GeoPoint((int)(Double.valueOf(stops.get(i).latitude) * 1E6), (int)(Double.valueOf(stops.get(i).longitude) * 1E6)));
+				}
+				if(!((MbusPublicFeedXmlParser.Route)o).topofloop.equals("0")) {
+					stopGeoPoints.add(new GeoPoint((int)(Double.valueOf(stops.get(0).latitude) * 1E6), (int)(Double.valueOf(stops.get(0).longitude) * 1E6)));
+				}
+				gCurrentRouteColor = Color.parseColor('#'+BusRoutesActivity.routes.get(position).busroutecolor);
+				
+				gProgressDialog = new ProgressDialog(BusRoutesActivity.this);
+				gProgressDialog.setMessage("Calculating Route...");
+				gProgressDialog.setCancelable(true);
+				gProgressDialog.setIndeterminate(true);
+				gProgressDialog.show();
+				
+				gOurGetDirectionsTask = new GetDirectionsTask();
+				gOurGetDirectionsTask.execute(stopGeoPoints.get(0));
+				
+				gSlidingMenu.toggle();
+			}
+		});
 		setContentView(R.layout.activity_bus_routes);
 		setBehindContentView(listView);
 		gSlidingMenu = getSlidingMenu();
@@ -262,9 +297,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 	public void setBusOverlays() {
 		//clear and re-add all overlays
 		List<Overlay> mapOverlays = gMapView.getOverlays();
-		mapOverlays.clear();
-		mapOverlays.add(gMyLocationOverlay);
-		mapOverlays.add(gScaleBarOverlay);
+		mapOverlays.remove(busIconOverlay);
 		Drawable busIcon = this.getResources().getDrawable(R.drawable.busred);
 		//this overlay needs a drawable in its constructor, but we change it later
 		busIconOverlay = new BusIconOverlay(busIcon); 
@@ -375,4 +408,106 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		}
 		return result;
 	}
+	
+	private Route directionsBusRoute() {
+		GoogleParser googleParser;
+		String jsonURL = "http://maps.google.com/maps/api/directions/json?";
+		StringBuffer sBuf = new StringBuffer(jsonURL);
+		sBuf.append("origin=");
+		sBuf.append(stopGeoPoints.get(0).getLatitudeE6()/1E6);
+		sBuf.append(',');
+		sBuf.append(stopGeoPoints.get(0).getLongitudeE6()/1E6);
+		sBuf.append("&destination=");
+		if(stopGeoPoints.size() <= 10) {
+			sBuf.append(stopGeoPoints.get(stopGeoPoints.size()-1).getLatitudeE6()/1E6);
+			sBuf.append(',');
+			sBuf.append(stopGeoPoints.get(stopGeoPoints.size()-1).getLongitudeE6()/1E6);
+		}
+		else {
+			sBuf.append(stopGeoPoints.get(9).getLatitudeE6()/1E6);
+			sBuf.append(',');
+			sBuf.append(stopGeoPoints.get(9).getLongitudeE6()/1E6);
+		}
+		sBuf.append("&waypoints=");
+		sBuf.append(stopGeoPoints.get(1).getLatitudeE6()/1E6);
+		sBuf.append(',');
+		sBuf.append(stopGeoPoints.get(1).getLongitudeE6()/1E6);
+		for(int i = 2; i < 9 && i < stopGeoPoints.size(); i++) {
+			sBuf.append("|");
+			sBuf.append(stopGeoPoints.get(i).getLatitudeE6()/1E6);
+			sBuf.append(',');
+			sBuf.append(stopGeoPoints.get(i).getLongitudeE6()/1E6);
+		}
+		sBuf.append("&sensor=true&mode=driving");
+		//sBuf.append("&sensor=true&mode=transit&departure_time="+(System.currentTimeMillis()+FIVE_MINUTES));
+		googleParser = new GoogleParser(sBuf.toString());
+		Route r =  googleParser.parseDriving();
+		if(stopGeoPoints.size() > 10) {
+			int prevDestIndex = 9;
+			while(stopGeoPoints.size() > prevDestIndex + 1) {
+				sBuf = new StringBuffer(jsonURL);
+				sBuf.append("origin=");
+				sBuf.append(stopGeoPoints.get(prevDestIndex).getLatitudeE6()/1E6);
+				sBuf.append(',');
+				sBuf.append(stopGeoPoints.get(prevDestIndex).getLongitudeE6()/1E6);
+				sBuf.append("&destination=");
+				if(stopGeoPoints.size() <= prevDestIndex + 10) {
+					sBuf.append(stopGeoPoints.get(stopGeoPoints.size()-1).getLatitudeE6()/1E6);
+					sBuf.append(',');
+					sBuf.append(stopGeoPoints.get(stopGeoPoints.size()-1).getLongitudeE6()/1E6);
+				}
+				else {
+					sBuf.append(stopGeoPoints.get(prevDestIndex + 9).getLatitudeE6()/1E6);
+					sBuf.append(',');
+					sBuf.append(stopGeoPoints.get(prevDestIndex + 9).getLongitudeE6()/1E6);
+				}
+				sBuf.append("&waypoints=");
+				sBuf.append(stopGeoPoints.get(prevDestIndex + 1).getLatitudeE6()/1E6);
+				sBuf.append(',');
+				sBuf.append(stopGeoPoints.get(prevDestIndex + 1).getLongitudeE6()/1E6);
+				for(int i = prevDestIndex + 2; i < prevDestIndex + 9 && i < stopGeoPoints.size(); i++) {
+					sBuf.append("|");
+					sBuf.append(stopGeoPoints.get(i).getLatitudeE6()/1E6);
+					sBuf.append(',');
+					sBuf.append(stopGeoPoints.get(i).getLongitudeE6()/1E6);
+				}
+				sBuf.append("&sensor=true&mode=driving");
+				//sBuf.append("&sensor=true&mode=transit&departure_time="+(System.currentTimeMillis()+FIVE_MINUTES));
+				googleParser = new GoogleParser(sBuf.toString());
+				Route r2 = googleParser.parseDriving();
+				r.addPoints(r2.getPoints());
+				r.addSegments(r2.getSegments());
+				prevDestIndex += 9;
+			}
+		}
+		return r;
+	}
+	
+	// Implementation of AsyncTask used to get the route a bus takes between stops
+	private class GetDirectionsTask extends AsyncTask<GeoPoint, Void, Route> {
+
+		@Override
+		protected Route doInBackground(GeoPoint... geopoints) {
+			//Creates Url and queries google directions api
+			return directionsBusRoute();
+		}
+
+		@Override
+		protected void onPostExecute(Route route) {
+			List<Overlay> tmp = gMapView.getOverlays();
+			//Remove the route if there's one there already
+			if(tmp.contains(gRouteOverlay)) {
+				tmp.remove(gRouteOverlay);
+			}
+			gRouteOverlay = new RouteOverlay(route, stopGeoPoints.get(0), stopGeoPoints.get(stopGeoPoints.size()-1), gCurrentRouteColor);
+			tmp.add(gRouteOverlay);
+
+			if(gProgressDialog.isShowing())
+				gProgressDialog.dismiss();
+			gMapView.invalidate();
+
+			gOurGetDirectionsTask = null;
+		}
+	}
+
 }

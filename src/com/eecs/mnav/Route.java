@@ -29,7 +29,7 @@ public class Route {
 	public void addPoints(final List<GeoPoint> points) {this.points.addAll(points);}
 
 	public void addSegment(final Segment s) {segments.add(s);}
-
+	public void addSegments(final List<Segment> segments) {this.segments.addAll(segments);}
 	public List<Segment> getSegments() {return segments;}
 
 	public String getName() {return name;}

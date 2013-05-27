@@ -1,34 +1,29 @@
 package com.eecs.mnav;
 
+import java.util.ArrayList;
+
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Point;
+import android.graphics.Rect;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
 
 public class BusRouteOverlay extends Overlay {
-	private GeoPoint locpoint;
 	private Paint paint;
-	private GeoPoint routePoints [];
-	private int routeGrade[];
-	private boolean routeIsActive;	
-	private Point pold, pnew, pp;
+	private ArrayList<GeoPoint> routePoints;
+	private boolean routeIsActive;  
 	private int numberRoutePoints;
 
 	// Constructor permitting the route array to be passed as an argument.
-	public BusRouteOverlay(GeoPoint[] routePoints, int[] routeGrade) {
+	public BusRouteOverlay(ArrayList<GeoPoint> routePoints) {
 		this.routePoints = routePoints;
-		this.routeGrade = routeGrade;
-		numberRoutePoints  = routePoints.length;
+		numberRoutePoints  = routePoints.size();
 		routeIsActive = true;
-		// If first time, set initial location to start of route
-		locpoint = routePoints[0];
-		pold = new Point(0, 0);
-		pnew = new Point(0,0);
-		pp = new Point(0,0);
-		paint = new Paint();
 	}
 
 	// Method to turn route display on and off
@@ -36,70 +31,129 @@ public class BusRouteOverlay extends Overlay {
 		this.routeIsActive = routeIsActive;
 	}
 
+	public void setColor(int c){
+		color = c;
+	}
+
+	private int color = 0;
+
+	Paint.Style paintStyle = Paint.Style.STROKE;
+
+	public void setFillStyle(Paint.Style style){
+		paintStyle = style;
+	}
+
 	@Override
 	public void draw(Canvas canvas, MapView mapview, boolean shadow) {
 		super.draw(canvas, mapview, shadow);
 		if(! routeIsActive) return;
 
-		/* 
-		The object mapview is a MapView.  The class MapView, documented at 
-		http://code.google.com/android/add-ons/google-apis/reference/com/google/android/maps/MapView.html,
-		has a method getProjection() that returns a Projection of the MapView.  Projection is an interface, docs at
-		http://code.google.com/android/add-ons/google-apis/reference/com/google/android/maps/Projection.html,
-		which has a method toPixels(GeoPoint in, android.graphics.Point out), which takes a GeoPoint (in) and outputs
-		a Point (out) that contains the screen x and y coordinates (in pixels) corresponding to the GeoPoint. (with latitude
-		and longitude specified in microdegrees).  Thus, after implementing mapview.getProjection().toPixels(gp, pp),
-		where gp is a GeoPoint, pp.x and pp.y hold the corresponding screen coordinates for the current MapView.
-		Note that this translation must be done each time draw is called, since the relationship between GeoPoints and
-		x-y coordinates may have changed (for example, if the map were panned or zoomed since the last draw).
-		 */
 
-		mapview.getProjection().toPixels(locpoint, pp);       // Converts GeoPoint to screen pixels
+		if(paint == null){
+			paint = new Paint();
 
-		int xoff = 0;
-		int yoff = 0;
-		int oldx = pp.x;
-		int oldy = pp.y;
-		int newx = oldx + xoff;
-		int newy = oldy + yoff;
-
-		paint.setAntiAlias(true);
-
-		// Draw route segment by segment, setting color and width of segment according to the slope
-		// information returned from the server for the route.
-
-		for(int i=0; i<numberRoutePoints-1; i++){
-			switch(routeGrade[i]){
-			case 1:
-				paint.setARGB(100,255,0,0);
-				paint.setStrokeWidth(3);
-				break;
-			case 2:
-				paint.setARGB(100, 0, 255, 0);
-				paint.setStrokeWidth(5);
-				break;
-			case 3:
-				paint.setARGB(100, 0, 0, 255);
-				paint.setStrokeWidth(7);
-				break;
-			case 4:
-				paint.setARGB(90, 153, 102, 153);
-				paint.setStrokeWidth(6);
-				break;
-			}
-
-			// Find endpoints of this segment in pixels
-			mapview.getProjection().toPixels(routePoints[i], pold);
-			oldx = pold.x;
-			oldy = pold.y;
-			mapview.getProjection().toPixels(routePoints[i+1], pnew);
-			newx = pnew.x;
-			newy = pnew.y;
-
-			// Draw the segment
-			canvas.drawLine(oldx, oldy, newx, newy, paint);
+			paint.setAntiAlias(true);
+			paint.setStrokeWidth(1);
+			paint.setStyle(paintStyle);
+			paint.setAntiAlias(true);
+			paint.setARGB(255, 0, 0, 255);
+			paint.setColor(color);
 		}
 
+		if(bitmap == null){
+
+			wMin = Integer.MAX_VALUE;
+			wMax = Integer.MIN_VALUE;
+			hMin = Integer.MAX_VALUE;
+			hMax = Integer.MIN_VALUE;
+
+			lonMin = Integer.MAX_VALUE;
+			lonMax = Integer.MIN_VALUE;
+			latMin = Integer.MAX_VALUE;
+			latMax = Integer.MIN_VALUE;
+
+			Boolean newSegment = true;
+			Point pt = new Point();
+
+			GeoPoint point = null;
+
+			ArrayList<Point> points = new ArrayList<Point>();
+
+			for(int i=0; i<numberRoutePoints; i++){
+
+				point = routePoints.get(i);
+
+				int tempLat = point.getLatitudeE6();
+				int tempLon = point.getLongitudeE6();
+
+				if(tempLon<lonMin)lonMin = tempLon;
+				if(tempLon>lonMax)lonMax = tempLon;
+				if(tempLat<latMin)latMin = tempLat;
+				if(tempLat>latMax)latMax = tempLat;
+
+				mapview.getProjection().toPixels(routePoints.get(i), pt);
+
+				points.add(new Point(pt.x,pt.y));
+
+				if(pt.x<wMin)wMin = pt.x;
+				if(pt.x>wMax)wMax = pt.x;
+				if(pt.y<hMin)hMin = pt.y;
+				if(pt.y>hMax)hMax = pt.y;
+
+			}
+
+			topLeftIn = new GeoPoint(latMax, lonMin);
+			bottomRightIn = new GeoPoint(latMin, lonMax);
+			int width = (wMax-wMin);
+			int height = (hMax-hMin);           
+
+			bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_4444);
+			Canvas c = new Canvas(bitmap);
+
+			Path bitmapPath = new Path();
+			bitmapPath.incReserve(numberRoutePoints);
+
+			newSegment = true;
+			for(Point p : points){
+
+				if (newSegment) {
+					bitmapPath.moveTo(p.x - wMin, p.y - hMin);
+					newSegment = false;
+				} else {
+					bitmapPath.lineTo(p.x - wMin, p.y - hMin);
+				}
+
+			}
+			c.drawPath(bitmapPath, paint);
+
+		}
+		mapview.getProjection().toPixels(topLeftIn, topLeftOut);
+		mapview.getProjection().toPixels(bottomRightIn, bottomRightOut);
+
+		int l = topLeftOut.x;
+		int t = topLeftOut.y;
+		int r = bottomRightOut.x;
+		int b = bottomRightOut.y; 
+
+		Rect rect = new Rect(l,t,r,b);
+
+		canvas.drawBitmap(bitmap, new Rect(0,0,bitmap.getWidth(),bitmap.getHeight()),rect,null);
+
 	}
+	GeoPoint topLeftIn = null;
+	GeoPoint bottomRightIn = null;
+	Point topLeftOut = new Point();
+	Point bottomRightOut = new Point();
+
+	Bitmap bitmap = null;
+	int wMin = Integer.MAX_VALUE;
+	int wMax = 0;
+	int hMin = Integer.MAX_VALUE;
+	int hMax = 0;
+
+	int lonMin = Integer.MAX_VALUE;
+	int lonMax = 0;
+	int latMin = Integer.MAX_VALUE;
+	int latMax = 0;
 
 }
