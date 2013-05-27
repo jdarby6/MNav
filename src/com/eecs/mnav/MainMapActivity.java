@@ -25,6 +25,7 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -565,8 +566,12 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 
 			bGetDirections.setOnClickListener(new Button.OnClickListener() {
 				public void onClick(View v) {
-					getDirections();
-					removeDialog(DIALOG_DESTINATION_BLDG);
+					if(HelperFunctions.checkGPS(MainMapActivity.this)){
+						getDirections();
+						removeDialog(DIALOG_DESTINATION_BLDG);
+					} else {
+						HelperFunctions.displayEnableGPSAlert(MainMapActivity.this);
+					}
 				}
 			});
 			break;
@@ -737,6 +742,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 					}
 					//Now take whatever destination we have now (either default, last known, or new closest door)
 					//Put it in overlay item and add pin to map
+					Looper.prepare();
 					putPinOnMap(dest, gDestName_full);
 					uiHandler.removeCallbacks(invalidateMapFromHandler);
 					uiHandler.post(invalidateMapFromHandler);
