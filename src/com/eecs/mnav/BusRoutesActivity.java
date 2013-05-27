@@ -11,6 +11,7 @@ import java.util.List;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
+import android.app.AlertDialog;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -129,8 +130,12 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		bTargetReticle = (Button) findViewById(R.id.button_return);
 		bTargetReticle.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				GeoPoint currentLoc = gMyLocationOverlay.getMyLocation();
-				zoomTo(currentLoc, Constants.ZOOM_LEVEL_BUILDING);
+				if(HelperFunctions.checkGPS(BusRoutesActivity.this)){
+					GeoPoint currentLoc = gMyLocationOverlay.getMyLocation();
+					zoomTo(currentLoc, Constants.ZOOM_LEVEL_BUILDING);
+				} else {
+					HelperFunctions.displayEnableGPSAlert(BusRoutesActivity.this);
+				}
 			}
 		});
 

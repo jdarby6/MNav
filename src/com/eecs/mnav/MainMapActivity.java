@@ -312,7 +312,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 					gMapView.getOverlays().remove(OVERLAY_PIN_ID);
 				} else {
 					dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
-					HelperFunctions.toastThisGravity("Enable GPS to get walking directions to this building.", Constants.LONG, 200);
+					HelperFunctions.toastThisGravity("Enable GPS to get walking directions to this building.", Constants.SHORT, 200);
 				}
 				
 				putPinOnMap(dest, gDestName_full);
