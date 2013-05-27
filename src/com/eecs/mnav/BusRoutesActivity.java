@@ -164,8 +164,12 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		bTargetReticle = (Button) findViewById(R.id.button_return);
 		bTargetReticle.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				GeoPoint currentLoc = gMyLocationOverlay.getMyLocation();
-				zoomTo(currentLoc, Constants.ZOOM_LEVEL_BUILDING);
+				if(HelperFunctions.checkGPS(BusRoutesActivity.this)){
+					GeoPoint currentLoc = gMyLocationOverlay.getMyLocation();
+					zoomTo(currentLoc, Constants.ZOOM_LEVEL_BUILDING);
+				} else {
+					HelperFunctions.displayEnableGPSAlert(BusRoutesActivity.this);
+				}
 			}
 		});
 

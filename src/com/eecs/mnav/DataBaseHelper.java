@@ -158,6 +158,10 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				"WHERE upper(name_abbr)='" + name + "' OR upper(name_full)='" + name + "'", null);
 	}
 
+	public Cursor getAllBldgIds() {
+		return myDataBase.rawQuery("SELECT bldg_num, num_doors, name_full FROM buildings", null);
+	}
+	
 	/**
 	 * Retrieves all of the door locations for a building whose number is bldg_num
 	 * @param bldg_num The building id for which we need the door locations 
