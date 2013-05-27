@@ -9,6 +9,7 @@ public class Constants {
 	public static final int FOUR_SECONDS = 4000;
 	public static final int LAYER_TYPE_SOFTWARE = 1;
 	public static final int LONG = Toast.LENGTH_LONG;
+	public static final int SHORT = Toast.LENGTH_SHORT;
 	public static final int ZOOM_LEVEL_DEFAULT = 14;
 	public static final int ZOOM_LEVEL_BUILDING = 19;
 	public static final int ZOOM_LEVEL_SKY = 17;

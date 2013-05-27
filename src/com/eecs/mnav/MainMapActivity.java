@@ -231,11 +231,11 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 						if(tempAddress.matches(Constants.REGEX_ROOM_NUM)) {
 							gDestNum = tempAddress.substring(0,tempAddress.indexOf(" "));
 							gDestName = tempAddress.substring(tempAddress.indexOf(" ")).trim();
-							Log.d("Search Button", "Matches REGEX_ROOM_NUM! RoomNum=" + gDestNum + " BldgName=" + gDestName);
+							Log.d("MainMapActivity", "Search Button Matches REGEX_ROOM_NUM! RoomNum=" + gDestNum + " BldgName=" + gDestName);
 						} else {//It should just be the name of the bldg
 							gDestName = tempAddress;
 							gDestNum = "";
-							Log.d("Search Button", "Matches REGEX_BLDG_NAME! RoomNum=" + gDestNum + " BldgName=" + gDestName);
+							Log.d("MainMapActivity", "Search Button Matches REGEX_BLDG_NAME! RoomNum=" + gDestNum + " BldgName=" + gDestName);
 						}
 					} else if(tempAddress != null && tempAddress.length() > 0){
 						//It doesn't match our regEx so it's an invalid entry.
@@ -302,12 +302,19 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 
 				//The gDestName is set, so dig into the database for building information and stuff
 				digIntoDatabaseForBuildingInformationAndStuff();
+				//create geopoint for dest
+				GeoPoint dest;
+				
 				//now find closest door
 				findClosestDoor();
-
-				//create a geopoint for dest
-				GeoPoint dest = getDirections(); //Query Google for directions to dest and return the dest 
-				gMapView.getOverlays().remove(OVERLAY_PIN_ID);
+				if(HelperFunctions.checkGPS(MainMapActivity.this)){
+					dest = getDirections(); //Query Google for directions to dest and return the dest
+					gMapView.getOverlays().remove(OVERLAY_PIN_ID);
+				} else {
+					dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
+					HelperFunctions.toastThisGravity("Enable GPS to get walking directions to this building.", Constants.LONG, 200);
+				}
+				
 				putPinOnMap(dest, gDestName_full);
 				gMapView.invalidate();
 				zoomTo(dest, Constants.ZOOM_LEVEL_BUILDING);
@@ -343,9 +350,13 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		bTargetReticle = (Button) findViewById(R.id.button_return);
 		bTargetReticle.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				GeoPoint currentLoc = gMyLocationOverlay.getMyLocation();
-				zoomTo(currentLoc, Constants.ZOOM_LEVEL_BUILDING);
-				buildAlertDialog(ALERT_INTRO_PROMPT_3);
+				if(HelperFunctions.checkGPS(MainMapActivity.this)){
+					GeoPoint currentLoc = gMyLocationOverlay.getMyLocation();
+					zoomTo(currentLoc, Constants.ZOOM_LEVEL_BUILDING);
+					buildAlertDialog(ALERT_INTRO_PROMPT_3);
+				} else {
+					HelperFunctions.displayEnableGPSAlert(MainMapActivity.this);
+				}
 			}
 		});
 		bTargetReticle.setOnLongClickListener(new OnLongClickListener() {
@@ -386,7 +397,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		HelperFunctions.checkGPS(this);
+		//HelperFunctions.checkGPS(this);
 		//Initialize the map overlays (scale, currentLocation indicator, and destination bldg if applicable)
 		//Also zooms to destination building pin or current location depending on if intro has been seen
 		initOverlays();
@@ -691,48 +702,70 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 	public void initOverlays() {
 		//Remove all existing overlays
 		List<Overlay> mapOverlays = gMapView.getOverlays();
-		mapOverlays.clear();
-
+		mapOverlays.clear();			
 		//Start with putting our own location on the map
 		gMyLocationOverlay = new MyLocationOverlay(this, gMapView);
 		mapOverlays.add(OVERLAY_MYLOC_ID, gMyLocationOverlay);
-		gMyLocationOverlay.enableMyLocation();
-		//Run this block of code after finding our first location fix
-		gMyLocationOverlay.runOnFirstFix(new Runnable() {
-			public void run() {
-				//If we haven't seen alert1 or if no location was entered, center on self
-				if(!hasSeenAlert1 || gDestName.equals("the diag")){
-					GeoPoint p = gMyLocationOverlay.getMyLocation();
-					if(gMapController == null)
-						gMapController = gMapView.getController();
-					gMapController.animateTo(p);
-					gMapController.setZoom(Constants.ZOOM_LEVEL_SKY);
-				}
-				//Now query last known destination (or default destination)
-				GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
-				//Find the closest door
-				if(findClosestDoor()) {
-					Log.d("ClosestDoor", "Found closest door!");
-					//If we found the closest door,
-					//create a geopoint for that door destination
-					dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
-				}
-				//Now take whatever destination we have now (either default, last known, or new closest door)
-				//Put it in overlay item and add pin to map
-				putPinOnMap(dest, gDestName_full);
-				uiHandler.removeCallbacks(invalidateMapFromHandler);
-				uiHandler.post(invalidateMapFromHandler);
-
-				//If we have seen alert1 and there is a location, zoom to that location
-				if(hasSeenAlert1 && !gDestName.equals("the diag"))
-					zoomTo(dest, Constants.ZOOM_LEVEL_BUILDING);
-			}
-		});
-
 		//Create the scalebar and add it to mapview
 		gScaleBarOverlay = new ScaleBarOverlay(gMapView);
 		gScaleBarOverlay.setImperial();
 		mapOverlays.add(OVERLAY_SCALEBAR_ID, gScaleBarOverlay);
+		if(HelperFunctions.checkGPS(this)){
+			//Start with putting our own location on the map
+			//gMyLocationOverlay = new MyLocationOverlay(this, gMapView);
+			//mapOverlays.add(OVERLAY_MYLOC_ID, gMyLocationOverlay);
+			gMyLocationOverlay.enableMyLocation();
+			//Run this block of code after finding our first location fix
+			gMyLocationOverlay.runOnFirstFix(new Runnable() {
+				public void run() {
+					//If we haven't seen alert1 or if no location was entered, center on self
+					if(!hasSeenAlert1 || gDestName.equals("the diag")){
+						GeoPoint p = gMyLocationOverlay.getMyLocation();
+						if(gMapController == null)
+							gMapController = gMapView.getController();
+						gMapController.animateTo(p);
+						gMapController.setZoom(Constants.ZOOM_LEVEL_SKY);
+					}
+					//Now query last known destination (or default destination)
+					GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
+					//Find the closest door
+					if(findClosestDoor()) {
+						Log.d("ClosestDoor", "Found closest door!");
+						//If we found the closest door,
+						//create a geopoint for that door destination
+						dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
+					}
+					//Now take whatever destination we have now (either default, last known, or new closest door)
+					//Put it in overlay item and add pin to map
+					putPinOnMap(dest, gDestName_full);
+					uiHandler.removeCallbacks(invalidateMapFromHandler);
+					uiHandler.post(invalidateMapFromHandler);
+	
+					//If we have seen alert1 and there is a location, zoom to that location
+					if(hasSeenAlert1 && !gDestName.equals("the diag"))
+						zoomTo(dest, Constants.ZOOM_LEVEL_BUILDING);
+				}
+			});
+		} else {
+			//Now query last known destination (or default destination)
+			GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
+			//Find the closest door
+			if(findClosestDoor()) {
+				Log.d("ClosestDoor", "Found closest door!");
+				//If we found the closest door,
+				//create a geopoint for that door destination
+				dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
+			}
+			//Now take whatever destination we have now (either default, last known, or new closest door)
+			//Put it in overlay item and add pin to map
+			putPinOnMap(dest, gDestName_full);
+			uiHandler.removeCallbacks(invalidateMapFromHandler);
+			uiHandler.post(invalidateMapFromHandler);
+
+			//If we have seen alert1 and there is a location, zoom to that location
+			if(hasSeenAlert1 && !gDestName.equals("the diag"))
+				zoomTo(dest, Constants.ZOOM_LEVEL_BUILDING);
+		}
 	}
 
 	private Route directionsWalking(final GeoPoint start, final GeoPoint dest) {
@@ -882,22 +915,40 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		alertDialogBuilder.create().show();
 	}
 
+	/**
+	 * Get the distance (double) from current location as given by GPS using gMyLocationOverlay.
+	 * @param latitude - latitude coordinate of destination
+	 * @param longitude - longitude coordinate of destination
+	 * @return Euclidean distance from current location to destination coords if GPS is enabled. -1 otherwise.
+	 */
 	private double getDistanceFromCurrentLoc(double latitude, double longitude) {
-		final float curLat = (float)gMyLocationOverlay.getMyLocation().getLatitudeE6() * (float)1E-6;
-		final float curLong = (float)gMyLocationOverlay.getMyLocation().getLongitudeE6() * (float)1E-6;
-
-		double lat_dist = latitude - curLat;
-		double long_dist = longitude - curLong;
-
-		return Math.sqrt(lat_dist*lat_dist + long_dist*long_dist);
+		if(HelperFunctions.checkGPS(MainMapActivity.this)){
+			final float curLat = (float)gMyLocationOverlay.getMyLocation().getLatitudeE6() * (float)1E-6;
+			final float curLong = (float)gMyLocationOverlay.getMyLocation().getLongitudeE6() * (float)1E-6;
+	
+			double lat_dist = latitude - curLat;
+			double long_dist = longitude - curLong;
+	
+			return Math.sqrt(lat_dist*lat_dist + long_dist*long_dist);
+		} else {
+			return -1;
+		}
 	}
-
+	/**
+	 * Finds the closest door to current location using getDistanceFromCurrentLoc() and gDestinationLat & gDestinationLong.
+	 * @return true if num_doors > != 1 && doors.length > 0
+	 */
 	private boolean findClosestDoor() {
 		int currentBestIndex = 0;
 		double currentBestDistance = 0;
 
 		for(int i = 0; i < num_doors; i++) {
 			double contenderDistance = getDistanceFromCurrentLoc(doors[i].latitude, doors[i].longitude);
+			if(contenderDistance == -1){
+				currentBestIndex = 0;
+				Log.d("MNavMainActivity","findClosestDoor got -1");
+				break;
+			}
 			if(contenderDistance < currentBestDistance)
 				currentBestIndex = i;
 		}
@@ -999,7 +1050,6 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 			try {
 				int bldg_name_full_col = cursor.getColumnIndexOrThrow("name_full");
 				gDestName_full = cursor.getString(bldg_name_full_col);
-				HelperFunctions.toastThis(gDestName_full, Constants.LONG);
 			} catch (IllegalArgumentException e) {
 				Log.d("DATABASE SHIT", e.toString());
 			}
@@ -1090,6 +1140,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		gPinOverlay.setTapListener(this);
 		tmpItem = new OverlayItem(pinLocation, name, "This is your current destination");
 		gPinOverlay.addOverlay(tmpItem);
+		HelperFunctions.toastThis(name, Constants.SHORT);
 		gMapView.getOverlays().add(OVERLAY_PIN_ID, gPinOverlay);
 	}
 
