@@ -95,6 +95,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 				Object o = listView.getItemAtPosition(position);
 				int stopcount = Integer.valueOf(((MbusPublicFeedXmlParser.Route)o).stopcount);
 				ArrayList<Stop> stops = ((MbusPublicFeedXmlParser.Route)o).stops;
+				stopGeoPoints.clear();
 				for(int i = 0; i < stopcount; i++) {
 					stopGeoPoints.add(new GeoPoint((int)(Double.valueOf(stops.get(i).latitude) * 1E6), (int)(Double.valueOf(stops.get(i).longitude) * 1E6)));
 				}
