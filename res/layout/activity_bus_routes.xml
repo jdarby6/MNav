@@ -82,7 +82,7 @@
             android:background="@drawable/divider_black_vert" />
 
         <TextView
-            android:id="@+id/textView1"
+            android:id="@+id/textView_stepbystep"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"

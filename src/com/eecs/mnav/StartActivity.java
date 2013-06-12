@@ -263,6 +263,7 @@ public class StartActivity extends Activity implements TextWatcher {
 	protected void onResume() {
 		super.onResume();
 		HelperFunctions.checkGPS(this);
+		//isGooglePlayServicesAvailable();
 	}
 
 	@Override

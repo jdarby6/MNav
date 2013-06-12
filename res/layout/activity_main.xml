@@ -23,18 +23,17 @@
             android:id="@+id/button_return"
             style="?android:attr/buttonStyleSmall"
             android:layout_width="45dp"
-            android:layout_height="45dp"
+            android:layout_height="42dp"
             android:layout_alignParentLeft="false"
             android:layout_alignParentRight="true"
             android:layout_alignParentTop="false"
-            android:layout_centerVertical="true"
             android:background="@drawable/ic_target"
             android:text="@string/_" />
 
         <Button
             android:id="@+id/button_plotroute"
             android:layout_width="45dp"
-            android:layout_height="45dp"
+            android:layout_height="42dp"
             android:layout_alignParentTop="true"
             android:layout_toLeftOf="@+id/button_return"
             android:background="@drawable/button_plot_route_drawable"
@@ -43,40 +42,50 @@
         <View
             android:id="@+id/divider_1"
             android:layout_width="1dp"
-            android:layout_height="wrap_content"
+            android:layout_height="50dp"
+            android:layout_alignParentTop="true"
+            android:background="@drawable/divider_black_vert" />
+
+        <View
+            android:id="@+id/divider_2"
+            android:layout_width="1dp"
+            android:layout_height="50dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
             android:background="@drawable/divider_black_vert" />
 
         <View
             android:id="@+id/divider_5"
             android:layout_width="1dp"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
+            android:layout_height="50dp"
             android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
             android:background="@drawable/divider_black_vert" />
 
         <View
             android:id="@+id/divider_4"
             android:layout_width="1dp"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
+            android:layout_height="50dp"
+            android:layout_alignParentBottom="false"
+            android:layout_alignParentTop="true"
             android:layout_toLeftOf="@+id/button_return"
             android:background="@drawable/divider_black_vert" />
 
         <View
             android:id="@+id/divider_3"
             android:layout_width="1dp"
-            android:layout_height="wrap_content"
+            android:layout_height="50dp"
             android:layout_alignLeft="@+id/button_plotroute"
-            android:layout_alignParentBottom="true"
+            android:layout_alignParentTop="true"
             android:background="@drawable/divider_black_vert" />
 
         <AutoCompleteTextView
-            android:id="@+id/autoCompleteTextView_map_destination"
+            android:id="@+id/autoComplete_map_destination"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="42dp"
             android:layout_alignParentTop="true"
             android:layout_toLeftOf="@id/divider_3"
-            android:layout_toRightOf="@id/divider_1"
+            android:layout_toRightOf="@id/divider_2"
             android:ems="10"
             android:hint="@string/search_campus"
             android:maxLines="1"
@@ -86,7 +95,22 @@
             <requestFocus />
         </AutoCompleteTextView>
 
+        <ScrollView
+            android:id="@+id/scrollView_stepbystep"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/autoComplete_map_destination"
+            android:padding="2dp" >
 
+            <TextView
+                android:id="@+id/textView_stepbystep"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:typeface="sans" />
+
+        </ScrollView>
 
     </RelativeLayout>
 
@@ -128,7 +152,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/layout_actionbar"
-        android:layout_centerHorizontal="true" >
+        android:layout_centerHorizontal="true"
+        android:clickable="true" >
 
         <TextView
             android:id="@+id/textView_destInfo"

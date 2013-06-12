@@ -111,6 +111,7 @@ public class GoogleParser {
 		try {
 			//Tranform the string into a json object
 			final JSONObject json = new JSONObject(result);
+			Log.d("Google Parser", json.toString());
 			//Get the route object
 			final JSONObject jsonRoute = json.getJSONArray("routes").getJSONObject(0);
 			//Get the leg, only one leg as we don't support waypoints
@@ -206,7 +207,7 @@ public class GoogleParser {
 				 * decoding any polylines found as we go to add to the route object's
 				 * map array. Using an explicit for loop because it is faster!
 				 */
-				for (int i = 0; i < numSteps; i++) { //TODO
+				for (int i = 0; i < numSteps; i++) {
 					//Get the individual step
 					final JSONObject step = steps.getJSONObject(i);
 					//Get the start position for this step and set it on the segment

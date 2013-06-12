@@ -36,6 +36,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
+import android.view.ViewGroup.LayoutParams;
 import android.view.Window;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -44,6 +45,8 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.google.android.maps.GeoPoint;
@@ -58,6 +61,8 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 	//Layout globals
 	private MapView gMapView = null;
 	private TextView tvDestInfo = null;
+	private TextView tvStepByStep = null;
+	private ScrollView svStepByStep = null;
 	private Button bPlotRoute;
 	private Button bTargetReticle;
 	private Button bZoomIn;
@@ -149,8 +154,25 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 			e.printStackTrace();
 		}
 
+		tvStepByStep = (TextView) findViewById(R.id.textView_stepbystep);
+		svStepByStep = (ScrollView) findViewById(R.id.scrollView_stepbystep);
+		svStepByStep.setVisibility(TextView.INVISIBLE);
+		
 		tvDestInfo = (TextView) findViewById(R.id.textView_destInfo);
 		tvDestInfo.setVisibility(TextView.INVISIBLE);
+		tvDestInfo.setOnClickListener(new OnClickListener(){
+		RelativeLayout actionBar = (RelativeLayout) findViewById(R.id.layout_actionbar);
+			public void onClick(View arg0) {
+				if(actionBar.getLayoutParams().height == 250){
+					actionBar.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, 100));
+					svStepByStep.setVisibility(TextView.INVISIBLE);
+				} else {
+					actionBar.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, 250));
+					svStepByStep.setVisibility(TextView.VISIBLE);
+				}
+			}
+			
+		});
 
 		//Initialize local db
 		local_db = new LocalDatabaseHandler(this);
@@ -204,7 +226,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		cursor.close();
 		String[] item = (String[]) strings.toArray(new String[strings.size()]);
 
-		autoCompleteTextViewDestination = (AutoCompleteTextView)findViewById(R.id.autoCompleteTextView_map_destination);
+		autoCompleteTextViewDestination = (AutoCompleteTextView)findViewById(R.id.autoComplete_map_destination);
 		autoCompleteTextViewDestination.addTextChangedListener(this);
 		autoCompleteTextViewDestination.setTextColor(Color.BLACK);
 		autoCompleteTextViewDestination.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, item));
@@ -981,6 +1003,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 
 		@Override
 		protected void onPostExecute(Route route) {
+			
 			List<Overlay> tmp = gMapView.getOverlays();
 			//Remove the route if there's one there already
 			if(tmp.contains(gRouteOverlay)) {
@@ -991,7 +1014,20 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 
 			gDistanceToDest = route.getDistance();
 			gTimeToDest = route.getDuration();
+			
+			tvStepByStep.setText(""); //Clear the textView.
+			int i = 1;
+			for(Segment x : route.getSegments()){
+				tvStepByStep.append("Step "+i+':'+x.getInstruction()+'\n'); //XXX
+				i++;
+			}
+			
 
+			//TODO : Make arrows to click and choose which "step" to be actively on.
+			//Display a pin on the map with the step number and zoomTo it.
+			//    zoomTo(x.getStartPoint(), Constants.ZOOM_LEVEL_BUILDING);
+			
+			
 			HelperFunctions.toastThis("Distance: "+gDistanceToDest + "\nTravel Duration: "+gTimeToDest, Constants.LONG);
 
 			HelperFunctions.toastThis("TransitType:"+route.getSegments().get(0).getTransitMode(), Constants.LONG);
