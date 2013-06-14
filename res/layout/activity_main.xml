@@ -95,23 +95,46 @@
             <requestFocus />
         </AutoCompleteTextView>
 
-        <ScrollView
-            android:id="@+id/scrollView_stepbystep"
+        <RelativeLayout
+            android:id="@+id/stepbystep_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_alignParentLeft="true"
             android:layout_below="@+id/autoComplete_map_destination"
-            android:padding="2dp" >
+            android:padding="2dp"
+            android:paddingTop="10dp" >
 
+            <Button
+                android:id="@+id/button_left_stepbystep"
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentTop="true"
+                android:background="@drawable/button_left_arrow" />
+
+                        <Button
+                android:id="@+id/button_right_stepbystep"
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_alignTop="@+id/button_left_stepbystep"
+                android:background="@drawable/button_right_arrow" />
+            
             <TextView
                 android:id="@+id/textView_stepbystep"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="20sp"
-                android:typeface="sans" />
+                android:layout_alignTop="@+id/button_left_stepbystep"
+                android:layout_toLeftOf="@id/button_right_stepbystep"
+                android:layout_toRightOf="@+id/button_left_stepbystep"
+                android:gravity="center|center_vertical|fill_horizontal"
+                android:text="Medium Text"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:typeface="monospace" />
 
-        </ScrollView>
 
+
+        </RelativeLayout>
     </RelativeLayout>
 
     <LinearLayout

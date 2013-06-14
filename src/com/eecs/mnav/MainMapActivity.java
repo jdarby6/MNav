@@ -28,6 +28,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.text.Editable;
+import android.text.Html;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -62,7 +63,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 	private MapView gMapView = null;
 	private TextView tvDestInfo = null;
 	private TextView tvStepByStep = null;
-	private ScrollView svStepByStep = null;
+	private RelativeLayout stepByStepLayout = null;
 	private Button bPlotRoute;
 	private Button bTargetReticle;
 	private Button bZoomIn;
@@ -155,8 +156,8 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		}
 
 		tvStepByStep = (TextView) findViewById(R.id.textView_stepbystep);
-		svStepByStep = (ScrollView) findViewById(R.id.scrollView_stepbystep);
-		svStepByStep.setVisibility(TextView.INVISIBLE);
+		stepByStepLayout = (RelativeLayout) findViewById(R.id.stepbystep_layout);
+		stepByStepLayout.setVisibility(RelativeLayout.INVISIBLE);
 		
 		tvDestInfo = (TextView) findViewById(R.id.textView_destInfo);
 		tvDestInfo.setVisibility(TextView.INVISIBLE);
@@ -165,10 +166,10 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 			public void onClick(View arg0) {
 				if(actionBar.getLayoutParams().height == 250){
 					actionBar.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, 100));
-					svStepByStep.setVisibility(TextView.INVISIBLE);
+					stepByStepLayout.setVisibility(TextView.INVISIBLE);
 				} else {
 					actionBar.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, 250));
-					svStepByStep.setVisibility(TextView.VISIBLE);
+					stepByStepLayout.setVisibility(TextView.VISIBLE);
 				}
 			}
 			
@@ -1017,10 +1018,10 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 			
 			tvStepByStep.setText(""); //Clear the textView.
 			int i = 1;
-			for(Segment x : route.getSegments()){
-				tvStepByStep.append("Step "+i+':'+x.getInstruction()+'\n'); //XXX
+			//for(Segment x : route.getSegments()){
+				tvStepByStep.setText(Html.fromHtml("<u>Step "+i+"</u>:<br>"+route.getSegments().get(1).getInstruction())); //XXX
 				i++;
-			}
+			//}
 			
 
 			//TODO : Make arrows to click and choose which "step" to be actively on.
