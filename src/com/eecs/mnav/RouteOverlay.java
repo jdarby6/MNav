@@ -22,12 +22,25 @@ class RouteOverlay extends Overlay {
 	private final Point p;
 	private final Paint paint;
 
-	public RouteOverlay(final Route route, final GeoPoint start, final GeoPoint end, final int defaultColour) {
+	public RouteOverlay(final List<GeoPoint> points, final GeoPoint start, final GeoPoint end, final int routeColor) {
 		super();
-		routePoints = route.getPoints();
+		//routePoints = route.getPoints();
+		routePoints = points;
 		routePoints.add(0, start);
 		routePoints.add(end);
-		colour = defaultColour;
+		colour = routeColor;
+		path = new Path();
+		p = new Point();
+		paint = new Paint();
+	}
+	
+	public RouteOverlay(final List<GeoPoint> points, final int routeColor) {
+		super();
+		//routePoints = route.getPoints();
+		routePoints = points;
+		//routePoints.add(0, start);
+		//routePoints.add(end);
+		colour = routeColor;
 		path = new Path();
 		p = new Point();
 		paint = new Paint();

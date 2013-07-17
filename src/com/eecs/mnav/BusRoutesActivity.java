@@ -504,7 +504,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 			if(tmp.contains(gRouteOverlay)) {
 				tmp.remove(gRouteOverlay);
 			}
-			gRouteOverlay = new RouteOverlay(route, stopGeoPoints.get(0), stopGeoPoints.get(stopGeoPoints.size()-1), gCurrentRouteColor);
+			gRouteOverlay = new RouteOverlay(route.getPoints(), stopGeoPoints.get(0), stopGeoPoints.get(stopGeoPoints.size()-1), gCurrentRouteColor);
 			tmp.add(gRouteOverlay);
 
 			if(gProgressDialog.isShowing())

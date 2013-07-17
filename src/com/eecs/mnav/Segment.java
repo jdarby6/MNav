@@ -1,5 +1,8 @@
 package com.eecs.mnav;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.android.maps.GeoPoint;
 
 public class Segment {
@@ -12,9 +15,16 @@ public class Segment {
 	private double distance;
 	/** Mode of transit **/
 	private String transitMode;
+	private final List<GeoPoint> points;
 
-	public Segment() {}
+	public Segment() {
+		points = new ArrayList<GeoPoint>();
+	}
 
+	public List<GeoPoint> getPoints() {return points;}
+	public void addPoint(final GeoPoint p) {points.add(p);}
+	public void addPoints(final List<GeoPoint> points) {this.points.addAll(points);}
+	
 	public String getTransitMode() {return transitMode;}
 	public void setTransitMode(final String trans) {this.transitMode = trans;}
 
@@ -37,6 +47,8 @@ public class Segment {
 		copy.instruction = instruction;
 		copy.length = length;
 		copy.distance = distance;
+		copy.transitMode = transitMode;
+		copy.addPoints(points);
 		return copy;
 	}
 }

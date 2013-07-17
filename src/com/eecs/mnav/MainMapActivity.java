@@ -50,6 +50,7 @@ import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.eecs.mnav.google.directions.TransitRoute;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
@@ -68,6 +69,9 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 	private Button bTargetReticle;
 	private Button bZoomIn;
 	private Button bZoomOut;
+	
+	private Button bDirLeft;
+	private Button bDirRight;
 
 	// Intro tips booleans
 	private boolean hasSeenAlert1 = false;
@@ -87,6 +91,8 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 	private String gTimeToDest;
 	private double gDestinationLong = -83.738234;
 	private double gDestinationLat = 42.276956;
+	private Route gCurrentRoute = null;
+	private int gCurrentSegment = 1;
 
 	//Helper globals
 	private LocalDatabaseHandler local_db;
@@ -346,27 +352,39 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		});
 
 		//---------------------
-		//SATELLITE BUTTON
+		//STEP BY STEP BUTTONS
 		//---------------------
-/*		bSatellite = (Button) findViewById(R.id.button_satellite);
-		if(!gMapView.isSatellite())
-			bSatellite.setBackgroundResource(R.drawable.ic_road);
-		else
-			bSatellite.setBackgroundResource(R.drawable.ic_satellite);
-		bSatellite.setOnClickListener(new OnClickListener() {
+		bDirLeft = (Button) findViewById(R.id.button_left_stepbystep);
+		bDirLeft.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				if(gMapView.isSatellite()) {
-					bSatellite.setBackgroundResource(R.drawable.ic_road);
-					gMapView.setSatellite(false);
+				if(gCurrentRoute != null){
+					if(gCurrentSegment-1 > -1){
+						gCurrentSegment--;
+						tvStepByStep.setText(Html.fromHtml("<u>Step "+(gCurrentSegment+1)+"</u>:<br>"+gCurrentRoute.getSegments().get(gCurrentSegment).getInstruction()));
+						zoomTo(gCurrentRoute.getSegments().get(gCurrentSegment).getStartPoint(), Constants.ZOOM_LEVEL_BUILDING);
+					} else {
+						GeoPoint currentLoc = gMyLocationOverlay.getMyLocation();
+						zoomTo(currentLoc, Constants.ZOOM_LEVEL_BUILDING);
+					}
 				}
-				else {
-					gMapView.setSatellite(true);
-					bSatellite.setBackgroundResource(R.drawable.ic_satellite);
-				}
-
-				Log.d("MAPSTUFF", "ZoomLevel=" + gMapView.getZoomLevel());
 			}
-		});*/
+		});
+		
+		bDirRight = (Button) findViewById(R.id.button_right_stepbystep);
+		bDirRight.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				if(gCurrentRoute != null){
+					if(gCurrentSegment+1 < gCurrentRoute.getSegments().size()){
+						gCurrentSegment++;
+						tvStepByStep.setText(Html.fromHtml("<u>Step "+(gCurrentSegment+1)+"</u>:<br>"+gCurrentRoute.getSegments().get(gCurrentSegment).getInstruction()));
+						zoomTo(gCurrentRoute.getSegments().get(gCurrentSegment).getStartPoint(), Constants.ZOOM_LEVEL_BUILDING);
+					} else {
+						GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
+						zoomTo(dest, Constants.ZOOM_LEVEL_BUILDING);
+					}
+				}
+			}
+		});
 
 		//---------------------
 		//TARGETING BUTTON
@@ -816,7 +834,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		return r;
 	}
 
-	private Route directionsTransit(final GeoPoint start, final GeoPoint dest) {
+	private TransitRoute directionsTransit(final GeoPoint start, final GeoPoint dest) {
 		GoogleParser googleParser;
 		String jsonURL = "http://maps.google.com/maps/api/directions/json?";
 		final StringBuffer sBuf = new StringBuffer(jsonURL);
@@ -833,7 +851,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		currentTime = currentTime.substring(0, currentTime.length()-3);
 		sBuf.append("&sensor=true&departure_time="+currentTime+"&mode=transit");
 		googleParser = new GoogleParser(sBuf.toString());
-		Route r =  googleParser.parseTransit();
+		TransitRoute r =  googleParser.parseTransit();
 		return r;
 	}
 
@@ -992,52 +1010,59 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 	}
 
 	// Implementation of AsyncTask used to get walking directions from current location to destination
-	private class GetDirectionsTask extends AsyncTask<GeoPoint, Void, Route> {
+	private class GetDirectionsTask extends AsyncTask<GeoPoint, Void, TransitRoute> {
 
 		@Override
-		protected Route doInBackground(GeoPoint... geopoints) {
+		protected TransitRoute doInBackground(GeoPoint... geopoints) {
 			//Creates Url and queries google directions api
-			if (isTransit)
+			//if (isTransit)
 				return directionsTransit(geopoints[0], geopoints[1]);
-			return directionsWalking(geopoints[0], geopoints[1]);
+			//return directionsWalking(geopoints[0], geopoints[1]);
 		}
 
 		@Override
-		protected void onPostExecute(Route route) {
+		protected void onPostExecute(TransitRoute route) {
 			
 			List<Overlay> tmp = gMapView.getOverlays();
 			//Remove the route if there's one there already
 			if(tmp.contains(gRouteOverlay)) {
 				tmp.remove(gRouteOverlay);
 			}
-			gRouteOverlay = new RouteOverlay(route, gStartGeo, gDestGeo, getResources().getColor(R.color.fireBrickRed));
-			tmp.add(OVERLAY_ROUTE_ID, gRouteOverlay);
+			if (isTransit){
+			//	RouteOverlay routeOverlay1 = new RouteOverlay(route.getSegments().get(0).getPoints(), getResources().getColor(R.color.fireBrickRed));
+			//	RouteOverlay routeOverlay2 = new RouteOverlay(route.getSegments().get(1).getPoints(), getResources().getColor(R.color.umichBlue));
+			//	RouteOverlay routeOverlay3 = new RouteOverlay(route.getSegments().get(2).getPoints(), getResources().getColor(R.color.fireBrickRed));
+				//tmp.add(3, routeOverlay1);
+			//	tmp.add(3, routeOverlay2);
+				//tmp.add(5, routeOverlay3);
+			} else {
+		//	gRouteOverlay = new RouteOverlay(route.getPoints(), gStartGeo, gDestGeo, getResources().getColor(R.color.fireBrickRed));
+		//	tmp.add(OVERLAY_ROUTE_ID, gRouteOverlay);
+			}
 
-			gDistanceToDest = route.getDistance();
-			gTimeToDest = route.getDuration();
+		//	gDistanceToDest = route.getDistance();
+		//	gTimeToDest = route.getDuration();
 			
 			tvStepByStep.setText(""); //Clear the textView.
-			int i = 1;
-			//for(Segment x : route.getSegments()){
-				tvStepByStep.setText(Html.fromHtml("<u>Step "+i+"</u>:<br>"+route.getSegments().get(1).getInstruction())); //XXX
-				i++;
-			//}
+		//	gCurrentRoute = route;
 			
+		//	tvStepByStep.setText(Html.fromHtml("<u>Step "+1+"</u>:<br>"+route.getSegments().get(0).getInstruction())); //XXX
 
-			//TODO : Make arrows to click and choose which "step" to be actively on.
+			//TODO :
 			//Display a pin on the map with the step number and zoomTo it.
-			//    zoomTo(x.getStartPoint(), Constants.ZOOM_LEVEL_BUILDING);
+				//for(Segment x : route.getSegments()){
 			
 			
-			HelperFunctions.toastThis("Distance: "+gDistanceToDest + "\nTravel Duration: "+gTimeToDest, Constants.LONG);
+		//	HelperFunctions.toastThis("Distance: "+gDistanceToDest + "\nTravel Duration: "+gTimeToDest, Constants.LONG);
 
-			HelperFunctions.toastThis("TransitType:"+route.getSegments().get(0).getTransitMode(), Constants.LONG);
+			//HelperFunctions.toastThis("TransitType:"+route.getSegments().get(0).getTransitMode(), Constants.LONG);
 
+			//Update the dest info tab
 			tvDestInfo.setVisibility(TextView.VISIBLE);
 			tvDestInfo.setText("Distance: "+gDistanceToDest+" Travel Duration: "+gTimeToDest);
 			tvDestInfo.setTextColor(getResources().getColor(R.color.black));
 
-			if(gProgressDialog.isShowing())
+			if(gProgressDialog != null && gProgressDialog.isShowing())
 				gProgressDialog.dismiss();
 			gMapView.invalidate();
 
