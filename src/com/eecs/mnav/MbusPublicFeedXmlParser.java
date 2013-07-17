@@ -149,13 +149,17 @@ public class MbusPublicFeedXmlParser {
 	 * BusRoutesActivity.routes if it does. 
 	 */
 	private static void updateRoutesList() {
+		ArrayList<Route> toAdd = new ArrayList<Route>();
+		ArrayList<Route> toRemove = new ArrayList<Route>();
 		for(Route r : currentRoutesFromFeed) {
 			if(!BusRoutesActivity.routes.contains(r))
-				BusRoutesActivity.routes.add(r);
+				toAdd.add(r);
 		}
 		for(Route r : BusRoutesActivity.routes) {
 			if(!currentRoutesFromFeed.contains(r))
-				BusRoutesActivity.routes.remove(r);
+				toRemove.remove(r);
 		}		
+		BusRoutesActivity.routes.addAll(toAdd);
+		BusRoutesActivity.routes.removeAll(toRemove);
 	}
 }
