@@ -314,43 +314,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		m_handler.removeCallbacks(m_statusChecker);
 	}
 
-/*	public void setBusOverlays() {
-		//clear and re-add all overlays
-		List<Overlay> mapOverlays = gMapView.getOverlays();
-		mapOverlays.remove(busIconOverlay);
-		Drawable busIcon = this.getResources().getDrawable(R.drawable.busred);
-		//this overlay needs a drawable in its constructor, but we change it later
-		busIconOverlay = new BusIconOverlay(busIcon); 
-
-		try {
-			// Display all buses at once
-			for(int i = 0; i < items.size(); i++) {
-				int lat = (int)(Double.parseDouble(items.get(i).latitude)*1E6);
-				int lon = (int)(Double.parseDouble(items.get(i).longitude)*1E6);
-				int heading = Integer.parseInt(items.get(i).heading);
-				String routeid = items.get(i).routeid;
-				String heading2 = getHeading2(heading);
-				String imageString = "bus_route_"+routeid+"_heading_"+heading2+".png";
-				busIcon = Drawable.createFromStream(getAssets().open("icons/"+imageString), imageString);
-				busIcon.setBounds(-busIcon.getIntrinsicWidth(), -busIcon.getIntrinsicHeight(),
-						busIcon.getIntrinsicWidth(), busIcon.getIntrinsicHeight());
-				OverlayItem overlayItem = new OverlayItem(new GeoPoint(lat, lon), items.get(i).route, "");
-				overlayItem.setMarker(busIcon);
-				busIconOverlay.addOverlay(overlayItem);
-			}
-		} 
-		catch (Exception e) {
-			Log.d("setBusOverlays", e.getMessage());
-		}
-
-		mapOverlays.add(busIconOverlay);
-		busIconOverlay.populateIt();
-
-		// Added symbols will be displayed when map is redrawn so force redraw now
-		gMapView.postInvalidate(); 
-	}
-*/
-	/* Chooses the closest 45 degree angle at which to orient the bus based
+	/** Chooses the closest 45 degree angle at which to orient the bus based
 	 * on its actual heading. MBus uses this value to choose the appropriate
 	 * icon file.
 	 */
@@ -576,6 +540,14 @@ public class BusRoutesActivity extends SlidingMapActivity {
 			}
 			
 			
+		}
+		
+		for(int i = 0; i < busPointsArraySize; i++)
+		{
+			if(isValidBusPoint[i] == false && busPoints[i] != null) {
+				busIconOverlay.removeObject(busPoints[i]);
+				busPoints[i] = null;
+			}
 		}
 		busIconOverlay.populateIt();
 		// Added symbols will be displayed when map is redrawn so force redraw now
