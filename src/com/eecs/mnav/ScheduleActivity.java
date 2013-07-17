@@ -247,24 +247,31 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 					if(cursor_all_classes.getString(7).toString() != null && cursor_all_classes.getString(7).toString().length() != 0) {
 						checkBoxMonday.setChecked(true);
 					}
+					else checkBoxMonday.setChecked(false);
 					if(cursor_all_classes.getString(8).toString() != null && cursor_all_classes.getString(8).toString().length() != 0) {
 						checkBoxTuesday.setChecked(true);
 					}
+					else checkBoxTuesday.setChecked(false);
 					if(cursor_all_classes.getString(9).toString() != null && cursor_all_classes.getString(9).toString().length() != 0) {
 						checkBoxWednesday.setChecked(true);
 					}
+					else checkBoxWednesday.setChecked(false);
 					if(cursor_all_classes.getString(10).toString() != null && cursor_all_classes.getString(10).toString().length() != 0) {
 						checkBoxThursday.setChecked(true);
 					}
+					checkBoxThursday.setChecked(false);
 					if(cursor_all_classes.getString(11).toString() != null && cursor_all_classes.getString(11).toString().length() != 0) {
 						checkBoxFriday.setChecked(true);
 					}
+					checkBoxFriday.setChecked(false);
 					if(cursor_all_classes.getString(12).toString() != null && cursor_all_classes.getString(12).toString().length() != 0) {
 						checkBoxSaturday.setChecked(true);
 					}
+					checkBoxSaturday.setChecked(false);
 					if(cursor_all_classes.getString(13).toString() != null && cursor_all_classes.getString(13).toString().length() != 0) {
 						checkBoxSunday.setChecked(true);
 					}
+					checkBoxSunday.setChecked(false);
 					editText_location.setText(cursor_all_classes.getString(15));
 					int period = autoCompleteTextView_class.getText().toString().indexOf('.');
 					autoCompleteTextView_class.setText(autoCompleteTextView_class.getText().toString().substring(0, period));
@@ -362,12 +369,19 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 			editText_begin_time.setText(curEvent.getTimeBegin());
 			editText_end_time.setText(curEvent.getTimeEnd());
 			if (curEvent.getDays().indexOf("MO") != -1) checkBoxMonday.setChecked(true);
+			else checkBoxMonday.setChecked(false);
 			if (curEvent.getDays().indexOf("TU") != -1)checkBoxTuesday.setChecked(true);
+			else checkBoxTuesday.setChecked(false);
 			if (curEvent.getDays().indexOf("WE") != -1)checkBoxWednesday.setChecked(true);
+			else checkBoxWednesday.setChecked(false);
 			if (curEvent.getDays().indexOf("TH") != -1)checkBoxThursday.setChecked(true);
+			else checkBoxThursday.setChecked(false);
 			if (curEvent.getDays().indexOf("FR") != -1)checkBoxFriday.setChecked(true);
+			else checkBoxFriday.setChecked(false);
 			if (curEvent.getDays().indexOf("SA") != -1)checkBoxSaturday.setChecked(true);
+			else checkBoxSaturday.setChecked(false);
 			if (curEvent.getDays().indexOf("SU") != -1)checkBoxSunday.setChecked(true);
+			else checkBoxSunday.setChecked(false);
 
 			button_done.setOnClickListener(new Button.OnClickListener() {
 				public void onClick(View v) {
