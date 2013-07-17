@@ -533,7 +533,6 @@ public class BusRoutesActivity extends SlidingMapActivity {
 			else {
 				// save the amount to interpolate by into the movePoints array	
 				movePoints[id] = new GeoPoint((lat - busPoints[id].getPoint().getLatitudeE6()) / splitMove, (lon - busPoints[id].getPoint().getLongitudeE6()) / splitMove);
-				Log.d("movePoints["+id+"]", movePoints[id].toString());
 				if(busPoints[id].getMarker(0) != busIcon) {
 					busPoints[id].setMarker(busIcon);
 				}
