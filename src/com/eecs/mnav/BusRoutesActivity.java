@@ -60,6 +60,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 	private static final String locationFeedLink = "http://mbus.pts.umich.edu/shared/location_feed.xml";
 	private static final String publicFeedLink = "http://mbus.pts.umich.edu/shared/public_feed.xml";
 	//private static final String stopsLink = "http://mbus.pts.umich.edu/shared/stop.xml";
+	//private static final String psaFeedLink = "http://mbus.pts.umich.edu/shared/psa_feed.xml";
 
 	static ArrayList<Item> items = new ArrayList<Item>();
 	static ArrayList<MbusPublicFeedXmlParser.Route> routes = new ArrayList<MbusPublicFeedXmlParser.Route>();
@@ -69,12 +70,16 @@ public class BusRoutesActivity extends SlidingMapActivity {
 	private GetDirectionsTask gOurGetDirectionsTask = null;
 	private ProgressDialog gProgressDialog;
 
-	//Number of points to interpolate a move by (chop up the update of bus icon into this many parts
-	//before fetching the XML again) - not implemented yet
-	//private int splitMove = 10;
+	private int splitMove = 10;
+	private int moveCount = 10; //setting it at 10 so that it'll fetch data to start 
+	private final int busPointsArraySize = 256;
+	private OverlayItem[] busPoints = new OverlayItem[busPointsArraySize];
+	private boolean[] isValidBusPoint = new boolean[busPointsArraySize];
+	private GeoPoint[] movePoints = new GeoPoint[busPointsArraySize];
+	
 	private BusIconOverlay busIconOverlay;
 
-	private int m_interval = Constants.FOUR_SECONDS;
+	private int m_interval = Constants.FOUR_SECONDS / splitMove;
 	private Handler m_handler;
 	private ListView listView;
 	private ListViewCustomAdapter routesListViewAdapter;
@@ -192,7 +197,8 @@ public class BusRoutesActivity extends SlidingMapActivity {
 			}
 		});
 		zoomTo(new GeoPoint((int)(Constants.DEFAULT_LAT * 1E6), (int)(Constants.DEFAULT_LONG * 1E6)), Constants.ZOOM_LEVEL_DEFAULT);
-		new GetXmlDataTask().execute((String[])null);
+		//new GetXmlDataTask().execute((String[])null);
+		busIconOverlay = new BusIconOverlay(this.getResources().getDrawable(R.drawable.busred));
 		m_handler = new Handler();
 		startRepeatingTask();
 
@@ -261,6 +267,8 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		gScaleBarOverlay = new ScaleBarOverlay(gMapView);
 		gScaleBarOverlay.setImperial();
 		mapOverlays.add(gScaleBarOverlay);
+		
+		mapOverlays.add(busIconOverlay);
 	}
 
 	private void zoomTo(GeoPoint p, int level) {
@@ -286,7 +294,14 @@ public class BusRoutesActivity extends SlidingMapActivity {
 
 	Runnable m_statusChecker = new Runnable() { 
 		public void run() {
-			new GetXmlDataTask().execute((String[]) null);
+			if(moveCount < splitMove) {
+				moveBuses();
+				moveCount++;
+			}
+			else {
+				stopRepeatingTask();
+				new GetXmlDataTask().execute((String[]) null);
+			}
 			m_handler.postDelayed(m_statusChecker, m_interval);
 		}
 	};
@@ -299,7 +314,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		m_handler.removeCallbacks(m_statusChecker);
 	}
 
-	public void setBusOverlays() {
+/*	public void setBusOverlays() {
 		//clear and re-add all overlays
 		List<Overlay> mapOverlays = gMapView.getOverlays();
 		mapOverlays.remove(busIconOverlay);
@@ -319,7 +334,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 				busIcon = Drawable.createFromStream(getAssets().open("icons/"+imageString), imageString);
 				busIcon.setBounds(-busIcon.getIntrinsicWidth(), -busIcon.getIntrinsicHeight(),
 						busIcon.getIntrinsicWidth(), busIcon.getIntrinsicHeight());
-				OverlayItem overlayItem = new OverlayItem(new GeoPoint(lat, lon), "", "");
+				OverlayItem overlayItem = new OverlayItem(new GeoPoint(lat, lon), items.get(i).route, "");
 				overlayItem.setMarker(busIcon);
 				busIconOverlay.addOverlay(overlayItem);
 			}
@@ -334,7 +349,7 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		// Added symbols will be displayed when map is redrawn so force redraw now
 		gMapView.postInvalidate(); 
 	}
-
+*/
 	/* Chooses the closest 45 degree angle at which to orient the bus based
 	 * on its actual heading. MBus uses this value to choose the appropriate
 	 * icon file.
@@ -391,8 +406,14 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		// Now that route data are loaded, execute the method to overlay the route on the map
 		protected void onPostExecute(String result) {
 			Log.i("GetXmlDataTask", "Locations and public feed XML data transfer complete");
-			setBusOverlays();
+			//setBusOverlays();
+			try {
+				busDataReceived();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			routesListViewAdapter.notifyDataSetChanged();
+			startRepeatingTask();
 		}
 
 		protected void onPreExecute() {
@@ -514,5 +535,69 @@ public class BusRoutesActivity extends SlidingMapActivity {
 			gOurGetDirectionsTask = null;
 		}
 	}
+	
+	void busDataReceived() throws IOException {
+		//Just invalidate all locations after each XML fetch (we set the appropriate ones to true just below here)
+		for (int i = 0; i < busPointsArraySize; i++) {
+			isValidBusPoint[i] = false;
+		}
+		for (int i = 0; i < items.size(); i++) {
+			int id = Integer.parseInt(items.get(i).id);
+			int lat = (int)(Double.parseDouble(items.get(i).latitude)*1E6);
+			int lon = (int)(Double.parseDouble(items.get(i).longitude)*1E6);
+			int heading = Integer.parseInt(items.get(i).heading);
+			
+			String routeid = items.get(i).routeid;
+			String heading2 = getHeading2(heading);
+			String imageString = "bus_route_"+routeid+"_heading_"+heading2+".png";
+			
+			Drawable busIcon = Drawable.createFromStream(getAssets().open("icons/"+imageString), imageString);
+			busIcon.setBounds(-busIcon.getIntrinsicWidth(), -busIcon.getIntrinsicHeight(),
+					busIcon.getIntrinsicWidth(), busIcon.getIntrinsicHeight());
+			
+			isValidBusPoint[id] = true;
+			
+			if(busPoints[id] == null) {
+				// create a new marker, and interpolation variable for it
+				movePoints[id] = new GeoPoint(0, 0);
+				busPoints[id] = new OverlayItem(new GeoPoint(lat, lon), items.get(i).route, "");
+				busPoints[id].setMarker(busIcon);
+				busIconOverlay.addOverlay(busPoints[id]);
 
+				
+			}
+			else {
+				// save the amount to interpolate by into the movePoints array	
+				movePoints[id] = new GeoPoint((lat - busPoints[id].getPoint().getLatitudeE6()) / splitMove, (lon - busPoints[id].getPoint().getLongitudeE6()) / splitMove);
+				Log.d("movePoints["+id+"]", movePoints[id].toString());
+				if(busPoints[id].getMarker(0) != busIcon) {
+					busPoints[id].setMarker(busIcon);
+				}
+			}
+			
+			
+		}
+		busIconOverlay.populateIt();
+		// Added symbols will be displayed when map is redrawn so force redraw now
+		gMapView.postInvalidate(); 
+		moveCount = 0;
+		m_handler.post(m_statusChecker);
+	}
+
+	void moveBuses() {
+		for(int i = 0; i < busPointsArraySize; i++) {
+			// Move the marker by the interpolation amount
+			if(isValidBusPoint[i]) {
+				int newLat = busPoints[i].getPoint().getLatitudeE6() + movePoints[i].getLatitudeE6();
+				int newLng = busPoints[i].getPoint().getLongitudeE6() + movePoints[i].getLongitudeE6();
+				OverlayItem old_overlay = busPoints[i];
+				busIconOverlay.removeObject(old_overlay);
+				busPoints[i] = new OverlayItem(new GeoPoint(newLat, newLng), old_overlay.getTitle(), old_overlay.getSnippet());
+				busPoints[i].setMarker(old_overlay.getMarker(0));
+				busIconOverlay.addOverlay(busPoints[i]);
+			}
+		}
+		busIconOverlay.populateIt();
+		gMapView.postInvalidate();
+	}
 }

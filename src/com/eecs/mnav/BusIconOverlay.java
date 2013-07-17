@@ -33,6 +33,10 @@ public class BusIconOverlay extends ItemizedOverlay<OverlayItem> {
 		if(i >= 0) myOverlays.remove(i);
 		//populate();
 	}
+	
+	public void removeObject(OverlayItem i) {
+		myOverlays.remove(i);
+	}
 
 	// Handle tap events on overlay icons
 	@Override
