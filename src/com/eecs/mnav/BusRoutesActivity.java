@@ -35,10 +35,10 @@ import com.google.android.maps.MapView;
 import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
-import com.slidingmenu.lib.SlidingMenu;
-import com.slidingmenu.lib.app.SlidingMapActivity;
+import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
+import com.jeremyfeinstein.slidingmenu.lib.app.SlidingActivity;
 
-public class BusRoutesActivity extends SlidingMapActivity {
+public class BusRoutesActivity extends SlidingActivity {
 	//Layout globals
 	private MapView gMapView = null;
 	private Button bSlider;
@@ -247,7 +247,6 @@ public class BusRoutesActivity extends SlidingMapActivity {
 		return true;
 	}
 
-	@Override
 	protected boolean isRouteDisplayed() {
 		return true;
 	}
