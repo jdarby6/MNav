@@ -19,7 +19,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	//The Android's default system path of your application database.
 	private static String DB_PATH;
 	private static String DB_NAME;
-	private SQLiteDatabase myDataBase; 
+	private SQLiteDatabase myDataBase;
+	private boolean updated;
 
 	/**
 	 * Sets the DB_NAME field to copy the appropriate pre-existing database to the app's database directory to be used 
@@ -29,6 +30,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		
 		super(ReportingApplication.getAppContext(), DB_NAME, null, 1);
 		DB_NAME = name;
+		updated = false;
 		
 	    if(android.os.Build.VERSION.SDK_INT >= 4.2){
 	        DB_PATH = ReportingApplication.getAppContext().getApplicationInfo().dataDir + "/databases/";         
@@ -46,9 +48,20 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	public void createDataBase() throws IOException {
 
 		boolean dbExists = checkDataBase();
-
+		Log.d("DATABSE STUFF","DatabaseExistst?"+dbExists);
 		if(dbExists) {
 			//do nothing - database already exists
+			if(!updated){
+				this.getWritableDatabase();
+
+				try {
+					copyDataBase();
+				} 
+				catch (IOException e) {
+					throw new Error("Error copying database");
+				}
+				updated = true;
+			}
 		} 
 		else {
 			//By calling this method, an empty database will be created into the default system path of
@@ -97,7 +110,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	 * @throws IOException
 	 * */
 	private void copyDataBase() throws IOException {
-
+		Log.d("DATABSE STUFF", "Within Copy Database");
 		//Open your local db as the input stream
 		InputStream myInput = ReportingApplication.getAppContext().getAssets().open(DB_NAME);
 

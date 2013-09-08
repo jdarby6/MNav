@@ -1,10 +1,12 @@
 package com.eecs.mnav.google.directions;
 
+import java.util.ArrayList;
+
 import com.google.android.maps.GeoPoint;
 
 public class Leg {
 
-	public Step[] steps;
+	public ArrayList<Step> steps;
 	public int distanceMeters;
 	public String distanceText;
 	public int durationSeconds;

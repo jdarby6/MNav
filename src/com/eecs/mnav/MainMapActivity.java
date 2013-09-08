@@ -91,7 +91,7 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 	private String gTimeToDest;
 	private double gDestinationLong = -83.738234;
 	private double gDestinationLat = 42.276956;
-	private Route gCurrentRoute = null;
+	private TransitRoute gCurrentRoute = null;
 	private int gCurrentSegment = 1;
 
 	//Helper globals
@@ -102,13 +102,13 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 	private SharedPreferences gPreferences = null;
 	private GetDirectionsTask gOurGetDirectionsTask = null;
 	private Handler uiHandler;
+	private final String TAG = "MainMapActivity";
 
 	//Overlay globals
 	private PinOverlay gPinOverlay = null;
-	private RouteOverlay gRouteOverlay = null;
+	private ArrayList<RouteOverlay> gRouteOverlays = new ArrayList<RouteOverlay>();
 	private MyLocationOverlay gMyLocationOverlay = null;
-	private ScaleBarOverlay gScaleBarOverlay = null;
-
+	
 	//Directions globals
 	private ProgressDialog gProgressDialog;
 	private GeoPoint gStartGeo;
@@ -126,9 +126,8 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 	private final static int DIALOG_SETTINGS = 2;
 	//Overlay IDs
 	private static final int OVERLAY_MYLOC_ID = 0;
-	private static final int OVERLAY_SCALEBAR_ID = 1;
-	private static final int OVERLAY_PIN_ID = 2;
-	private static final int OVERLAY_ROUTE_ID = 3;
+	private static final int OVERLAY_PIN_ID = 1;
+	private static final int OVERLAY_ROUTE_ID = 2;
 
 
 	private class Coords {
@@ -360,8 +359,8 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 				if(gCurrentRoute != null){
 					if(gCurrentSegment-1 > -1){
 						gCurrentSegment--;
-						tvStepByStep.setText(Html.fromHtml("<u>Step "+(gCurrentSegment+1)+"</u>:<br>"+gCurrentRoute.getSegments().get(gCurrentSegment).getInstruction()));
-						zoomTo(gCurrentRoute.getSegments().get(gCurrentSegment).getStartPoint(), Constants.ZOOM_LEVEL_BUILDING);
+						tvStepByStep.setText(Html.fromHtml("<u>Step "+(gCurrentSegment+1)+"</u>:<br>"+gCurrentRoute.leg.steps.get(gCurrentSegment).htmlInstructions));
+						zoomTo(gCurrentRoute.leg.steps.get(gCurrentSegment).startLocation, Constants.ZOOM_LEVEL_BUILDING);
 					} else {
 						GeoPoint currentLoc = gMyLocationOverlay.getMyLocation();
 						zoomTo(currentLoc, Constants.ZOOM_LEVEL_BUILDING);
@@ -374,10 +373,10 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 		bDirRight.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				if(gCurrentRoute != null){
-					if(gCurrentSegment+1 < gCurrentRoute.getSegments().size()){
+					if(gCurrentSegment+1 < gCurrentRoute.leg.steps.size()){
 						gCurrentSegment++;
-						tvStepByStep.setText(Html.fromHtml("<u>Step "+(gCurrentSegment+1)+"</u>:<br>"+gCurrentRoute.getSegments().get(gCurrentSegment).getInstruction()));
-						zoomTo(gCurrentRoute.getSegments().get(gCurrentSegment).getStartPoint(), Constants.ZOOM_LEVEL_BUILDING);
+						tvStepByStep.setText(Html.fromHtml("<u>Step "+(gCurrentSegment+1)+"</u>:<br>"+gCurrentRoute.leg.steps.get(gCurrentSegment).htmlInstructions));
+						zoomTo(gCurrentRoute.leg.steps.get(gCurrentSegment).startLocation, Constants.ZOOM_LEVEL_BUILDING);
 					} else {
 						GeoPoint dest = new GeoPoint((int)(gDestinationLat * 1e6), (int)(gDestinationLong * 1e6));
 						zoomTo(dest, Constants.ZOOM_LEVEL_BUILDING);
@@ -748,18 +747,11 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 	public void initOverlays() {
 		//Remove all existing overlays
 		List<Overlay> mapOverlays = gMapView.getOverlays();
-		mapOverlays.clear();			
+		mapOverlays.clear();
 		//Start with putting our own location on the map
 		gMyLocationOverlay = new MyLocationOverlay(this, gMapView);
 		mapOverlays.add(OVERLAY_MYLOC_ID, gMyLocationOverlay);
-		//Create the scalebar and add it to mapview
-		gScaleBarOverlay = new ScaleBarOverlay(gMapView);
-		gScaleBarOverlay.setImperial();
-		mapOverlays.add(OVERLAY_SCALEBAR_ID, gScaleBarOverlay);
 		if(HelperFunctions.checkGPS(this)){
-			//Start with putting our own location on the map
-			//gMyLocationOverlay = new MyLocationOverlay(this, gMapView);
-			//mapOverlays.add(OVERLAY_MYLOC_ID, gMyLocationOverlay);
 			gMyLocationOverlay.enableMyLocation();
 			//Run this block of code after finding our first location fix
 			gMyLocationOverlay.runOnFirstFix(new Runnable() {
@@ -1014,39 +1006,52 @@ public class MainMapActivity extends MapActivity implements TextWatcher {
 
 		@Override
 		protected TransitRoute doInBackground(GeoPoint... geopoints) {
-			//Creates Url and queries google directions api
-			//if (isTransit)
-				return directionsTransit(geopoints[0], geopoints[1]);
-			//return directionsWalking(geopoints[0], geopoints[1]);
+			List<Overlay> tmp = gMapView.getOverlays();
+			//Remove the route if there's one there already
+			Log.d(TAG, "tmp size is"+tmp.size());
+			while(tmp.size() > OVERLAY_ROUTE_ID) {
+				tmp.remove(OVERLAY_ROUTE_ID);
+				Log.d(TAG, "tmp size is now"+tmp.size()+" after removing");
+			}
+			gRouteOverlays.clear();
+			return directionsTransit(geopoints[0], geopoints[1]);
 		}
 
 		@Override
 		protected void onPostExecute(TransitRoute route) {
 			
 			List<Overlay> tmp = gMapView.getOverlays();
-			//Remove the route if there's one there already
-			if(tmp.contains(gRouteOverlay)) {
-				tmp.remove(gRouteOverlay);
-			}
+			
+			RouteOverlay newOverlay;
 			if (isTransit){
-			//	RouteOverlay routeOverlay1 = new RouteOverlay(route.getSegments().get(0).getPoints(), getResources().getColor(R.color.fireBrickRed));
-			//	RouteOverlay routeOverlay2 = new RouteOverlay(route.getSegments().get(1).getPoints(), getResources().getColor(R.color.umichBlue));
-			//	RouteOverlay routeOverlay3 = new RouteOverlay(route.getSegments().get(2).getPoints(), getResources().getColor(R.color.fireBrickRed));
-				//tmp.add(3, routeOverlay1);
-			//	tmp.add(3, routeOverlay2);
-				//tmp.add(5, routeOverlay3);
+				for(int s = 0; s < route.leg.steps.size(); ++s){
+					String travelMode = route.leg.steps.get(s).travelMode;
+					Log.d(TAG, "step "+s+" travelMode="+route.leg.steps.get(s).travelMode);
+					List<GeoPoint> points = GoogleParser.decodePolyLine(route.leg.steps.get(s).polyline);
+					if(travelMode.equals("WALKING")) {
+						newOverlay = new RouteOverlay(points, getResources().getColor(R.color.fireBrickRed));
+					} else if(travelMode.equals("TRANSIT")) {
+						newOverlay = new RouteOverlay(points, getResources().getColor(R.color.umichBlue));
+					} else {
+						//neither walking or transit.. black
+						newOverlay = new RouteOverlay(points, getResources().getColor(R.color.black));
+					}
+					gRouteOverlays.add(newOverlay);
+				}
+				tmp.addAll(OVERLAY_ROUTE_ID, gRouteOverlays);
 			} else {
-		//	gRouteOverlay = new RouteOverlay(route.getPoints(), gStartGeo, gDestGeo, getResources().getColor(R.color.fireBrickRed));
-		//	tmp.add(OVERLAY_ROUTE_ID, gRouteOverlay);
+				List<GeoPoint> points = GoogleParser.decodePolyLine(route.overviewPolyline);
+				newOverlay= new RouteOverlay(points, gStartGeo, gDestGeo, getResources().getColor(R.color.fireBrickRed));
+				gRouteOverlays.add(newOverlay);
+				tmp.addAll(OVERLAY_ROUTE_ID, gRouteOverlays);
 			}
 
-		//	gDistanceToDest = route.getDistance();
-		//	gTimeToDest = route.getDuration();
+			gDistanceToDest = route.leg.distanceText;
+			gTimeToDest = route.leg.durationText;
 			
 			tvStepByStep.setText(""); //Clear the textView.
-		//	gCurrentRoute = route;
-			
-		//	tvStepByStep.setText(Html.fromHtml("<u>Step "+1+"</u>:<br>"+route.getSegments().get(0).getInstruction())); //XXX
+			gCurrentRoute = route;
+			tvStepByStep.setText(Html.fromHtml("<u>Step 1</u>:<br>"+route.leg.steps.get(0).htmlInstructions)); //XXX
 
 			//TODO :
 			//Display a pin on the map with the step number and zoomTo it.

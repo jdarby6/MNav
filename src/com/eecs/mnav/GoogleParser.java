@@ -156,12 +156,15 @@ public class GoogleParser {
 			int endLon = (int) (leg.getJSONObject("end_location").getDouble("lng")*1E6);
 			transitLeg.endLocation = new GeoPoint(endLat, endLon);
 			
+			route.leg = transitLeg;
+			
 			//Get the steps for this leg
 			final JSONArray steps = leg.getJSONArray("steps");
 			//Number of steps for use in for loop
 			final int numSteps = steps.length();
 			/* Loop through the steps */
 			Log.d("GoogleParser", "Number of steps:"+numSteps);
+			ArrayList<Step> stepsArray = new ArrayList<Step>(numSteps);
 			for (int i = 0; i < numSteps; i++) { //TODO
 				Step step = new Step();
 				//Get the individual step
@@ -202,12 +205,16 @@ public class GoogleParser {
 						Line line = new Line();
 						JSONObject jLine = jTransDets.getJSONObject("line");
 						//TODO: allow for more than one agency
-						line.agencyName = jLine.getJSONArray("agencies").getJSONObject(0).getString("name");
-						line.agencyPhone = jLine.getJSONArray("agencies").getJSONObject(0).getString("phone");
-						line.agencyUrl = jLine.getJSONArray("agencies").getJSONObject(0).getString("url");
-						line.lineUrl = jLine.getString("url");
-						line.name = jLine.getString("name");
-						line.vehicleType = jLine.getJSONObject("vehicle").getString("type");
+						try{
+							line.agencyName = jLine.getJSONArray("agencies").getJSONObject(0).getString("name");
+							line.agencyPhone = jLine.getJSONArray("agencies").getJSONObject(0).getString("phone");
+							line.agencyUrl = jLine.getJSONArray("agencies").getJSONObject(0).getString("url");
+							line.lineUrl = jLine.getString("url");
+							line.name = jLine.getString("name");
+							line.vehicleType = jLine.getJSONObject("vehicle").getString("type");
+						} catch (JSONException ex) {
+							Log.d("GOOGLE PARSER - NEW", "Line is missing "+ex);
+						}
 						transDets.transitLine = line;
 					} else {
 						transDets.transitLine = null;
@@ -229,22 +236,10 @@ public class GoogleParser {
 				} else {
 					step.subSteps = null;
 				}
+				stepsArray.add(step);
 			}
-				
-				
-
-				//Log.d("GoogleParser", "Instruction "+i+":"+segment.getInstruction());
-				//Retrieve & decode this segment's polyline and add it to the route.
-				//route.addPoints(decodePolyLine(step.getJSONObject("polyline").getString("points")));
-
-				//segment.addPoints(decodePolyLine(step.getJSONObject("polyline").getString("points")));
-				
-				//Grab the type of transit this describes
-				//segment.setTransitMode(step.getString("travel_mode"));
-				//Log.d("GOOGLE PARSER", "Transit Mode is :"+step.getString("travel_mode"));
-
-				//Push a copy of the segment to the route
-				//route.addSegment(segment.copy());
+			route.leg.steps = stepsArray;
+			
 			Log.d("GOOGLE PARSER - NEW", "SUCCESSSSSSS!!!!");
 			Log.d("GOOGLE PARSER - NEW", "SUCCESSSSSSS!!!!");
 			Log.d("GOOGLE PARSER - NEW", "SUCCESSSSSSS!!!!");
@@ -254,6 +249,7 @@ public class GoogleParser {
 		} catch (JSONException e) {
 			Log.e(e.getMessage(), "Google JSON Parser - " + feedURL);
 		}
+		
 		return route;
 	}
 
@@ -270,8 +266,12 @@ public class GoogleParser {
 		step.distanceMeters = jStep.getJSONObject("distance").getInt("value");
 		step.durationText = jStep.getJSONObject("duration").getString("text");
 		step.polyline = jStep.getJSONObject("polyline").getString("points");
-		step.htmlInstructions = jStep.getString("html_instructions");
-		Log.d("GOOGLE PARSER - NEW", "substep: "+step.htmlInstructions);
+		try{
+			step.htmlInstructions = jStep.getString("html_instructions");
+			Log.d("GOOGLE PARSER - NEW", "substep: "+step.htmlInstructions);
+		} catch (JSONException ex) {
+			Log.d("GOOGLE PARSER -  NEW", "No html instructions for this substep");
+		}
 		step.travelMode = jStep.getString("travel_mode");
 		//Strip html from google directions and set as turn instruction
 		//segment.setInstruction(step.getString("html_instructions").replaceAll("<(.*?)*>", ""));
@@ -295,12 +295,16 @@ public class GoogleParser {
 				Line line = new Line();
 				JSONObject jLine = jTransDets.getJSONObject("line");
 				//TODO: allow for more than one agency
+				try {
 				line.agencyName = jLine.getJSONArray("agencies").getJSONObject(0).getString("name");
 				line.agencyPhone = jLine.getJSONArray("agencies").getJSONObject(0).getString("phone");
 				line.agencyUrl = jLine.getJSONArray("agencies").getJSONObject(0).getString("url");
 				line.lineUrl = jLine.getString("url");
 				line.name = jLine.getString("name");
 				line.vehicleType = jLine.getJSONObject("vehicle").getString("type");
+				} catch (JSONException ex) {
+					Log.d("GOOGLE PARSER - NEW", "Line is missing "+ex);
+				}
 				transDets.transitLine = line;
 			} else {
 				transDets.transitLine = null;
