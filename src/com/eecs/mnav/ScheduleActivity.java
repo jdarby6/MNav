@@ -258,20 +258,16 @@ public class ScheduleActivity extends Activity implements TextWatcher {
 					else checkBoxWednesday.setChecked(false);
 					if(cursor_all_classes.getString(10).toString() != null && cursor_all_classes.getString(10).toString().length() != 0) {
 						checkBoxThursday.setChecked(true);
-					}
-					checkBoxThursday.setChecked(false);
+					} else checkBoxThursday.setChecked(false);
 					if(cursor_all_classes.getString(11).toString() != null && cursor_all_classes.getString(11).toString().length() != 0) {
 						checkBoxFriday.setChecked(true);
-					}
-					checkBoxFriday.setChecked(false);
+					}else checkBoxFriday.setChecked(false);
 					if(cursor_all_classes.getString(12).toString() != null && cursor_all_classes.getString(12).toString().length() != 0) {
 						checkBoxSaturday.setChecked(true);
-					}
-					checkBoxSaturday.setChecked(false);
+					} else checkBoxSaturday.setChecked(false);
 					if(cursor_all_classes.getString(13).toString() != null && cursor_all_classes.getString(13).toString().length() != 0) {
 						checkBoxSunday.setChecked(true);
-					}
-					checkBoxSunday.setChecked(false);
+					}else checkBoxSunday.setChecked(false);
 					editText_location.setText(cursor_all_classes.getString(15));
 					int period = autoCompleteTextView_class.getText().toString().indexOf('.');
 					autoCompleteTextView_class.setText(autoCompleteTextView_class.getText().toString().substring(0, period));
